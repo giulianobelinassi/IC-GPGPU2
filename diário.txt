@@ -1,0 +1,338 @@
+São Caetano do Sul, Terça-Feira, dia 6 de Setembro de 2016.
+	22:00h:
+	Reiniciei as atividades pausadas no domingo, dia 4. Esqueci de escrever
+	um diário sobre este dia, mas basicamente o que fiz foi reescrever a
+	função print_matrix do EP1 de MAC0300 em FORTRAN e quebrar a cabeça
+	tentando compilar o programa devido a erros de sintaxe. Após uma hora,
+	obtive sucesso.
+	
+	Neste exato momento, aprendi a diferença entre INTENT(IN) e INTENT(OUT).
+	Isto me parece muito útil para especificações de funções e subrotinas.
+	
+	22:15h: Descobri que não há necessidade de uma função especifica para
+	impressão de uma matriz em FORTRAN; o próprio PRINT *, se encarrega disto.
+	
+	22:30h: Descobri uma forma de passar uma matriz para uma função/subrotina
+	de forma que seu tamanho fique implícito, assim eu consigo uma maior
+	liberdade no tratamento de matrizes.
+	Este site está sendo útil: http://www.fortran90.org/src/best-practices.html
+	
+	23:07: Implementei uma versão do read_linsys_file, mas ainda não testei.
+	Estou cansado, com sono, e há um erro de compilação ao checar o resultado
+	do iostats. Verei isto depois.
+	
+Encerradas as atividades do dia.
+	
+São Caetano do Sul, Quarta-Feira, dia 7 de Setembro de 2016.
+	11:31:
+	Reiniciei as atividades do dia. Preciso encontrar a causa do erro de
+	compilação.
+	
+	11:36: Encontrei a causa do erro. IF(statement) THEN. Esqueci do then.
+	
+	12:21: Reimplementando a função READ_LINSYS_FILE, descobri que é
+	necessário um carinho especial para ler valores de um arquivo em fortran.
+	Este link se tornou útil: http://www.cs.mtu.edu/~shene/COURSES/cs201/NOTES/chap05/REAL-in.html
+	
+	12:34: Encontrei uma maneira de ignorar espaços. Agora consigo prosseguir
+	com a leitura do arquivo.
+	
+	13:34: meu READ_LINSYS_FILE Está lendo os expoentes tudo errado. Pausa
+	para almoço.
+	
+	14:32: Ao contrário da documentação providenciada pelo cs.mtu acima,
+	precisei usar o ES para ler o double, caso contrário o expoente é
+	ignorado.
+	Terminado o Módulo MatrixIO.
+	
+	16:45 Retomada as atividades.
+	
+	19:18 Implementei o backcol e fowrcol. Os resultados estão absurdamente
+	errados.
+Encerradas as atividades do dia.
+
+São Paulo, Quinta-Feira, dia 8 de Setembro de 2016.
+	8:13 Inicio das atividades do dia. Preciso encontrar o problema no
+	backcol e forwcol.
+
+	9:13 Encontrei o problema: A inicialização de uma matriz é
+	completamente contraintuitivo: colocar os valores na mesma linhas
+	no reshape na verdade preenche suas colunas.
+
+	9:37 BACKCOL Implementado e testado.
+	
+Santo André, Domingo, dia 11 se Setembro de 2016.
+	19:59 Inicio das atividades. Vou testar o FORWCOL.
+	
+	20:06 Testado e funcionando. Iniciarei a implementação da decomposição
+	de Cholesky.
+	
+	20:30 Não consigo entender a minha implementação em C. Lembro que tive
+	uma boa sacada... :P
+	
+Fim das atividades do dia.
+
+São Caetano do Sul, Segunda-Feira, dia 12 de Setembro de 2016.
+	19:35. Inicio das atividades.
+	
+	20:28. Fechei este arquivo sem salvar (duh). Até aqui, fiz um Makefile
+	e implementei a Decomposição de Cholesky. Agora irei testá-la.	
+	
+	20:33: gfortran colimp.f95 -o colimp.f95  ... É. Perdi o arquivo.
+	
+	20:35: Encontrei uma versão anterior em um zip que tinha. Espero que
+	Esta não contenha bugs...
+	
+	21:07: Cholesky Implementado.
+	
+	21:26: Cholesky Testado. Erro muito pequeno.
+	
+Fim das atividades do dia.
+
+São Caetano do Sul, Terça-Feira, dia 13 de Setembro de 2016
+	14:00 Inicio das atividades do dia. Inicio da implementação da decompo-
+	sição LU.
+	
+	16:09: Estou perdendo muito tempo debugando o código. O GDB tem problemas
+	para exibir variáveis de outras funções. Perguntarei isto para o Gubi
+	amanhã.
+	
+	16:48: Descobri um problema na minha decomposição de Cholesky. O resultado
+	está estranho.
+	
+	17:04: Encontrei o problema. Era no backrow com transposição. Eu havia
+	consertado esse erro antes, mas eu perdi o arquivo.
+	
+	17:09: Decomposição LU e Cholesky com respostas corretas, porém o arquivo
+	de saída está com problemas: Algumas células estão exibindo ***** ao invés
+	do número. Entrada/Saída em Fortran é algo horrível.
+	
+	17:14: Iniciei a leitura do capítulo "Formatted Output", do 
+	"Fotran 90/95 Explained" de Michael Meltcalf
+	
+	17:24: Não há informações sobre a leitura de exponenciais no livro.
+	
+	17:43: Corrigi o problema. Ainda não acredito que o FORTRAN é incapaz de
+	ler um formato exponencial sem especificar o tamanho da mantissa, expoente
+	e o número como String. 
+	FORTRAN exibe a soma dos erros como sendo 0.0000000000000000 .
+	
+	17:49: Irei modificar o código para lidar com matrizes de tamanhos
+	variáveils
+	
+Fim das atividades do dia.
+
+São Paulo, dia 14 de Setembro de 2016.
+	10:17: Vou postar o problema do GDB no stackoverflow.
+
+	Não documentei as ações posteriores a anterior. A Atualização do gdb do
+	7.7 para a 7.11 resolveu o problema.
+	
+São Paulo, dia 19 de Setembro de 2016.
+	7:58: Criado um diretório no github.
+	
+	9:40: Terminado main com contador de tempo. Não tenho os arquivos para
+	testar, portanto farei isto assim que chegar em casa.
+	
+	16:00 Reinicio das atividades
+	
+	18:32 Encontrei um problema na decomposição LU: Faltava um ENDDO na linha
+	124 do colimp.f95. 
+	
+	18:45 Fortran foi mais rápido que C.
+
+Sorocaba dia 1 de Outubro de 2016
+	13:49 Inicio das atividades. Irei estudar paralelizações de alguns
+	problemas clássicos usando pthreads em Fortran com o objetivo de
+	entender os desafios na parelização de um algoritmo e desenvolver
+	habilidades na conexão Fortran - C.
+	
+	14:55 Relembrei algumas coisas sobre cálculo que me permitem calcular
+	PI usando o método dos trapézios.
+
+	16:43 Chamar as pthreads diretamente via fortran é trabalhoso.
+	Apenas consegui SEGFAULT até agora.
+
+	17:44 Consegui criar uma pthread, porém não consigo dar join. Aprendi
+	um pouco mais de como chamadas de funções em FORTRAN funcinam. Tudo
+	é passado por referência, portanto caso um procedimento C necessite de
+	passagem por cópia, algo a mais deve ser feito
+
+	18:11 Será necessário criar interfaces entre C e fortran. Vou procurar uma
+	boa maneira de fazer isto.
+
+	18:47 Estou com um segfault no pthread_attr_destroy. Não sei o motivo. :(
+
+São Paulo, dia 3 de Outubro de 2016
+	8:15 Vou tentar resolver o problema da interface. Criarei um makefile
+	para tentar facilitar meu trabalho.
+	
+	9:22 É demasiado complicado utilizar pthreads em fortran. Consegui criar
+	uma interface que funciona caso a otimização seja no máximo O1.
+	Descartarei o uso de pthreads e estudarei o OpenMP para Fortran.
+	
+São Caetano do Sul, dia 6 de Outubro de 2016
+	17:01 Inicio dos estudos de OpenMP em Fortran
+	
+	20:04 Brinquei um pouco com o OpenMP. Estou usando uma apostila de 2002
+	um pouco desatualizada, portanto preciso pesquisar os comandos equivale-
+	entes na versão 4.0 do OpenMP. Implementei um cálculo de PI paralelo.
+
+Sorocaba, dia 14 de Outubro de 2016
+	11:27: No livro do Andrews há um capítulo sobre decomposição LU paralela.
+	vou estudá-la.
+
+	11:33: O capítulo tem um requisito sobre multiplicação de matrizes em
+	paralelo. Irei lê-lo.
+
+	12:22: Pausa para almoço. Irei Implementar uma multiplicação de
+	Matrizes em paralelo.
+
+	13:44: Retorno.
+
+	16:25: Implementei a multiplicação de matrizes. Para 1024x1024, a
+	MATMUL do Fortran demora cerca de 1.4 segundos, enquanto a minha
+	demora 13 segundos. Quando eu otimizo meu programa (O4), o tempo é
+	parecido, mas a do fortran ainda ganha. Vou decompilar e ver que magia
+	o compilador está fazendo.
+
+	16:26 Pausa. Imprevistos
+
+	18:31: Retorno. 
+
+	18:40: O gfortran sumiu com a minha função. Não consigo localizar o
+	código dela olhando o Assembly.
+
+
+	19:10 Fiz uma parelização da multiplicação de matrizes e implementei no
+	OpenMP. Está demorando um pouco mais que a sequencial para uma matriz
+	1000x1000, mas acredito que para matrizes maiores isto se inverta. Meu
+	Gerador de Matrizes aleatórios baseado no do Prof. Ernesto está com bugs
+	e não consigo gerar matrizes maiores que 1000x1000, portanto precisarei
+	reescrevê-lo.
+	
+Fim das atividades do dia.
+
+Sorocaba, dia 15 de Outubro de 2016
+	15:13 Vou reconstruir o gerador de matrizes aleatórias.
+
+	17:38 Implementei outro gerador de matrizes aleatórias. Após resolver
+	alguns problemas com o código implementado anteirormente, testei a
+	MYMATMUL. Em um Core2Quad Q8200 @ 2.6Ghz, a MATMUL do Fortran demora
+	97.280119148999830. a MYMATMUL demora 64.170854659001336 com 4
+	processadores (matriz 4000x4000). Testarei em 2 processadores.
+
+	17:44: Em 2 processadores o tempo foi 62.799928311998279
+
+	17:54: Pausa
+Fim das Atividades do dia.
+
+São Paulo, dia 17 de Outubro de 2016
+	8:20: Vou executar o MYMATMUL em um AMD Phenom II X6 1055T
+	
+	8:36: Para uma matriz 6000x6000, 6 Cores compilado com -O4 e march=native:
+		MATMUL:   343.67481395900177
+		MYMATMUL: 120.89353359799861
+		
+	8:41 Para uma matriz 4000x4000, 6 Cores compilado com -O4 e march=native:
+		MATMUL:   99.336008106998634 
+		MYMATMUL: 36.906518944997515
+		
+	8:45: Para 4000x4000 e 4 cores:
+		MYMATMUL: 37.650977886998589
+		
+	8:50 Para 2 Núcleos (4000x4000), temos 55.943051006001042
+	
+	9:20 Pausa
+	
+	15:58: Em um Core-i5 3210m, para uma matriz 4000x4000 temos 47.211970317999999
+	em apenas um núcleo. Para 4 núcleos, temos 44.166021297000043.
+	
+	16:04: Para 2 cores, 45.053485375000037.
+	
+	18:13 Segfault em MyMatMul2.
+	
+	9:12 Mandei rodar o Zillertal. Cancelei, pois o sequencial demorou
+	727.02343160298187
+	
+São Paulo, dia 24 de Outubro de 2016
+	8:30 Inicio das atividades. Vou verificar o problema com a MATMUL2
+	
+	9:18 A MyMatMul2 está sequencial e e não sei o porque.
+	
+	9:25 Entendi o problema: O OpenMP não está detectando que as partições
+	são excusivas.
+	
+	9:40 Vou pedir orientação para o Prof. Gubi.
+	pausa
+	
+	17:09 Vou estudar CUDA e assim adentrar ao tópico de GPGPU.
+	
+	17:45: Seguindo um exemplo de soma na GPU. Algumas perguntas surgiram,
+	como e se eu executasse o programa em uma máquina sem GPU nvidia, e se
+	eu não desse free() nas estruturas alocadas, etc... Vou testar para
+	ver o que acontece.
+	
+	17:48: Ao testar em outra máquina, descobri que é necessário a biblioteca
+	cuda. Como eu não tenho acesso de administrador desta máquina, então
+	não posso instalar a biblioteca.
+	
+	18:00: Com o programa mem.cu, descobri que ao finalizar o programa, a
+	memória que ele requisitou é liberada. Menos mal, assim se houver
+	vazamento de memória não será necessário reiniciar a máquina.
+	
+	
+	19:30: Problemas com o código vector_add.cu: A soma não é realizada!
+	
+Sorocaba, dia 28 de outubro de 2016
+	13:44: inicio.
+
+	14:29: Feito o vector_add também usar threads. irei fazer um brenchmark
+	em instantes.
+
+	15:07: O programa de soma de vetores não é um bom brenchmark. Estou
+	pesquisando agora como usar cuda em fortran.
+
+	15:31: O Compilador Fortran PGI é pago x.x.
+
+	15:33: Paralelizarei uma decomposição LU. 
+
+	15:48: Estou lendo sobre o BLAS. Talvez seja melhor começar a
+	trabalhar sobre o código do Ronaldo
+
+Sorocaba, dia 12 de dezembro de 2016.
+	10:58: Inicio. Farei o código do Ronaldo compilar.
+
+	11:09: Consegui logar na máquina disponibilizada para mim e encontrei
+	o compilador Fortran da Intel instalado. O gfortran não está instalado,
+	mas isto não deve ser problema.
+
+	11:42: Encontrei a documentação sobre a subrotina DLSACG() em:
+	docs.roguewave.com/imsl/fortran/7.1/html/fnlmath/index.html#page/FNLMath/mch1.04.020.html#ww1372646
+
+	12:53: Escrevi a chamada da função da DLSACG em LAPACK vide documentação encontrada em
+	http://www.netlib.org/lapack/explore-html/d6/d10/group__complex16_g_esolve_ga0913d6f4e94720e01b9493b96a5fc93e.html#ga0913d6f4e94720e01b9493b96a5fc93e
+	Estou enfrentando erros de compilação que resolverei em breve.
+
+	13:53: O Main.for compila, mas não passa do processo de linkedição.
+	Falta determinar as dependências de cada arquivo.
+
+	14:07: Habilitar todos os Warnings do compilador faz com que a saída reclame
+	de várias variáveis implicitamente declaradas.
+
+	14:30: em Ghmatece.for, nas linhas [32; 38], temos um bloco de código com
+	um goto e um IF esquisito. Preciso perguntar o que é isso.
+
+
+	15:25: Tenho um Makefile. O ambiente providenciado aparenta não conter
+	Intel MKL, ou BLAS ou LAPACK.
+
+	15:28: Confirmado. Os pacotes liblapack-dev e libblas-dev não estão instalados.
+
+	15:53: Consegui compilar o código usando o gfortran adicionando algumas flags
+	que ignoram o tamanho máximo das colunas. Ao executar o binário, recebo um
+	erro sobre arquivo não encontrado.
+
+	15:54: Claro, arquivos em Unix são case-sensitive.
+
+	16:03: Aparentemente, faltam alguns arquivos.
