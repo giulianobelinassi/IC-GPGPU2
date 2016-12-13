@@ -336,3 +336,15 @@ Sorocaba, dia 12 de dezembro de 2016.
 	15:54: Claro, arquivos em Unix são case-sensitive.
 
 	16:03: Aparentemente, faltam alguns arquivos.
+
+Sorocaba, dia 13 de dezembro de 2016
+	Esqueci de atualizar este diário constantemente. O que eu fiz foi basicamente
+	fazer o código compilar no gfortran e corrigir (vários) erros de identação
+	que faziam o código ou não compilar sem as flags que faziam ignorar isto,
+	ou tornava o código ilegível em meu editor.
+	Também removi algumas expressões como IF(arith) L1 L2 L3, pois apenas eram
+	utilizadas um dos casos e torna o código ilegível para alguém que acabou
+	de abri-lo (há pouca documentação na internet sobre esse tipo de condicional).
+	O Código executa, mas nada é impresso no terminal. Acho isto estranho. talvez
+	haja alguma lógica de redirecionamento?
+

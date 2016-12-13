@@ -1,5 +1,5 @@
 FC      = gfortran
-FCFLAGS = -g -ffixed-line-length-none -ffree-line-length-none
+FCFLAGS = -g -std=legacy -Wall
 FLFLAGS = -llapack
 RM      = rm -f
 
