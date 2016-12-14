@@ -41,12 +41,14 @@ C       USE MSIMSL
         INTEGER CONE(NE,4),KODE(NX)
         REAL INSTANTE_INICIAL,INSTANTE_FINAL
 C       Declara a matriz de pivoteamento para o LAPACK.
-        INTEGER P(1000)
-        COMPLEX*16 WORK(1000)
-        COMPLEX   SWORK(1000000)
-        DOUBLE PRECISION RWORK(1000)
-        INTEGER ITER
+        INTEGER P(NX)
+C       COMPLEX*16 WORK(1000)
+C       COMPLEX   SWORK(1000000)
+C       DOUBLE PRECISION RWORK(1000)
+        INTEGER ITER, u, v
+        DIMENSION zh_reshaped(NX*NX)
 
+        EXTERNAL ZGESV
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
 * NX = DIMENSÃO MÁXIMA DO SISTEMA DE EQUAÇÕES       
@@ -110,11 +112,25 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 * (ROTINA PRONTA DA BIBLIOTECA DO FORTRAN PS 4.0)   
 *
 C       CALL DLSACG(NN,ZH,NX,ZFI,1,ZVETSOL)
-        CALL ZCGESV(NN,1,ZH,NN,P,ZFI,NN,VETSOL,NN,WORK,SWORK,RWORK,ITER)
-        IF (ITER /= 0) THEN
-            PRINT *, "Erro em ZCGESV :-("
+     
+C COPIA A MATRIZ ZH EM UM VETOR CONTÍGUO NA MEMÓRIA
+        DO 50 v = 1, NN
+            DO 50 u = 1, NN
+                IF (u == v) THEN
+                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
+                ELSE
+                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
+                ENDIF
+ 50     CONTINUE
+
+        CALL ZGESV(NN,1,zh_reshaped,NN,P,ZFI,NN,ITER)
+        IF (ITER < 0) THEN
+            PRINT *, "Erro em ZGESV :-("
+        ELSE IF (ITER > 0) THEN
+            PRINT *, "Matriz Singular :-|"
+
         ENDIF
-        ZFI=ZVETSOL
+C       ZFI=ZVETSOL
 *
 * ACIONA ROTINA QUE CALCULA OS DESLOCAMENTOS EM PONTOS INTERNOS
 *

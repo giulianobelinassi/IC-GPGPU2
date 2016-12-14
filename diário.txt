@@ -346,5 +346,27 @@ Sorocaba, dia 13 de dezembro de 2016
 	utilizadas um dos casos e torna o código ilegível para alguém que acabou
 	de abri-lo (há pouca documentação na internet sobre esse tipo de condicional).
 	O Código executa, mas nada é impresso no terminal. Acho isto estranho. talvez
-	haja alguma lógica de redirecionamento?
+	haja alguma lógica de redirecionamento
+
+Sorocaba, dia 14 de dezembro de 2016
+	10:48: Segundo o arquivo ESOLO240D_-5+5.DAT, houve problemas na ZCGESV.
+	Tentarei encontrar a fonte.
+
+	12:00: ZGESV(NN,1,ZH,NN,P,ZFI,NN,ITER) acusa matriz singular, mesmo que
+	eu passe a matriz identidade!
+
+	12:55: Identifiquei o problema. A matriz ZH está declarada como
+	sendo NX x NX, mas ao trabalhar com problemas menores, ele utiliza
+	NN x NN, onde NN <= NX. Caso NN < NX, então haverá um padding, ou seja,
+	a próxima coluna da matriz não está contiguamente na memória. Como o
+	Lapack usa o BLAS e eu li em algum lugar que o BLAS é escrito em
+	C & Assembler, então provavelmente deve ocorrer uma cast da
+	matriz ZH em um vetor em algum lugar. O fato da falta de
+	contiguidade da matriz na memória torna-se um problema neste passo.
+	A solução emergencial adotada foi declarar um vetor zh_reshaped e
+	copiar os dados de forma que o LAPACK leia tudo adequadamente, e
+	com isto a matriz ZH não acusa um erro de singularidade.
+	 
+	13:02: Aqui: http://stackoverflow.com/questions/1303182/how-does-blas-get-such-extreme-performance
+	
 
