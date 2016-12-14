@@ -370,3 +370,6 @@ Sorocaba, dia 14 de dezembro de 2016
 	13:02: Aqui: http://stackoverflow.com/questions/1303182/how-does-blas-get-such-extreme-performance
 	
 	15:57: Os resultados não batem com os arquivos do Ronaldo. Verificarei tudo novamente.
+
+	16:31: Eu havia quebrado alguma coisa. Refazer as alterações no pacote original fez
+	as diferenças desaparecerem.

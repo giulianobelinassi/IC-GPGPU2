@@ -1,6 +1,6 @@
 EXEMPLO 3D ESTATICO SUPERFÍCIE TRUNCADA SEM INCLINAÇÃO (240 ELS. CTES.)
  
-10 1 0 1 
+10 1 0 1
 
 	1.0
 
@@ -123,5 +123,4 @@ EXEMPLO 3D ESTATICO SUPERFÍCIE TRUNCADA SEM INCLINAÇÃO (240 ELS. CTES.)
  1.5	0.5		1.0
  2.5	0.5		1.0
  3.5	0.5		1.0
- 4.5	0.5		1.0 rodando para frequencia            1
- rodando para frequencia            1
+ 4.5	0.5		1.0
