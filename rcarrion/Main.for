@@ -45,8 +45,7 @@ C       Declara a matriz de pivoteamento para o LAPACK.
 C       COMPLEX*16 WORK(1000)
 C       COMPLEX   SWORK(1000000)
 C       DOUBLE PRECISION RWORK(1000)
-        INTEGER ITER, u, v
-        DIMENSION zh_reshaped(NX*NX)
+        INTEGER ITER
 
         EXTERNAL ZGESV
 *
@@ -114,23 +113,22 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 C       CALL DLSACG(NN,ZH,NX,ZFI,1,ZVETSOL)
      
 C COPIA A MATRIZ ZH EM UM VETOR CONTÍGUO NA MEMÓRIA
-        DO 50 v = 1, NN
-            DO 50 u = 1, NN
-                IF (u == v) THEN
-                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
-                ELSE
-                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
-                ENDIF
- 50     CONTINUE
+C        DO 50 v = 1, NN
+C            DO 50 u = 1, NN
+C                IF (u == v) THEN
+C                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
+C                ELSE
+C                    zh_reshaped(u + NN*(v-1)) = ZH(u, v)
+C                ENDIF
+C 50     CONTINUE
 
-        CALL ZGESV(NN,1,zh_reshaped,NN,P,ZFI,NN,ITER)
+        CALL ZGESV(NN,1,ZH(1:NN, 1:NN),NN,P,ZFI,NN,ITER)
         IF (ITER < 0) THEN
             PRINT *, "Erro em ZGESV :-("
         ELSE IF (ITER > 0) THEN
             PRINT *, "Matriz Singular :-|"
 
         ENDIF
-C       ZFI=ZVETSOL
 *
 * ACIONA ROTINA QUE CALCULA OS DESLOCAMENTOS EM PONTOS INTERNOS
 *
