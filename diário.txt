@@ -373,3 +373,7 @@ Sorocaba, dia 14 de dezembro de 2016
 
 	16:31: Eu havia quebrado alguma coisa. Refazer as alterações no pacote original fez
 	as diferenças desaparecerem.
+
+	19:18: Escrevi um script que realiza 2 testes de aceitação, corrigi a identação do main.for e
+	resolvi a solução emergencial efetuada em 12:55 deste dia. A Função do LAPACK tem um parâmetro
+	para este caso.
