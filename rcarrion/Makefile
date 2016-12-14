@@ -59,4 +59,4 @@ Nonsinge.o: Nonsinge.for
 
 
 clean:
-	$(RM) main *.o
+	$(RM) main *.o fort.*
