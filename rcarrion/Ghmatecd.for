@@ -27,6 +27,8 @@ C
         DIMENSION DFI(NX)
         DIMENSION DELTA(3,3)
         INTEGER CONE(NE,4),KODE(NX)
+        REAL t0, t1
+
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 *
@@ -63,15 +65,14 @@ C
 *
 * ZERANDO AS MATRIZES H E G
 *
-         DO 50 J=1,N
-             DO 50 I=1,N
-                II=3*(I-1)
-                DO 50 JN=1,3
-                    DO 50 IN=1,3
-                         ZGP(II+IN,II+JN)=(0.D0,0.D0)
-                         ZHP(II+IN,II+JN)=(0.D0,0.D0)
-                         ZG(II+IN,II+JN)=(0.D0,0.D0)
- 50                      ZH(II+IN,II+JN)=(0.D0,0.D0)
+        DO 50 I=1,N
+            II=3*(I-1) + 1 
+C           Use a notação de particionamento para o compilador decidir como percorrer a matriz.
+            ZGP(II:II+2, II:II+2) = (0.D0,0.D0)
+            ZHP(II:II+2, II:II+2) = (0.D0,0.D0)
+            ZG (II:II+2, II:II+2) = (0.D0,0.D0)
+            ZH (II:II+2, II:II+2) = (0.D0,0.D0)
+ 50     CONTINUE
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
@@ -110,41 +111,29 @@ C
             CO(4,1)=CX(N4)
             CO(4,2)=CY(N4)
             CO(4,3)=CZ(N4)
-            JJ=3*(J-1)
-*
+
+            JJ=3*(J-1) + 1
             DO 200 I=1,NBE
-*	 
-                IF(I-J)120,140,120
+                II=3*(I-1) + 1
+
+                IF (I == J) THEN
+*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G SINGULAR
+*                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 *
-* ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
+                    CALL SING_DE (ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
+     $                  ETA,ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
+
+                    ZGP(II:II+2, JJ:JJ+2)=ZGELEM+ZGEST(II:II+2, JJ:JJ+2)
+                    ZHP(II:II+2, JJ:JJ+2)=ZHELEM+ZHEST(II:II+2, JJ:JJ+2)
+                ELSE
+*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
 *
- 120            CALL NONSINGD(ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),ETA,
-     $             ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
-*
-                II=3*(I-1)
-                DO 190 JN=1,3
-                    DO 190 IN=1,3
-                        ZGP(II+IN,JJ+JN)=ZGELEM(IN,JN)
-                        ZHP(II+IN,JJ+JN)=ZHELEM(IN,JN)
- 190            CONTINUE
-*
-                GO TO 150
-*
-* ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G SINGULAR
-* ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
-*
- 140            CALL SING_DE (ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),ETA,
-     $              ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
-*
-                II=3*(I-1)
-                DO 191 JN=1,3
-                    DO 191 IN=1,3
-                       ZGP(II+IN,JJ+JN)=ZGELEM(IN,JN)+ZGEST(II+IN,JJ+JN)
-                       ZHP(II+IN,JJ+JN)=ZHELEM(IN,JN)+ZHEST(II+IN,JJ+JN)
- 191            CONTINUE
-*
- 150            CONTINUE 
-*
+                    CALL NONSINGD(ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
+     $                  ETA,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
+
+                    ZGP(II:II+2, JJ:JJ+2) = ZGELEM
+                    ZHP(II:II+2, JJ:JJ+2) = ZHELEM
+                ENDIF
  200        CONTINUE
  220    CONTINUE
 *
@@ -152,32 +141,27 @@ C
 * NAS MATRIZES ZH E ZG FINAIS
 *
         NN=3*NBE
-        DO 400 IMA=1,NN
-            DO 400 IMB=1,NN
-                ZH(IMA,IMB)=ZHP(IMA,IMB)
-                ZG(IMA,IMB)=ZGP(IMA,IMB)
- 400    CONTINUE
+        ZH(1:NN, 1:NN) = ZHP(1:NN, 1:NN)
+        ZG(1:NN, 1:NN) = ZGP(1:NN, 1:NN)
 *
 * REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS
 *
 * CONDIÇÕES DE CONTORNO E FORMA A MATRIZ A QUE É ARMAZENADA EM G
 *
-        NN=3*NBE
         DO 250 J=1,NN
-            IF(KODE(J)) 250,230,250
- 230            DO 240 I=1,NN
-                    ZCH=ZG(I,J)*ZGE
-                    ZG(I,J)=-ZH(I,J)
- 240                ZH(I,J)=-ZCH
+            IF (KODE(J) == 0) THEN
+                DO 240 I=1,NN
+                    ZCH = ZG(I,J)*ZGE
+                    ZG(I,J) = -ZH(I,J)
+ 240                ZH(I,J) = -ZCH
+
+            ENDIF
  250    CONTINUE
+
 *
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
-        DO 300 I=1,NN
-            ZFI(I)=(0.D0,0.D0)
-            DO 300 J=1,NN
-                ZFI(I)=ZFI(I)+ZG(I,J)*ZDFI(J)
- 300    CONTINUE
-*
+        
+        ZFI(1:NN) = MATMUL(ZG(1:NN, 1:NN), ZDFI(1:NN))
         RETURN
       END
