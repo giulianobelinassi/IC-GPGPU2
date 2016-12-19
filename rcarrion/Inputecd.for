@@ -17,7 +17,7 @@
         DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
         DIMENSION BC(NX)
         DIMENSION AFR(NFRX)
-        DIMENSION DELTA(3,3)
+C       DIMENSION DELTA(3,3)
         INTEGER CONE(NE,4),KODE(NX)
 *
         WRITE(IPS,100)
@@ -88,7 +88,7 @@ C           N4=CONE(I,4)
 *
 * ELEMENTOS QUADRILATERAIS DE QUATRO NÓS
 *
-C	        CXM(I)=(CX(N1)+CX(N2)+CX(N3)+CX(N4))*0.25D0
+C           CXM(I)=(CX(N1)+CX(N2)+CX(N3)+CX(N4))*0.25D0
 C           CYM(I)=(CY(N1)+CY(N2)+CY(N3)+CY(N4))*0.25D0
 C           CZM(I)=(CZ(N1)+CZ(N2)+CZ(N3)+CZ(N4))*0.25D0
             WRITE(IPS,550) I,(CONE(I,J),J=1,4),CXM(I),CYM(I),CZM(I)

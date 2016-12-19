@@ -14,9 +14,11 @@
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION DELTA(3,3)
         DIMENSION GI(NPG),OME(NPG)
-        DIMENSION CO(4,3),ETA(3),P(2,4),XJ(2,3),F(4)
+        DIMENSION CO(4,3),P(2,4),XJ(2,3),F(4)
         DIMENSION RD(3),RN(3)
         DIMENSION ZD(3,3,3),ZS(3,3,3),ZDP(3,3,3),ZSP(3,3,3)
+C       DIMENSION ETA(3)
+
 *
 * ZERA AS MATRIZES ZD E ZS
 *
@@ -72,7 +74,7 @@
      $              (XJ(1,1)*XJ(2,2)-XJ(2,1)*XJ(1,2))**2  )
                
                  IF (DET < 1.0D-5) THEN
- 100                WRITE(IPR,1000) DET
+                    WRITE(IPR,1000) DET
                     WRITE(IPR,1100) ((CO(I,J),J=1,3),I=1,4)
  1000   FORMAT(///' NONSING : ERRO, JACOBIANO NULO OU NEGATIVO =',D14.5)
  1100   FORMAT(/1X,'COORDINADAS DOS PONTOS EXTREMOS '/(3D14.5))

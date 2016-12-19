@@ -74,5 +74,5 @@
  550        FORMAT(I6,4I9,2X,3D12.4)
   18    CONTINUE
 *
- 50     RETURN
+        RETURN
       END

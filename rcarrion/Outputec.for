@@ -12,7 +12,7 @@
         IMPLICIT COMPLEX*16 (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION ZFI(NX),ZDFI(NX),ZDSOL(3*NPIX),ZSSOL(9*NPIX)
-        DIMENSION DELTA(3,3)
+C       DIMENSION DELTA(3,3)
 *
         WRITE(IPS,50)
   50    FORMAT(/' ',79('*')/)
@@ -21,7 +21,8 @@
  700    FORMAT(30X,'FREQ‹ NCIA = ',D14.7/)
 *
         WRITE(IPS,100)
- 100  FORMAT(' ',79('*')//1X,'RESULTADOS'//2X,'N”S DO CONTORNO'//' ELEM',
+ 100    FORMAT(' ',79('*')//1X,'RESULTADOS'//2X,'N”S DO CONTORNO'//
+     $    ' ELEM',
      $6X,'DESLOCAMENTO X',11X,'DESLOCAMENTOT Y',11X,'DESLOCAMENTO Z'/)
         DO 10 I=1,NBE
              WRITE(IPS,200) I,(ZFI(3*(I-1)+J),J=1,3)
@@ -60,7 +61,7 @@
             WRITE(IPT,*)FR,CDABS(ZFI(157)),CDABS(ZFI(166))
         ENDIF
 
-  60    WRITE(IPS,500)
+        WRITE(IPS,500)
  500    FORMAT(' ',230('*'))
 *
         RETURN
