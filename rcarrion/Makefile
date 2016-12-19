@@ -1,4 +1,4 @@
-FC      = gfortran
+FC      = gfortran-5
 FCFLAGS = -g -march=native -std=legacy -Wall -Wno-unused-dummy-argument #-Ofast
 FLFLAGS = -llapack
 RM      = rm -f
