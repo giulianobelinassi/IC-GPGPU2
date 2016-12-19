@@ -1,5 +1,5 @@
 FC      = gfortran
-FCFLAGS = -g -march=native -std=legacy #-Wall -Ofast
+FCFLAGS = -g -march=native -std=legacy -Wall #-Ofast
 FLFLAGS = -llapack
 RM      = rm -f
 
