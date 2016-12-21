@@ -389,3 +389,10 @@ Sorocaba, dia 19 de dezembro de 2016.
 	cache.
 
 	17:41. Isso vai dar trabalho. Farei amanhã.
+
+Sorocaba, dia 21 de dezembro de 2016
+	Comecei a paralelizar a subrotina NONSINGD. Ainda não tenho o resultado
+	correto, mas tenho uma resalva sobre o compilador gfortran 6.2.1 20161124
+	O Código paralelizado dá segmentation fault sem razão aparente, enqunto o
+	5.4.1 20161202 não. Tentarei reproduzir o sintoma em um código menor e
+	tentar verificar se o ocorrido é um bug de compilador.

@@ -52,8 +52,8 @@
         ZBB=4.D0*ZCAPPA/R-2.D0*ZCAPPADR
         ZCC=(ZC1-2.D0)*(ZAA+5.D-1*ZBB-3.D0*ZCAPPA/R)-2.D0*ZCAPPA/R      
 *
-        DO 40 I=1,3
-            DO 40 J=1,3
+        DO 40 J=1,3
+            DO 40 I=1,3
                 ZU(I,J)=ZC0*(ZFHI*DELTA(I,J)-ZCAPPA*RD(J)*RD(I))
            ZT(I,J)=(1.D0/(4.D0*PI))*((ZAA*(DRN*DELTA(I,J)+RD(J)*RN(I)))+
      $              RD(I)*RD(J)*DRN*ZBB+RD(I)*RN(J)*ZCC)

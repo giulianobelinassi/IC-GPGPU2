@@ -19,8 +19,9 @@
         DIMENSION ZHELEM(3,3),ZGELEM(3,3)
 C
 C quando coloco NX o programa não compila
-        DIMENSION ZHP(2880,2880),ZGP(2880,2880)
-        DIMENSION ZHEST(2880,2880),ZGEST(2880,2880)
+C No gfortran compila :-)
+        DIMENSION ZHP(NX,NX),ZGP(NX,NX)
+        DIMENSION ZHEST(NX,NX),ZGEST(NX,NX)
 C
         DIMENSION CO(4,3),ETA(3)
         DIMENSION ZFI(NX),ZDFI(NX)
@@ -40,8 +41,8 @@ C       REAL t0, t1
 *
 * TRANSFORMAÇÃO DAS MATRIZES [HEST] E [GEST] EM NÚMEROS COMPLEXOS
 *
-        DO 5 I=1,N
-            DO 5 J=1,N
+        DO 5 J=1,N
+            DO 5 I=1,N
                ZHEST((3*I-2),(3*J-2))=DCMPLX(HEST((3*I-2),(3*J-2)),0.D0)
                ZHEST((3*I-2),(3*J-1))=DCMPLX(HEST((3*I-2),(3*J-1)),0.D0)
                ZHEST((3*I-2),(3*J))  =DCMPLX(HEST((3*I-2),(3*J)),0.D0)
