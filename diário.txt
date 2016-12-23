@@ -396,3 +396,7 @@ Sorocaba, dia 21 de dezembro de 2016
 	O Código paralelizado dá segmentation fault sem razão aparente, enqunto o
 	5.4.1 20161202 não. Tentarei reproduzir o sintoma em um código menor e
 	tentar verificar se o ocorrido é um bug de compilador.
+
+Sorocaba, dia 23 de dezembro de 2016
+	16:22: Consegui paralelizar a NONSINGD. O tempo anterior era de
+	0m3,463s e agora é de 0m2,375s em um Intel Core-i5 3210m. 

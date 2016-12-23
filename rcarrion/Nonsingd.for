@@ -52,12 +52,10 @@ C        NPG_cp = NPG
 *
         CALL GAULEG(-1.D0,1.D0,GI,OME,NPG)
 *
-!$OMP  PARALLEL DEFAULT(PRIVATE) 
-!$OMP& PRIVATE(JG, IG)
-!$OMP& SHARED(INP,INQ,IPR,IPS,IPT,GI,OME)
+!$OMP  PARALLEL DO DEFAULT(PRIVATE)
+!$OMP& SHARED(INP,INQ,IPR,IPS,IPT, GI, OME, CO, CXP, CYP, CZP, NPG, ETA,
+!$OMP& DELTA, ZGE, PI, FR, ZCS, ZCP)
 !$OMP& REDUCTION(+:ZHELEM, ZGELEM)
-
-!$OMP DO
         DO JG=1,NPG
 *
             G2=GI(JG)
@@ -71,6 +69,10 @@ C        NPG_cp = NPG
 *
             DO IG=1,NPG
 *
+                IF (IG > NPG) THEN
+                    PRINT*, "Vai crashar :P"
+                ENDIF
+
                 G1=GI(IG)
                 P1=OME(IG)
                 RP=1.D0+G1
@@ -132,8 +134,7 @@ C        NPG_cp = NPG
 *
             ENDDO
         ENDDO
-!$OMP END DO
-!$OMP END PARALLEL
+!$OMP END PARALLEL DO
 
 *
 C        DO 321 j=1,3
