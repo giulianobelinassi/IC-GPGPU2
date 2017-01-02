@@ -1,6 +1,6 @@
 FC      = gfortran
 FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument #-Ofast
-PARALLEL= -fopenmp 
+PARALLEL=#-fopenmp 
 FLFLAGS = -llapack
 RM      = rm -f
 
