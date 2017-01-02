@@ -9,26 +9,28 @@
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
      $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4)
-        IMPLICIT REAL*8 (A-H,O-Y)
-        IMPLICIT COMPLEX*16 (Z)
-        COMMON INP,INQ,IPR,IPS,IPT
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXM(NE),CYM(NE),CZM(NE)
-        DIMENSION HEST(NX,NX),GEST(NX,NX)
-        DIMENSION ZH(NX,NX),ZG(NX,NX)
-        DIMENSION ZHELEM(3,3),ZGELEM(3,3)
-C
-C quando coloco NX o programa não compila
-C No gfortran compila :-)
-        DIMENSION ZHP(NX,NX),ZGP(NX,NX)
-        DIMENSION ZHEST(NX,NX),ZGEST(NX,NX)
-C
-        DIMENSION CO(4,3),ETA(3)
-        DIMENSION ZFI(NX),ZDFI(NX)
-        DIMENSION DFI(NX)
-        DIMENSION DELTA(3,3)
-        INTEGER CONE(NE,4),KODE(NX)
-C       REAL t0, t1
+        IMPLICIT NONE
+        INTEGER INP,INQ,IPR,IPS,IPT
+        COMMON  INP,INQ,IPR,IPS,IPT
+
+        DOUBLE PRECISION, INTENT(IN) :: CX(NCOX),CY(NCOX),CZ(NCOX)
+        DOUBLE PRECISION, INTENT(IN) :: CXM(NE),CYM(NE),CZM(NE)
+        DOUBLE PRECISION, INTENT(IN) :: HEST(NX,NX), GEST(NX,NX) 
+        DOUBLE COMPLEX,   INTENT(OUT):: ZH(NX,NX), ZG(NX,NX)
+        DOUBLE COMPLEX,   INTENT(OUT):: ZFI(NX)
+        DOUBLE PRECISION, INTENT(IN) :: DFI(NX)
+        DOUBLE COMPLEX,   INTENT(OUT):: ZDFI(NX)
+        INTEGER,          INTENT(IN) :: KODE(NX),NE,NX,NCOX,CONE(NE,4)
+        DOUBLE PRECISION, INTENT(IN) :: DELTA(3,3),PI
+        INTEGER,          INTENT(IN) :: N,NBE,NP,NPG
+        DOUBLE PRECISION, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
+        DOUBLE COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
+        DOUBLE PRECISION, INTENT(IN) :: C1,C2,C3,C4
+
+        DOUBLE COMPLEX ZHELEM(3,3),ZGELEM(3,3),ZHP(NX,NX),ZGP(NX,NX)
+        DOUBLE COMPLEX ZCH,ZHEST(NX,NX),ZGEST(NX,NX)
+        DOUBLE PRECISION CO(4,3), ETA(3), A,B,C,R
+        INTEGER N1,N2,N3,N4,NN,I,J,II,JJ
 
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
@@ -81,8 +83,9 @@ C           Use a notação de particionamento para o compilador decidir como perc
 * CÁLCULO DAS COMPONENTES DO VETOR NORMAL
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
-
-        DO 220 J=1,N
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ETA,A,B,C,R,ZHELEM,ZGELEM)
+        DO J=1,N
             N1=CONE(J,1)
             N2=CONE(J,2)
             N3=CONE(J,3)
@@ -114,7 +117,7 @@ C           Use a notação de particionamento para o compilador decidir como perc
             CO(4,3)=CZ(N4)
 
             JJ=3*(J-1) + 1
-            DO 200 I=1,NBE
+            DO I=1,NBE
                 II=3*(I-1) + 1
 
                 IF (I == J) THEN
@@ -135,8 +138,8 @@ C           Use a notação de particionamento para o compilador decidir como perc
                     ZGP(II:II+2, JJ:JJ+2) = ZGELEM
                     ZHP(II:II+2, JJ:JJ+2) = ZHELEM
                 ENDIF
- 200        CONTINUE
- 220    CONTINUE
+            ENDDO
+        ENDDO
 *
 * TRANSFORMAÇÃO DAS MATRIZES ZHP E ZGP PROVISÓRIAS
 * NAS MATRIZES ZH E ZG FINAIS

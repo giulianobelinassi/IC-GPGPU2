@@ -27,21 +27,6 @@
         INTEGER i, j, k, ig, jg
 
 *
-C        DIMENSION CO_cp(4,3),ETA_cp(3),DELTA_cp(3,3)    
-
-C Guarda as entradas
-C        CO_cp  = CO
-C        CXP_cp = CXP
-C        CYP_cp = CYP
-C        CZP_cp = CZP
-C        ETA_cp = ETA
-C        ZGE_cp = ZGE
-C        ZSC_cp = ZSC
-C        ZCP_cp = ZCP
-C        DELTA_cp = DELTA
-C        PI_cp = PI
-C        FR_co = FR
-C        NPG_cp = NPG
 
 * ZERA AS MATRIZES ELEMENTARES HELEM E GELEM
 *       
@@ -52,10 +37,10 @@ C        NPG_cp = NPG
 *
         CALL GAULEG(-1.D0,1.D0,GI,OME,NPG)
 *
-!$OMP  PARALLEL DO DEFAULT(PRIVATE)
-!$OMP& SHARED(INP,INQ,IPR,IPS,IPT, GI, OME, CO, CXP, CYP, CZP, NPG, ETA,
-!$OMP& DELTA, ZGE, PI, FR, ZCS, ZCP)
-!$OMP& REDUCTION(+:ZHELEM, ZGELEM)
+C!$OMP  PARALLEL DO DEFAULT(PRIVATE)
+C!$OMP& SHARED(INP,INQ,IPR,IPS,IPT, GI, OME, CO, CXP, CYP, CZP, NPG, ETA,
+C!$OMP& DELTA, ZGE, PI, FR, ZCS, ZCP)
+C!$OMP& REDUCTION(+:ZHELEM, ZGELEM)
         DO JG=1,NPG
 *
             G2=GI(JG)
@@ -134,66 +119,7 @@ C        NPG_cp = NPG
 *
             ENDDO
         ENDDO
-!$OMP END PARALLEL DO
+C!$OMP END PARALLEL DO
 
-*
-C        DO 321 j=1,3
-C            DO 321 i=1,4
-C                IF (CO_cp(i, j) /= CO(i, j)) THEN           
-C                    PRINT*, "Variável Modificada: CO"
-C                ENDIF
-C 321    CONTINUE
-C        DO 123 j=1,3
-C            DO 123, i=1,3
-C                IF (DELTA_cp(i, j) /= DELTA(i, j)) THEN 
-C                    PRINT*, "Variável modificada: DELTA"
-C                ENDIF
-C 123    CONTINUE
-C
-C        DO 213 i=1,3
-C            IF (ETA_cp(i) /= ETA_cp(i)) THEN
-C                PRINT*, "Variável Modificada: ETA"
-C            ENDIF
-C 213    CONTINUE
-C
-C        IF (CXP_cp /= CXP) THEN
-C            PRINT*, "Variável Modificada: CXP"
-C        ENDIF
-C        IF (CYP_cp /= CYP) THEN
-C            PRINT*, "Variável Modificada: CYP"
-C        ENDIF
-C        IF (CZP_cp /= CZP) THEN
-C            PRINT*, "Variável Modificada: CZP"
-C        ENDIF
-C        IF (ZGE_cp /= ZGE) THEN
-C            PRINT*, "Variável Modificada: ZGE"
-C        ENDIF
-C        IF (ZSC_cp /= ZSC) THEN
-C            PRINT*, "Variável Modificada: ZSC"
-C        ENDIF
-C        IF (ZCP_cp /= ZCP) THEN
-C            PRINT*, "Variável Modificada: ZCP"
-C        ENDIF
-C        IF (PI_cp /= PI) THEN
-C            PRINT*, "Variável Modificada: PI"
-C        ENDIF
-C        IF (FR_co /= FR) THEN
-C            PRINT*, "Variável Modificada: FR"
-C        ENDIF
-C        IF (NPG_cp /= NPG) THEN
-C            PRINT*, "Variável Modificada: NPG"
-C        ENDIF
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         RETURN
       END
