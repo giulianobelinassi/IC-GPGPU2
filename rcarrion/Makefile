@@ -1,15 +1,17 @@
+CC      = gcc
 FC      = gfortran
-FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument #-Ofast
+FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument -march=native -Ofast
 PARALLEL= -fopenmp 
+CFLAGS  = -O3 -march=native
 FLFLAGS = -llapack
 RM      = rm -f
 
 all: main main_small
 
-main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main.o
+main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main.o unl_stack.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
-main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main_small.o
+main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main_small.o unl_stack.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
 Main.o: Main.for Inputece.for
@@ -63,7 +65,9 @@ Nonsingd.o: Nonsingd.for
 Nonsinge.o: Nonsinge.for
 	$(FC) $(FCFLAGS) -c $<
 
-
+unl_stack.o: unl_stack.c
+	$(CC) $(CFLAGS) -c $<
+	
 
 clean:
 	$(RM) main main_small *.o fort.*

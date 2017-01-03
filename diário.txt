@@ -415,4 +415,12 @@ Sorocaba, dia 03 de janeiro de 2017
 	entradas disponibilizadas pelo Ronaldo no dia 02 de Janeiro.
 	No momento estou configurando um ambiente disponibilizado no 
 	PeGrande (.vimrc, clonando repositórios...)
+	
+	17:16: Ao modificar a flag de otimização, eu obtive SEGFAULT.
+	Descobri que as matrizes em Ghmatecd não eram devidamente
+	alocadas devido a stack overflow, sendo assim escrevi uma
+	função em C que pede um tamanho ilimitado de stack para o
+	SO (Unix) e chamo ela em Main.for (request_unlimited_stack).
+	O tempo agora passou para 46.536s.
+
 

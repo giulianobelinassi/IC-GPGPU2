@@ -49,6 +49,7 @@ C        t0 = OMP_GET_WTIME()
 *
 * TRANSFORMAÇÃO DAS MATRIZES [HEST] E [GEST] EM NÚMEROS COMPLEXOS
 *
+
         DO J=1,N
             DO I=1,N
                ZHEST((3*I-2),(3*J-2))=DCMPLX(HEST((3*I-2),(3*J-2)),0.D0)
