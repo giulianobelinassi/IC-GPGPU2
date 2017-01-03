@@ -27,7 +27,7 @@ Inputecd.o: Inputecd.for
 	$(FC) $(FCFLAGS) -c $<
 
 Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
-	$(FC) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<

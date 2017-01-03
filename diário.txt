@@ -423,4 +423,15 @@ Sorocaba, dia 03 de janeiro de 2017
 	SO (Unix) e chamo ela em Main.for (request_unlimited_stack).
 	O tempo agora passou para 46.536s.
 
+	18:55: Paralelizei GHMATECE, uma cópia do e-mail enviado
+	para o Ronaldo, declarando os resultados obtidos:
 
+	Acabo de paralelizar a subrotina GHMATECE, além de resolver 
+	alguns problemas que ocorriam quando eu habilitava a otimização
+	-Ofast. No PéGrande (Intel(R) Core(TM) i7 CPU 920  @ 2.67GHz
+	com 8 cores, não sei se alguns virtuais) temos os seguintes
+	resultados:
+    Com -O0 (sem otimizações do compilador), 1 processador: 4m25s, 
+	8 processadores: 1m22s.
+	Com -Ofast -march=native (Otimizações agressivas no compilador),
+	1 processador: 1m30s, 8 processadores: 0m32s
