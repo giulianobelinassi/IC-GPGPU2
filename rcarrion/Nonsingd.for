@@ -54,10 +54,6 @@ C!$OMP& REDUCTION(+:ZHELEM, ZGELEM)
 *
             DO IG=1,NPG
 *
-                IF (IG > NPG) THEN
-                    PRINT*, "Vai crashar :P"
-                ENDIF
-
                 G1=GI(IG)
                 P1=OME(IG)
                 RP=1.D0+G1

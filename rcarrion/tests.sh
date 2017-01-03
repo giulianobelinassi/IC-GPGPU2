@@ -16,6 +16,8 @@ function print_failed {
 	echo -e "[${RED}FALHOU${NC}]\n"
 }
 
+#remove os arquivos antigos.
+rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
 
 # Teste 1: O arquivo SSOLO240E_-5+5.DAT, que é a solução encontrada
 # por este programa, deve ser igual ao SSOLO240E_-5+5.SOL, que é o
@@ -23,9 +25,9 @@ function print_failed {
 # (Compaq Visual Fortran 2003, no Windows) convertido para o formato
 # Unix (sem o carriage return).
 
-echo -e "Dado a execução do programa 'main'"
+echo -e "Dado a execução do programa 'main_small'"
 
-./main > /dev/null
+./main_small > /dev/null
 
 echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
 if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
@@ -41,5 +43,22 @@ else
 	print_failed
 fi
 
+echo -e "Dado a execução do programa 'main'"
+
+./main > /dev/null
+
+echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
+if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é igual ao SSOLO2160D_-5+5.SOL ?"
+if cmp -s "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
 
 echo -e "Este é o fim dos testes.\n\n"

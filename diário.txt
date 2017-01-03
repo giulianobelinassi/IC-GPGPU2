@@ -401,7 +401,18 @@ Sorocaba, dia 23 de dezembro de 2016
 	16:22: Consegui paralelizar a NONSINGD. O tempo anterior era de
 	0m3,463s e agora é de 0m2,375s em um Intel Core-i5 3210m. 
 
-Sorocaba, dia 02 de dezembro de 2016
+Sorocaba, dia 02 de janeiro de 2017
 	17:04: Paralelizei parte da Ghmatecd, o que implica em chamadas
 	paralelas à NONSINGD e SING_DE. O tempo continua o mesmo.
 	Testarei com o outro exemplo disponibilizado pelo Ronaldo.
+
+Sorocaba, dia 03 de janeiro de 2017
+	15:16 Calculei o tempo gasto apenas na subrotina Ghmatecd
+	e paralelizei algumas outras partes da subrotina. Como não
+	obtive nenhum resultado com estas paralelizações, resolvi
+	manter apenas o laço que realiza as chamadas à Nonsingd.
+	Também criei mais dois testes de aceitação sobre as novas
+	entradas disponibilizadas pelo Ronaldo no dia 02 de Janeiro.
+	No momento estou configurando um ambiente disponibilizado no 
+	PeGrande (.vimrc, clonando repositórios...)
+
