@@ -3,7 +3,7 @@ FC      = gfortran
 FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument -march=native -Ofast
 PARALLEL= -fopenmp  
 CFLAGS  = -O3 -march=native
-FLFLAGS = -lopenblas
+FLFLAGS = libopenblas.a
 RM      = rm -f
 
 all: main main_small

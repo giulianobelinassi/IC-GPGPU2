@@ -447,4 +447,16 @@ Sorocaba, dia 06 de janeiro de 2016
 	3 proc: 31s
 	4 proc: 28s
 	Testarei no PeGrande.
+	
+	14:57: Compilei o OpenBLAS para o PÉGrande. Resultados:
+	Com -Ofast -march=native
+	1 proc: 1m20s
+	2 proc: 42s
+	4 proc: 22s
+	8 proc: 18,71s
 
+	Com -O0:
+	1 proc: 4m17s
+	2 proc: 2m15s
+	4 proc: 1m10s
+	8 proc: 1m3s
