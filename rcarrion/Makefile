@@ -1,9 +1,9 @@
 CC      = gcc
 FC      = gfortran
 FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument -march=native -Ofast
-PARALLEL= -fopenmp 
+PARALLEL= -fopenmp  
 CFLAGS  = -O3 -march=native
-FLFLAGS = -llapack
+FLFLAGS = -lopenblas
 RM      = rm -f
 
 all: main main_small
@@ -33,7 +33,7 @@ Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o
-	$(FC) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Outputec.o: Outputec.for
 	$(FC) $(FCFLAGS) -c $<

@@ -42,8 +42,13 @@
         DO 30 K=1,L*3
             ZDSOL(K)=(0.D0,0.D0)
   30    CONTINUE
-*
-        DO 120 J=1,N
+
+
+
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ETA,A,B,C,R,ZHELEM,ZGELEM)
+!$OMP& REDUCTION(+:ZDSOL)
+        DO J=1,N
 *
             N1=CONE(J,1)
             N2=CONE(J,2)
@@ -74,22 +79,26 @@
             CO(4,3)=CZ(N4)
             JJ=3*(J-1)
 *
-            DO 110 K=1,L
+            DO K=1,L
 *
                 CALL NONSINGD(ZHELEM,ZGELEM,CO,CXI(K),CYI(K),CZI(K),ETA,
      $              ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
 *
                 KK=3*(K-1)
-                DO 100 IN=1,3
-                    DO 90 JN=1,3
-                        ZDSOL(KK+IN)=ZDSOL(KK+IN)+
-     $                      ZDFI(JJ+JN)*ZGELEM(IN,JN)-
-     $                      ZFI(JJ+JN)*ZHELEM(IN,JN)
-  90                CONTINUE
- 100            CONTINUE
-*
- 110        CONTINUE
- 120    CONTINUE
+                ZDSOL(KK+1:KK+3)=ZDSOL(KK+1:KK+3) +
+     $              MATMUL(ZGELEM,ZDFI(JJ+1:JJ+3))-
+     $              MATMUL(ZHELEM,ZFI(JJ+1:JJ+3))
+
+C                DO IN=1,3
+C                    DO JN=1,3
+C                        ZDSOL(KK+IN)=ZDSOL(KK+IN)+
+C     $                      ZDFI(JJ+JN)*ZGELEM(IN,JN)-
+C     $                      ZFI(JJ+JN)*ZHELEM(IN,JN)
+C                    ENDDO
+C                ENDDO
+            ENDDO
+        ENDDO
+!$OMP END PARALLEL DO
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ
 * O CÁLCULO PARA OS DESLOCAMENTOS EM PONTOS INTERNOS).
@@ -98,8 +107,12 @@
 *
        
         ZSSOL(1:L*9) = 0.D0
-        DO 200 K=1,L
-            DO 210 J=1,N
+       
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ETA,A,B,C,R,ZD,ZS)
+!$OMP& REDUCTION(+:ZDSOL)
+        DO K=1,L
+            DO J=1,N
 *
                 N1=CONE(J,1)
                 N2=CONE(J,2)
@@ -186,8 +199,9 @@
      $                                    ZFI (3*J-2)*ZS(1,3,3)-
      $                                    ZFI (3*J-1)*ZS(2,3,3)-
      $                                    ZFI (3*J)  *ZS(3,3,3)
- 210        CONTINUE
- 200    CONTINUE
+            ENDDO
+        ENDDO        
+!$OMP END PARALLEL DO
 *
         RETURN
       END

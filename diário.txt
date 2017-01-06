@@ -435,3 +435,16 @@ Sorocaba, dia 03 de janeiro de 2017
 	8 processadores: 1m22s.
 	Com -Ofast -march=native (Otimizações agressivas no compilador),
 	1 processador: 1m30s, 8 processadores: 0m32s
+
+Sorocaba, dia 06 de janeiro de 2016
+	13:04: Paralelizei INTEREC, porém o ganho foi muito baixo (2s).
+	em -Ofast -march=native. Como de fato houve algum ganho, 
+	deixarei assim.
+	Substituí o Lapack pelo OpenBLAS, que implementa uma decomposição
+	LU paralela. Aqui vão os resultados no meu Core-i5, -Ofast -march=native
+	1 proc: 1m6s
+	2 proc: 36s
+	3 proc: 31s
+	4 proc: 28s
+	Testarei no PeGrande.
+
