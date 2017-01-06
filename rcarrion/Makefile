@@ -1,6 +1,6 @@
 CC      = gcc
 FC      = gfortran
-FCFLAGS = -g -std=legacy -Wall -Wno-unused-dummy-argument -march=native -Ofast
+FCFLAGS = -g -std=legacy -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast
 PARALLEL= -fopenmp  
 CFLAGS  = -O3 -march=native
 FLFLAGS = libopenblas.a
