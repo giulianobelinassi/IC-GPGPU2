@@ -1,6 +1,6 @@
 CC      = gcc
 FC      = gfortran
-FCFLAGS = -g -std=legacy -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast
+FCFLAGS = -g -std=legacy -funroll-loops -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast
 PARALLEL= -fopenmp  
 CFLAGS  = -O3 -march=native
 FLFLAGS = libopenblas.a
@@ -8,10 +8,10 @@ RM      = rm -f
 
 all: main main_small
 
-main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main.o unl_stack.o
+main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o unl_stack.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
-main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Main_small.o unl_stack.o
+main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main_small.o unl_stack.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
 Main.o: Main.for Inputece.for
@@ -19,6 +19,9 @@ Main.o: Main.for Inputece.for
 
 Main_small.o: Main_small.for Inputece.for
 	$(FC) $(FCFLAGS) -c $<
+
+Normvec.o: Normvec.for
+	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Inputece.o: Inputece.for
 	$(FC) $(FCFLAGS) -c $<

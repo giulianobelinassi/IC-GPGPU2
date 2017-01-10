@@ -8,7 +8,7 @@
 
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
-     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4)
+     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS)
         
         USE omp_lib
 
@@ -30,10 +30,11 @@
         DOUBLE PRECISION, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
         DOUBLE COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
         DOUBLE PRECISION, INTENT(IN) :: C1,C2,C3,C4
+        DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
 
         DOUBLE COMPLEX ZHELEM(3,3),ZGELEM(3,3),ZHP(NX,NX),ZGP(NX,NX)
         DOUBLE COMPLEX ZCH,ZHEST(NX,NX),ZGEST(NX,NX)
-        DOUBLE PRECISION CO(4,3), ETA(3), A,B,C,R
+        DOUBLE PRECISION CO(4,3)!, ETA(3), A,B,C,R
         INTEGER N1,N2,N3,N4,NN,I,J,II,JJ
 
 C        DOUBLE PRECISION t0, t1
@@ -92,22 +93,22 @@ C           Use a notação de particionamento para o compilador decidir como perc
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
 !$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ETA,A,B,C,R,ZHELEM,ZGELEM)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ZHELEM,ZGELEM)
         DO J=1,N
             N1=CONE(J,1)
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
-            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
-     $           (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
-            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
-     $           (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
-            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
-     $           (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-            R=DSQRT(A*A+B*B+C*C)
-            ETA(1)=A/R
-            ETA(2)=B/R
-            ETA(3)=C/R
+C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
+C     $           (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
+C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
+C     $           (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
+C            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
+C     $           (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
+C            R=DSQRT(A*A+B*B+C*C)
+C            ETA(1)=A/R
+C            ETA(2)=B/R
+C            ETA(3)=C/R
 *
 * ARMAZENA AS COORDENADAS DOS PONTOS EXTREMOS DO ELEMENTO NO VETOR CO
 *
@@ -133,7 +134,8 @@ C           Use a notação de particionamento para o compilador decidir como perc
 *                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 *
                     CALL SING_DE (ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
-     $                  ETA,ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
+     $                  ETAS(1:3,J),
+     $                  ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
 
                     ZGP(II:II+2, JJ:JJ+2)=ZGELEM+ZGEST(II:II+2, JJ:JJ+2)
                     ZHP(II:II+2, JJ:JJ+2)=ZHELEM+ZHEST(II:II+2, JJ:JJ+2)
@@ -141,7 +143,7 @@ C           Use a notação de particionamento para o compilador decidir como perc
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
 *
                     CALL NONSINGD(ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
-     $                  ETA,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
+     $                  ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
 
                     ZGP(II:II+2, JJ:JJ+2) = ZGELEM
                     ZHP(II:II+2, JJ:JJ+2) = ZHELEM

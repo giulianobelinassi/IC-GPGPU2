@@ -7,7 +7,8 @@
 ************************************************************************
 *
       SUBROUTINE INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,ZSSOL,
-     $  NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,NBE,RHO)
+     $  NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,NBE,RHO,
+     $  ETAS)
 *
         IMPLICIT REAL*8 (A-H,O-Y)
         IMPLICIT COMPLEX*16 (Z)
@@ -15,11 +16,12 @@
         DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
         DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
         DIMENSION ZHELEM(3,3),ZGELEM(3,3)
-        DIMENSION CO(4,3),ETA(3)
+        DIMENSION CO(4,3)!,ETA(3)
         DIMENSION DELTA(3,3)
         DIMENSION ZFI(NX),ZDFI(NX),ZDSOL(3*NPIX),ZSSOL(9*NPIX)
         INTEGER CONE(NE,4),KODE(NX)
         DIMENSION ZD(3,3,3),ZS(3,3,3)
+        DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
 *
@@ -46,7 +48,7 @@
 
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ETA,A,B,C,R,ZHELEM,ZGELEM)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
 !$OMP& REDUCTION(+:ZDSOL)
         DO J=1,N
 *
@@ -54,17 +56,17 @@
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
-            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
-     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
-            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
-     $          (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
-            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
-     $          (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-            R=DSQRT(A*A+B*B+C*C)
-      
-            ETA(1)=A/R
-            ETA(2)=B/R
-            ETA(3)=C/R
+C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
+C     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
+C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
+C     $          (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
+C            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
+C     $          (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
+C            R=DSQRT(A*A+B*B+C*C)
+C      
+C            ETA(1)=A/R
+C            ETA(2)=B/R
+C            ETA(3)=C/R
             CO(1,1)=CX(N1)
             CO(1,2)=CY(N1)
             CO(1,3)=CZ(N1)
@@ -81,8 +83,8 @@
 *
             DO K=1,L
 *
-                CALL NONSINGD(ZHELEM,ZGELEM,CO,CXI(K),CYI(K),CZI(K),ETA,
-     $              ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
+                CALL NONSINGD(ZHELEM,ZGELEM,CO,CXI(K),CYI(K),CZI(K),
+     $              ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
 *
                 KK=3*(K-1)
                 ZDSOL(KK+1:KK+3)=ZDSOL(KK+1:KK+3) +
@@ -109,7 +111,7 @@ C                ENDDO
         ZSSOL(1:L*9) = 0.D0
        
 !$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ETA,A,B,C,R,ZD,ZS)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
 !$OMP& REDUCTION(+:ZDSOL)
         DO K=1,L
             DO J=1,N
@@ -118,17 +120,17 @@ C                ENDDO
                 N2=CONE(J,2)
                 N3=CONE(J,3)
                 N4=CONE(J,4)
-                A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
-     $              (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
-                B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
-     $              (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
-                C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
-     $              (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-                
-                R=DSQRT(A*A+B*B+C*C)
-                ETA(1)=A/R
-                ETA(2)=B/R
-                ETA(3)=C/R
+C                A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
+C     $              (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
+C                B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
+C     $              (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
+C                C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
+C     $              (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
+C                
+C                R=DSQRT(A*A+B*B+C*C)
+C                ETA(1)=A/R
+C                ETA(2)=B/R
+C                ETA(3)=C/R
                 CO(1,1)=CX(N1)
                 CO(1,2)=CY(N1)
                 CO(1,3)=CZ(N1)
@@ -142,8 +144,8 @@ C                ENDDO
                 CO(4,2)=CY(N4)
                 CO(4,3)=CZ(N4)
 *
-                CALL SIGMAEC(CO,CXI(K),CYI(K),CZI(K),ETA,DELTA,PI,FR,
-     $              ZGE,RHO,ZCS,ZCP,NPG,ZD,ZS)
+                CALL SIGMAEC(CO,CXI(K),CYI(K),CZI(K),ETAS(1:3,J),DELTA,
+     $              PI,FR,ZGE,RHO,ZCS,ZCP,NPG,ZD,ZS)
 *
                 ZSSOL(9*K-8)=ZSSOL(9*K-8)+ZDFI(3*J-2)*ZD(1,1,1)+
      $                                    ZDFI(3*J-1)*ZD(2,1,1)+

@@ -7,7 +7,7 @@
 ************************************************************************
 *
       SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
-     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4)
+     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS)
 *
         IMPLICIT REAL*8 (A-H,O-Y)
         IMPLICIT COMPLEX*16 (Z)
@@ -17,8 +17,9 @@
         DIMENSION HEST(NX,NX),GEST(NX,NX)
         DIMENSION HELEM(3,3),GELEM(3,3)
         DIMENSION DELTA(3,3)
-        DIMENSION CO(4,3),ETA(3)
+        DIMENSION CO(4,3)!, ETA(3)
         INTEGER CONE(NE,4)
+        DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
 *
         PI=4.D0*DATAN(1.D0)
 *
@@ -50,7 +51,7 @@
 *
    
 !$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ETA,A,B,C,R,HELEM,GELEM)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,HELEM,GELEM)
         DO J=1,N
 *
 * CÁLCULO DAS COMPONENTES DO VETOR NORMAL
@@ -60,16 +61,17 @@
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
-            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
-     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
-            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) -
-     $          (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
-            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
-     $          (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-            R=DSQRT(A*A+B*B+C*C)
-            ETA(1)=A/R
-            ETA(2)=B/R
-            ETA(3)=C/R
+C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
+C     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
+C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) -
+C     $          (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
+C            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
+C     $          (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
+C            R=DSQRT(A*A+B*B+C*C)
+C            ETAS(1)=A/R
+C            ETAS(2)=B/R
+C            ETAS(3)=C/R
+            
 *
 * ARMAZENA AS COORDENADAS DOS PONTOS EXTREMOS DO ELEMENTO NO VETOR CO
 *
@@ -91,14 +93,16 @@
 *	 
                 IF (I == J) THEN
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE G SINGULAR
-                    CALL SINGGE(HELEM,GELEM,CXM(I),CYM(I),CZM(I),ETA,CX,
+                    CALL SINGGE(HELEM,GELEM,CXM(I),CYM(I),CZM(I),
+     $                      ETAS(1:3,J),CX,
      $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,
      $                  C2,C3,C4,DELTA)
                 ELSE
 
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
                     CALL NONSINGE(HELEM,GELEM,CO,CXM(I),CYM(I),CZM(I),
-     $                  ETA,N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA)
+     $                  ETAS(1:3,J),N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,
+     $                  DELTA)
                 ENDIF
 
                 II=3*(I-1) + 1
