@@ -460,3 +460,21 @@ Sorocaba, dia 06 de janeiro de 2016
 	2 proc: 2m15s
 	4 proc: 1m10s
 	8 proc: 1m3s
+
+Sorocaba, dia 10 de janeiro de 2017
+	Eliminei os cálculos redundantes em Ghmatecd, Ghmatece e Interrec.
+	Tive problemas estranhos devido ao fato de Fortran aceitar chamas de
+	subrotinas sem parâmetros.
+
+
+	Estou pensando em uma maneira de executar Ghmatecd na GPU. Iniciei
+	uma interface Fortran>C>CUDA, mas já encontrei dificuldades:
+		1) O cuda trata números complexos de uma maneira especial que
+		preciso verificar para não misturar os dados.
+		2) Fortran sempre passa apontadores em suas subrotinas, isto
+		quer dizer que eu preciso pensar em um jeito de declarar o tamanho
+		das matrizes ao passar para o C. Talvez eu consiga usar structs.
+		3) O compilador NVCC é um compilador C++, que pode não suportar
+		os complexos do C99.
+
+		

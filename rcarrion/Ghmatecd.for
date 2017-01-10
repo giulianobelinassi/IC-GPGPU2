@@ -92,6 +92,9 @@ C           Use a notação de particionamento para o compilador decidir como perc
 * CÁLCULO DAS COMPONENTES DO VETOR NORMAL
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
+
+        PRINT *, N, NBE
+
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ZHELEM,ZGELEM)
         DO J=1,N
