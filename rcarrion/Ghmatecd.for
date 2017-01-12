@@ -2,7 +2,7 @@
 *                                                                      *
 *         ESTA SUBROTINA CALCULA AS MATRIZES [H] E [G];                *
 *                                                                      *
-*        AINDA MONTA O SISTEMA DE EQUA«’ES [A] {x} = {f}               *
+*        AINDA MONTA O SISTEMA DE EQUA√á√ïES [A] {x} = {f}               *
 *                                                                      *
 ************************************************************************
 
@@ -32,15 +32,18 @@
         DOUBLE PRECISION, INTENT(IN) :: C1,C2,C3,C4
         DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
 
-        DOUBLE COMPLEX ZHELEM(3,3),ZGELEM(3,3),ZHP(NX,NX),ZGP(NX,NX)
-        DOUBLE COMPLEX ZCH,ZHEST(NX,NX),ZGEST(NX,NX)
+        DOUBLE COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
         DOUBLE PRECISION CO(4,3)!, ETA(3), A,B,C,R
         INTEGER N1,N2,N3,N4,NN,I,J,II,JJ
+
+#ifdef TEST_GHMATECD_CUDA
+        DOUBLE COMPLEX ZHP(NX,NX), ZGP(NX,NX)
+#endif
 
 C        DOUBLE PRECISION t0, t1
 C        t0 = OMP_GET_WTIME()
 *
-* TRANSFORMA«√O DAS CONDI«’ES DE CONTORNO EM N⁄MEROS COMPLEXOS
+* TRANSFORMA√á√ÉO DAS CONDI√á√ïES DE CONTORNO EM N√öMEROS COMPLEXOS
 *
         DO I=1,NBE
             ZDFI(3*I-2)=DCMPLX(DFI(3*I-2),0.D0)
@@ -48,55 +51,48 @@ C        t0 = OMP_GET_WTIME()
             ZDFI(3*I)=DCMPLX(DFI(3*I),0.D0)
         ENDDO
 *
-* TRANSFORMA«√O DAS MATRIZES [HEST] E [GEST] EM N⁄MEROS COMPLEXOS
+* TRANSFORMA√á√ÉO DAS MATRIZES [HEST] E [GEST] EM N√öMEROS COMPLEXOS
 *
 
-        DO J=1,N
-            DO I=1,N
-               ZHEST((3*I-2),(3*J-2))=DCMPLX(HEST((3*I-2),(3*J-2)),0.D0)
-               ZHEST((3*I-2),(3*J-1))=DCMPLX(HEST((3*I-2),(3*J-1)),0.D0)
-               ZHEST((3*I-2),(3*J))  =DCMPLX(HEST((3*I-2),(3*J)),0.D0)
-               ZHEST((3*I-1),(3*J-2))=DCMPLX(HEST((3*I-1),(3*J-2)),0.D0)
-               ZHEST((3*I-1),(3*J-1))=DCMPLX(HEST((3*I-1),(3*J-1)),0.D0)
-               ZHEST((3*I-1),(3*J))  =DCMPLX(HEST((3*I-1),(3*J)),0.D0)
-               ZHEST((3*I),(3*J-2))  =DCMPLX(HEST((3*I),(3*J-2)),0.D0)
-               ZHEST((3*I),(3*J-1))  =DCMPLX(HEST((3*I),(3*J-1)),0.D0)
-               ZHEST((3*I),(3*J))    =DCMPLX(HEST((3*I),(3*J)),0.D0)
-
-               ZGEST((3*I-2),(3*J-2))=DCMPLX(GEST((3*I-2),(3*J-2)),0.D0)
-               ZGEST((3*I-2),(3*J-1))=DCMPLX(GEST((3*I-2),(3*J-1)),0.D0)
-               ZGEST((3*I-2),(3*J))  =DCMPLX(GEST((3*I-2),(3*J)),0.D0)
-               ZGEST((3*I-1),(3*J-2))=DCMPLX(GEST((3*I-1),(3*J-2)),0.D0)
-               ZGEST((3*I-1),(3*J-1))=DCMPLX(GEST((3*I-1),(3*J-1)),0.D0)
-               ZGEST((3*I-1),(3*J))  =DCMPLX(GEST((3*I-1),(3*J)),0.D0)
-               ZGEST((3*I),(3*J-2))  =DCMPLX(GEST((3*I),(3*J-2)),0.D0)
-               ZGEST((3*I),(3*J-1))  =DCMPLX(GEST((3*I),(3*J-1)),0.D0)
-               ZGEST((3*I),(3*J))    =DCMPLX(GEST((3*I),(3*J)),0.D0)
-            ENDDO
-        ENDDO
+!        DO J=1,N
+!            DO I=1,N
+!               ZHEST((3*I-2),(3*J-2))=DCMPLX(HEST((3*I-2),(3*J-2)),0.D0)
+!               ZHEST((3*I-2),(3*J-1))=DCMPLX(HEST((3*I-2),(3*J-1)),0.D0)
+!               ZHEST((3*I-2),(3*J))  =DCMPLX(HEST((3*I-2),(3*J)),0.D0)
+!               ZHEST((3*I-1),(3*J-2))=DCMPLX(HEST((3*I-1),(3*J-2)),0.D0)
+!               ZHEST((3*I-1),(3*J-1))=DCMPLX(HEST((3*I-1),(3*J-1)),0.D0)
+!               ZHEST((3*I-1),(3*J))  =DCMPLX(HEST((3*I-1),(3*J)),0.D0)
+!               ZHEST((3*I),(3*J-2))  =DCMPLX(HEST((3*I),(3*J-2)),0.D0)
+!               ZHEST((3*I),(3*J-1))  =DCMPLX(HEST((3*I),(3*J-1)),0.D0)
+!               ZHEST((3*I),(3*J))    =DCMPLX(HEST((3*I),(3*J)),0.D0)
+!
+!               ZGEST((3*I-2),(3*J-2))=DCMPLX(GEST((3*I-2),(3*J-2)),0.D0)
+!               ZGEST((3*I-2),(3*J-1))=DCMPLX(GEST((3*I-2),(3*J-1)),0.D0)
+!               ZGEST((3*I-2),(3*J))  =DCMPLX(GEST((3*I-2),(3*J)),0.D0)
+!               ZGEST((3*I-1),(3*J-2))=DCMPLX(GEST((3*I-1),(3*J-2)),0.D0)
+!               ZGEST((3*I-1),(3*J-1))=DCMPLX(GEST((3*I-1),(3*J-1)),0.D0)
+!               ZGEST((3*I-1),(3*J))  =DCMPLX(GEST((3*I-1),(3*J)),0.D0)
+!               ZGEST((3*I),(3*J-2))  =DCMPLX(GEST((3*I),(3*J-2)),0.D0)
+!               ZGEST((3*I),(3*J-1))  =DCMPLX(GEST((3*I),(3*J-1)),0.D0)
+!               ZGEST((3*I),(3*J))    =DCMPLX(GEST((3*I),(3*J)),0.D0)
+!            ENDDO
+!        ENDDO
 *
 * ZERANDO AS MATRIZES H E G
 *
-        DO 50 I=1,N
-            II=3*(I-1) + 1 
-C           Use a notaÁ„o de particionamento para o compilador decidir como percorrer a matriz.
-            ZGP(II:II+2, II:II+2) = (0.D0,0.D0)
-            ZHP(II:II+2, II:II+2) = (0.D0,0.D0)
-            ZG (II:II+2, II:II+2) = (0.D0,0.D0)
-            ZH (II:II+2, II:II+2) = (0.D0,0.D0)
- 50     CONTINUE
+
+        ZG(1:3*NBE, 1:3*NBE) = (0.D0, 0.D0)
+        ZH(1:3*NBE, 1:3*NBE) = (0.D0, 0.D0)
 *
-* C¡LCULO DOS COEFICIENTES DAS MATRIZES H E G
+* C√ÅLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 *
-* C¡LCULO DAS COMPONENTES DO VETOR NORMAL
+* C√ÅLCULO DAS COMPONENTES DO VETOR NORMAL
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
 
-        PRINT *, N, NBE
-
 !$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,ZHELEM,ZGELEM)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
         DO J=1,N
             N1=CONE(J,1)
             N2=CONE(J,2)
@@ -134,37 +130,80 @@ C            ETA(3)=C/R
 
                 IF (I == J) THEN
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G SINGULAR
-*                   ATRAV…S DA DIFEREN«A DIN¬MICO - EST¡TICO
+*                   ATRAV√âS DA DIFEREN√áA DIN√ÇMICO - EST√ÅTICO
 *
-                    CALL SING_DE (ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
+                    CALL SING_DE (ZH(II:II+2, JJ:JJ+2),
+     $                  ZG(II:II+2, JJ:JJ+2),
+     $                  CO,CXM(I),CYM(I),CZM(I),
      $                  ETAS(1:3,J),
      $                  ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
 
-                    ZGP(II:II+2, JJ:JJ+2)=ZGELEM+ZGEST(II:II+2, JJ:JJ+2)
-                    ZHP(II:II+2, JJ:JJ+2)=ZHELEM+ZHEST(II:II+2, JJ:JJ+2)
-                ELSE
-*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G N√O SINGULAR
-*
-                    CALL NONSINGD(ZHELEM,ZGELEM,CO,CXM(I),CYM(I),CZM(I),
-     $                  ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
 
-                    ZGP(II:II+2, JJ:JJ+2) = ZGELEM
-                    ZHP(II:II+2, JJ:JJ+2) = ZHELEM
+                    ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
+     $                  GEST(II:II+2, JJ:JJ+2)
+                    ZH(II:II+2, JJ:JJ+2) = ZH(II:II+2, JJ:JJ+2) + 
+     $                  HEST(II:II+2, JJ:JJ+2)
+
+                ELSE
+*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G N√ÉO SINGULAR
+*
+                    CALL NONSINGD(ZH(II:II+2, JJ:JJ+2),
+     $                  ZG(II:II+2, JJ:JJ+2),
+     $                  CO,CXM(I),CYM(I),CZM(I),
+     $                  ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
                 ENDIF
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
 *
-* TRANSFORMA«√O DAS MATRIZES ZHP E ZGP PROVIS”RIAS
+* TRANSFORMA√á√ÉO DAS MATRIZES ZHP E ZGP PROVIS√ìRIAS
 * NAS MATRIZES ZH E ZG FINAIS
 *
         NN=3*NBE
-        ZH(1:NN, 1:NN) = ZHP(1:NN, 1:NN)
-        ZG(1:NN, 1:NN) = ZGP(1:NN, 1:NN)
+
+! MATRIZES PROVIS√ìRIAS ELIMINADAS. 
+!        ZH(1:NN, 1:NN) = ZHP(1:NN, 1:NN)
+!        ZG(1:NN, 1:NN) = ZGP(1:NN, 1:NN)
+
+#ifdef TEST_GHMATECD_CUDA
+        ZHP = (0.D0,0.D0)
+        ZGP = (0.D0,0.D0)
+
+        CALL cuda_ghmatecd(NE,
+     $                      NBE,
+     $                      NX,
+     $                      NPG,
+     $                      NCOX,
+     $                      N,
+     $                      CONE,
+     $                      CX,
+     $                      CY,
+     $                      CZ,
+     $                      CXM,
+     $                      CYM,
+     $                      CZM,
+     $                      ETAS,
+     $                      ZGE,
+     $                      ZCS,
+     $                      ZCP,
+     $                      C1,
+     $                      C2,
+     $                      C3,
+     $                      C4,
+     $                      DELTA,
+     $                      PI,
+     $                      FR,
+     $                      HEST,
+     $                      GEST,
+     $                      ZGP,
+     $                      ZHP
+     $                      )
+        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
+#endif
 *
-* REORDENA AS COLUNAS DO SISTEMA DE EQUA«’ES DE ACORDO COM AS
+* REORDENA AS COLUNAS DO SISTEMA DE EQUA√á√ïES DE ACORDO COM AS
 *
-* CONDI«’ES DE CONTORNO E FORMA A MATRIZ A QUE … ARMAZENADA EM G
+* CONDI√á√ïES DE CONTORNO E FORMA A MATRIZ A QUE √â ARMAZENADA EM G
 *
         DO  J=1,NN
             IF (KODE(J) == 0) THEN
@@ -177,7 +216,7 @@ C            ETA(3)=C/R
         ENDDO
 
 *
-* FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE … ARMAZENADO EM ZFI
+* FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE √â ARMAZENADO EM ZFI
 *
         
         ZFI(1:NN) = MATMUL(ZG(1:NN, 1:NN), ZDFI(1:NN))
@@ -185,3 +224,28 @@ C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
+
+      SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
+        DOUBLE COMPLEX, INTENT(IN), DIMENSION(NX,NX) :: ZH,ZHP,ZG,ZGP
+        INTEGER, INTENT(IN) :: NX, NN
+
+        INTEGER :: i, j
+        LOGICAL :: ghmatecd_asserted = .TRUE.
+
+        DO j = 1, NN
+            DO i = 1, NN
+                IF (ZHP(i,j) /= ZH(i,j)) THEN
+                    ghmatecd_asserted = .FALSE.
+                ENDIF
+            ENDDO
+        ENDDO
+       WRITE(0,"(A)") "As matrizes ZH e ZG em Ghmatecd_cu sao iguais as"
+        WRITE(0,"(A)") "calculadas em Ghmatecd?"
+        IF (ghmatecd_asserted .EQV. .TRUE.) THEN
+            WRITE(0,"(A)")"[OK]"
+        ELSE
+            WRITE(0,"(A)"),"[FALHOU]"
+        ENDIF
+        WRITE(0,"(A)"), ""
+
+      END SUBROUTINE ASSERT_GHMATECD_ZH_ZG

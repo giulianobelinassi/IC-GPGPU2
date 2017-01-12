@@ -477,4 +477,25 @@ Sorocaba, dia 10 de janeiro de 2017
 		3) O compilador NVCC é um compilador C++, que pode não suportar
 		os complexos do C99.
 
-		
+Sorocaba, dia 12 de janeiro de 2017
+	Consegui encontrar um jeito de chamar um código compilado pelo CUDA C++
+	em Fortran. A dificuldade disto superou as minhas estimativas pelo fato
+	de em C++ não temos como passar uma matriz juntamente com o seu tamanho
+	para uma função de forma explícita, algo que pode ser feito no C99.
+	Sendo assim, precisei encontrar uma maneira de fazer o compilador
+	entender o tamanho da matriz ou trabalhar com uma matriz projetada em
+	um vetor, o	que daria mais trabalho.
+	
+	Devido a alguma novidade no gcc6, não consegui linkar os códigos
+	compilador no NVCC. A solução, por enquanto, foi usar o gcc5.
+
+	Também consegui fazer o código usar a metade da memória que antes
+	este utilizava apenas removendo cópias de matrizes que eram
+	desnecessáriamente feitas em Ghmatecd.for, assim o uso de memória
+	caiu de 2Gb para 1Gb.
+
+	O próximo passo portanto será tentar trazer mais tarefas para serem
+	executadas em CUDA C++, e assim paralelizar usando a placa de vídeo.
+
+
+
