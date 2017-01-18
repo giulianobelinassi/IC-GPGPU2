@@ -231,16 +231,38 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
 
         INTEGER :: i, j
         LOGICAL :: ghmatecd_asserted = .TRUE.
+        DOUBLE PRECISION :: sum_norms = 0, eps = 1E-10
+
 
         DO j = 1, NN
             DO i = 1, NN
                 IF (ZHP(i,j) /= ZH(i,j)) THEN
-                    ghmatecd_asserted = .FALSE.
+                    sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
                 ENDIF
             ENDDO
         ENDDO
+
+        IF (sum_norms > eps) THEN
+            ghmatecd_asserted = .FALSE.
+            PRINT*, "Erro em ZH de ", sum_norms
+        ENDIF
+
+        sum_norms = 0
+        DO j = 1, NN
+            DO i = 1, NN
+                IF (ZGP(i,j) /= ZG(i,j)) THEN
+                    sum_norms = sum_norms + ABS(ZGP(i,j)-ZG(i,j))
+                ENDIF
+            ENDDO
+        ENDDO
+
+        IF (sum_norms > eps) THEN
+            ghmatecd_asserted = .FALSE.
+            PRINT*, "Erro em ZG de ", sum_norms
+        ENDIF
+
        WRITE(0,"(A)") "As matrizes ZH e ZG em Ghmatecd_cu sao iguais as"
-        WRITE(0,"(A)") "calculadas em Ghmatecd?"
+        WRITE(0,"(A)") "calculadas em Ghmatecd com um erro de 1E-10?"
         IF (ghmatecd_asserted .EQV. .TRUE.) THEN
             WRITE(0,"(A)")"[OK]"
         ELSE

@@ -497,5 +497,18 @@ Sorocaba, dia 12 de janeiro de 2017
 	O próximo passo portanto será tentar trazer mais tarefas para serem
 	executadas em CUDA C++, e assim paralelizar usando a placa de vídeo.
 
+Sorocaba, dia 18 de janeiro de 2016
+	Consegui converter a subrotina Nonsingd para Cuda C++. Enfrentei
+	desde o dia 16 problemas misteriosos que tornavam os valores
+	calculados pela versão em CUDA C++ incompatíveis com as calculadas
+	em fortran. Após muito debugging, sem encontrar o problema, comecei
+	a fazer chamadas entre as versões em Fortran e C++ tentando identi-
+	ficar o problema. após comentar a função Solfundif, o problema
+	desapareceu. Aparentemente essa função faz alguma alteração obscura
+	que afeta o resultado de Sing_de. Fazer uma cópia dos parâmetros
+	cxp, cyp e czp aparentemente resolveu o problema
 
+	A soma de todos os erros entre as diferentes versões está na casa
+	de 1E-10.
 
+	Tudo isto foi bem frustrante. :-(
