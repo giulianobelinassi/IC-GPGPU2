@@ -233,11 +233,13 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         LOGICAL :: ghmatecd_asserted = .TRUE.
         DOUBLE PRECISION :: sum_norms = 0, eps = 1E-10
 
+        sum_norms = 0.0
 
         DO j = 1, NN
             DO i = 1, NN
                 IF (ZHP(i,j) /= ZH(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
+                    PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
                 ENDIF
             ENDDO
         ENDDO
@@ -247,11 +249,12 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             PRINT*, "Erro em ZH de ", sum_norms
         ENDIF
 
-        sum_norms = 0
+        sum_norms = 0.0
         DO j = 1, NN
             DO i = 1, NN
                 IF (ZGP(i,j) /= ZG(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZGP(i,j)-ZG(i,j))
+                    PRINT*, i, j, ABS(ZGP(i,j)-ZG(i,j))
                 ENDIF
             ENDDO
         ENDDO
@@ -266,8 +269,8 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         IF (ghmatecd_asserted .EQV. .TRUE.) THEN
             WRITE(0,"(A)")"[OK]"
         ELSE
-            WRITE(0,"(A)"),"[FALHOU]"
+            WRITE(0,"(A)")"[FALHOU]"
         ENDIF
-        WRITE(0,"(A)"), ""
+        WRITE(0,"(A)") ""
 
       END SUBROUTINE ASSERT_GHMATECD_ZH_ZG

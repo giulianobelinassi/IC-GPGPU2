@@ -1,7 +1,7 @@
 ************************************************************************
 *                                                                      *
-*  SUBROTINA QUE CALCULA AS SOLUÇÕES FUNDAMENTAIS DINÂMICAS 3D		 *
-*																	 *
+*  SUBROTINA QUE CALCULA AS SOLUÇÕES FUNDAMENTAIS DINÂMICAS 3D         *
+*                                                                      *
 ************************************************************************
 *
       SUBROUTINE SOLFUND(ZU,ZT,CXP,CYP,CZP,CXG,CYG,CZG,RN,ZGE,ZCS,ZCP,

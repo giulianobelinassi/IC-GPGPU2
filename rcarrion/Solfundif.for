@@ -52,13 +52,19 @@
         ZBB=4.D0*ZCAPPA/R-2.D0*ZCAPPADR
         ZCC=(ZC1-2.D0)*(ZAA+5.D-1*ZBB-3.D0*ZCAPPA/R)-2.D0*ZCAPPA/R      
 *
+!        PRINT*, "RDN = ", RDN
         DO 40 I=1,3
             DO 40 J=1,3
                 ZUDIF(I,J)=ZC0*(ZFHI*DELTA(I,J)-ZCAPPA*RD(J)*RD(I)) -
      $              DCMPLX((C1/R)*(C2*DELTA(I,J)+RD(I)*RD(J)),0.D0)
+!        ZTDIF(I,J)=(1.D0/(4.D0*PI))*((ZAA*(DRN*DELTA(I,J)+RD(J)*RN(I)))+
+!     $              RD(I)*RD(J)*DRN*ZBB+RD(I)*RN(J)*ZCC)
+!     $        -DCMPLX((C3/(R*R))*(RDN*(C4*DELTA(I,J)+3.D0*RD(I)*RD(J)) +
+!     $              C4*(RD(J)*RN(I)-RD(I)*RN(J))),0.D0)
+
         ZTDIF(I,J)=(1.D0/(4.D0*PI))*((ZAA*(DRN*DELTA(I,J)+RD(J)*RN(I)))+
      $              RD(I)*RD(J)*DRN*ZBB+RD(I)*RN(J)*ZCC)
-     $        -DCMPLX((C3/(R*R))*(RDN*(C4*DELTA(I,J)+3.D0*RD(I)*RD(J)) +
+     $        -DCMPLX((C3/(R*R))*(DRN*(C4*DELTA(I,J)+3.D0*RD(I)*RD(J)) +
      $              C4*(RD(J)*RN(I)-RD(I)*RN(J))),0.D0)
  40     CONTINUE
 *
