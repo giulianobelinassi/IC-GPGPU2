@@ -33,8 +33,9 @@
         DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
 
         DOUBLE COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
-        DOUBLE PRECISION CO(4,3)!, ETA(3), A,B,C,R
-        INTEGER N1,N2,N3,N4,NN,I,J,II,JJ
+        DOUBLE PRECISION :: CO(4,3)!, ETA(3), A,B,C,R
+        DOUBLE PRECISION :: GI(NPG), OME(NPG)
+        INTEGER N1,N2,N3,N4,NN,I,J,II,JJ,RET
 
 #ifdef TEST_GHMATECD_CUDA
         DOUBLE COMPLEX ZHP(NX,NX), ZGP(NX,NX)
@@ -91,6 +92,8 @@ C        t0 = OMP_GET_WTIME()
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
 
+        CALL GAULEG(-1.D0, 1.D0, GI, OME, NPG)
+
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
         DO J=1,N
@@ -136,7 +139,7 @@ C            ETA(3)=C/R
      $                  ZG(II:II+2, JJ:JJ+2),
      $                  CO,CXM(I),CYM(I),CZM(I),
      $                  ETAS(1:3,J),
-     $                  ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,NPG)
+     $                  ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,GI,OME,NPG)
 
 
                     ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
@@ -147,10 +150,11 @@ C            ETA(3)=C/R
                 ELSE
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
 *
-                    CALL NONSINGD(ZH(II:II+2, JJ:JJ+2),
+                    CALL NONSINGD (ZH(II:II+2, JJ:JJ+2),
      $                  ZG(II:II+2, JJ:JJ+2),
      $                  CO,CXM(I),CYM(I),CZM(I),
-     $                  ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
+     $                  ETAS(1:3,J),
+     $                  ZGE,ZCS,ZCP,DELTA,PI,FR,GI,OME,NPG)
                 ENDIF
             ENDDO
         ENDDO
@@ -191,12 +195,14 @@ C            ETA(3)=C/R
      $                      C3,
      $                      C4,
      $                      DELTA,
-     $                      PI,
      $                      FR,
      $                      HEST,
      $                      GEST,
      $                      ZGP,
-     $                      ZHP
+     $                      ZHP,
+     $                      OME,
+     $                      GI,
+     $                      RET
      $                      )
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
 #endif
@@ -239,7 +245,7 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             DO i = 1, NN
                 IF (ZHP(i,j) /= ZH(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
-                    PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
+!                    PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
                 ENDIF
             ENDDO
         ENDDO
@@ -254,7 +260,7 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             DO i = 1, NN
                 IF (ZGP(i,j) /= ZG(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZGP(i,j)-ZG(i,j))
-                    PRINT*, i, j, ABS(ZGP(i,j)-ZG(i,j))
+!                    PRINT*, i, j, ABS(ZGP(i,j)-ZG(i,j))
                 ENDIF
             ENDDO
         ENDDO

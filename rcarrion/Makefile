@@ -4,7 +4,7 @@ NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -funroll-loops -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
-NVFLAGS = $(EXTRA) -g -O4 -use_fast_math
+NVFLAGS = $(EXTRA) -g -G -O4 -use_fast_math
 FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++
 RM      = rm -f
 

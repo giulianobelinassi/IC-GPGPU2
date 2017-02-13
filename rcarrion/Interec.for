@@ -22,6 +22,10 @@
         INTEGER CONE(NE,4),KODE(NX)
         DIMENSION ZD(3,3,3),ZS(3,3,3)
         DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
+        
+        DOUBLE PRECISION :: GI(NPG), OME(NPG)
+
+        CALL GAULEG(-1.D0, 1.D0, GI, OME, NPG)
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
 *
@@ -84,7 +88,7 @@ C            ETA(3)=C/R
             DO K=1,L
 *
                 CALL NONSINGD(ZHELEM,ZGELEM,CO,CXI(K),CYI(K),CZI(K),
-     $              ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,NPG)
+     $              ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,GI,OME,NPG)
 *
                 KK=3*(K-1)
                 ZDSOL(KK+1:KK+3)=ZDSOL(KK+1:KK+3) +

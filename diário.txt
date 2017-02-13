@@ -497,7 +497,7 @@ Sorocaba, dia 12 de janeiro de 2017
 	O próximo passo portanto será tentar trazer mais tarefas para serem
 	executadas em CUDA C++, e assim paralelizar usando a placa de vídeo.
 
-Sorocaba, dia 18 de janeiro de 2016
+Sorocaba, dia 18 de janeiro de 2017
 	Consegui converter a subrotina Nonsingd para Cuda C++. Enfrentei
 	desde o dia 16 problemas misteriosos que tornavam os valores
 	calculados pela versão em CUDA C++ incompatíveis com as calculadas
@@ -512,3 +512,15 @@ Sorocaba, dia 18 de janeiro de 2016
 	de 1E-10.
 
 	Tudo isto foi bem frustrante. :-(
+
+Sorocaba, dia 13 de fevereiro de 2017
+	Nossa, faz tempo que não atualizo isto!
+	Bem, tive diversos problemas rodeando o modo em que o CUDA lida
+	com números complexos. A maneira que estou paralelizando Ghmatecd
+	é da mesma maneira feita na versão com CPU, entretanto isto está
+	se mostrando uma péssima ideia até agora, pois o trabalho em cada
+	thread da GPU acaba aumentando conforme o tamanho do problema.
+	Por enquanto os resultados ainda não estão corretos, mas isto já
+	dá algum feedback.
+
+
