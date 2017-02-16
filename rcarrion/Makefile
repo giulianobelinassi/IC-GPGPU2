@@ -1,7 +1,7 @@
 CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp -funroll-loops -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast
+FCFLAGS = $(EXTRA) -g -cpp -funroll-loops -flto -Wall -Wno-unused-dummy-argument #-march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
 NVFLAGS = $(EXTRA) -g -G -O4 -use_fast_math
