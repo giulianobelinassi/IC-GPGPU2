@@ -1,24 +1,11 @@
 #include <cstdio>
 #include <cmath>
-#include "cuda_complex.hpp"
+#include <thrust/complex.h>
 
 #define restrict __restrict__
 
 
 extern "C"{
-
-__device__ double myAtomicAdd(double* address, double val)
-{
-	unsigned long long int* address_as_ull =
-		(unsigned long long int*)address;
-		 unsigned long long int old = *address_as_ull, assumed;
-		 do {
-		     assumed = old;
-			 old = atomicCAS(address_as_ull, assumed,
-			 __double_as_longlong(val + __longlong_as_double(assumed)));
-	     } while (assumed != old);
-	    return __longlong_as_double(old);
-}
 
 void cuda_assert(cudaError_t error)
 {
@@ -30,16 +17,16 @@ void cuda_assert(cudaError_t error)
 }
 
 
-void sing_de_(complex<double> zhelem[3][3],
-              complex<double> zgelem[3][3],
+void sing_de_(thrust::complex<double> zhelem[3][3],
+              thrust::complex<double> zgelem[3][3],
               double co[][4],
               double* cxm,
               double* cym,
               double* czm,
               double eta[],
-              complex<double>* zge,
-              complex<double>* zcs,
-              complex<double>* zcp,
+              thrust::complex<double>* zge,
+              thrust::complex<double>* zcs,
+              thrust::complex<double>* zcp,
               double* c1,
               double* c2,
               double* c3,
@@ -52,16 +39,16 @@ void sing_de_(complex<double> zhelem[3][3],
               int* npg
               );
 
-void nonsingd_(complex<double> zhelem[3][3],
-               complex<double> zgelem[3][3],
+void nonsingd_(thrust::complex<double> zhelem[3][3],
+               thrust::complex<double> zgelem[3][3],
                double co[][4],
                double* cxm,
                double* cym,
                double* czm,
                double eta[],
-               complex<double>* zge,
-               complex<double>* zcs,
-               complex<double>* zcp,
+               thrust::complex<double>* zge,
+               thrust::complex<double>* zcs,
+               thrust::complex<double>* zcp,
                double delta[][3],
                double* pi,
                double* fr,
@@ -70,21 +57,21 @@ void nonsingd_(complex<double> zhelem[3][3],
 
 
 __global__ void nonsingd_kernel(
-						   complex<float> zhelem[3][3],
-						   complex<float> zgelem[3][3],
-						   double co[3][4],
-						   double cxp,
-						   double cyp,
-						   double czp,
-						   double rn[3],
-						   complex<double> zge,
-						   complex<double> zcs,
-						   complex<double> zcp,
-						   double delta[3][3],
-						   double pi,
-						   double fr,
-						   double gi[],
-						   double ome[],
+						   thrust::complex<float> zhelem[3][3],
+						   thrust::complex<float> zgelem[3][3],
+						   float co[3][4],
+						   float cxp,
+						   float cyp,
+						   float czp,
+						   float rn[3],
+						   thrust::complex<float> zge,
+						   thrust::complex<float> zcs,
+						   thrust::complex<float> zcp,
+						   float delta[3][3],
+						   float pi,
+						   float fr,
+						   float gi[],
+						   float ome[],
 						   int npg
 						   )
 {
@@ -93,15 +80,15 @@ __global__ void nonsingd_kernel(
 	const int jg = blockIdx.x;
 
 
-	double p[4][2], xj[3][2], f[4];
-	double g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
-    double cxg, cyg, czg; //, cxp, cyp, czp;
-    double j1, j2, j3;
-    double r1, r2, r3, r, drn, rd[3];
-    complex<double> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
+	float p[4][2], xj[3][2], f[4];
+	float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
+    float cxg, cyg, czg; //, cxp, cyp, czp;
+    float j1, j2, j3;
+    float r1, r2, r3, r, drn, rd[3];
+    thrust::complex<float> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
                     zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
 
-	complex<float> zhi, zgi;
+	thrust::complex<float> zhi, zgi;
 
 	//const double pi  = 3.141592654;
 	
@@ -168,7 +155,9 @@ __global__ void nonsingd_kernel(
 	j2 = xj[0][1]*xj[2][0]-xj[0][0]*xj[2][1];
 	j3 = xj[0][0]*xj[1][1]-xj[0][1]*xj[1][0];
 
+	/*otimizar*/
 	det = sqrt(j1*j1 + j2*j2 + j3*j3);
+	/**/
 
 /*
 	if (det < 1e-5)
@@ -191,15 +180,18 @@ __global__ void nonsingd_kernel(
 	r1    = cxg - cxp;
 	r2    = cyg - cyp;
 	r3    = czg - czp;
+
+	/*otimizar*/
 	r     = sqrt(r1*r1 + r2*r2 + r3*r3);
 	drn   = (r1*rn[0] + r2*rn[1] + r3*rn[2])/r;
 	rd[0] = r1/r;
 	rd[1] = r2/r;
 	rd[2] = r3/r;
+	/**/
 
-	zwi = complex<double>(0, fr);
+	zwi = thrust::complex<float>(0, fr);
 	
-	zc0 = 1.0/(4*(pi)*(zge));
+	zc0 = 1.f/(4.f*(pi)*(zge));
 	zc1 = ((zcp)/(zcs))*((zcp)/(zcs));
 	zc2 = ((zcs)/(zcp))*((zcs)/(zcp));
 	zkp = -zwi/(zcp);
@@ -211,27 +203,28 @@ __global__ void nonsingd_kernel(
 	zp2 = zzp*zzp;
 	zs2 = zzs*zzs;
 
-	zfhi    = (1. + 1./zs2 - 1./zzs)*zezs/r - zc2*(1./zp2 - 1./zzp)*zezp/r;
-	zcappa  = (1. + 3./zs2 - 3./zzs)*zezs/r - zc2*(1. + 3./zp2 - 3./zzp)*zezp/r;
-	zfhidr  = (-2.+ zzs + 3./zzs - 3./zs2)*zezs/(r*r) - zc2*(-1. + 3./zzp - 3./zp2)*zezp/(r*r);
-	zcappadr= (zzs - 4. + 9./zzs - 9./zs2)*zezs/(r*r) - zc2*(zzp - 4. + 9./zzp - 9./zp2)*zezp/(r*r);
+	zfhi    = (1.f + 1.f/zs2 - 1.f/zzs)*zezs/r - zc2*(1.f/zp2 - 1.f/zzp)*zezp/r;
+	zcappa  = (1.f + 3.f/zs2 - 3.f/zzs)*zezs/r - zc2*(1.f + 3.f/zp2 - 3.f/zzp)*zezp/r;
+	zfhidr  = (-2.f+ zzs + 3.f/zzs - 3.f/zs2)*zezs/(r*r) - zc2*(-1.f + 3.f/zzp - 3.f/zp2)*zezp/(r*r);
+	zcappadr= (zzs - 4.f + 9.f/zzs - 9.f/zs2)*zezs/(r*r) - zc2*(zzp - 4.f + 9.f/zzp - 9.f/zp2)*zezp/(r*r);
 
 	zaa = zfhidr-zcappa/r;
-	zbb = 4.*zcappa/r - 2.*zcappadr;
-	zcc = (zc1-2.)*(zaa + 0.5*zbb-3.0*zcappa/r)-2.0*zcappa/r;
+	zbb = 4.f*zcappa/r - 2.f*zcappadr;
+	zcc = (zc1-2.f)*(zaa + 0.5f*zbb-3.0f*zcappa/r)-2.0f*zcappa/r;
 
 	p12 = p1*p2*det;
 
 	zgi = (zc0*(zfhi*delta[threadIdx.x][threadIdx.y] - zcappa*rd[threadIdx.x]*rd[threadIdx.y])*zzp)*p12;
-	zhi = (1.0/(4.0*pi))*((zaa*(drn*delta[threadIdx.x][threadIdx.y] + 
+	zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[threadIdx.x][threadIdx.y] + 
 						rd[threadIdx.x]*rn[threadIdx.y])) + rd[threadIdx.y]*rd[threadIdx.x]*drn*zbb + 
 				rd[threadIdx.y]*rn[threadIdx.x]*zcc)*p12;
+/*
+	atomicAdd((float*) &zgelem[threadIdx.x][threadIdx.y]                , zgi.real());
+	atomicAdd((float*) &zgelem[threadIdx.x][threadIdx.y] + sizeof(float), zgi.imag());
 
-	atomicAdd((float*) &zgelem[threadIdx.x][threadIdx.y]                , real(zgi));
-	atomicAdd((float*) &zgelem[threadIdx.x][threadIdx.y] + sizeof(float), imag(zgi));
-
-	atomicAdd((float*) &zhelem[threadIdx.x][threadIdx.x]                , real(zhi));
-	atomicAdd((float*) &zhelem[threadIdx.x][threadIdx.x] + sizeof(float), imag(zhi));
+	atomicAdd((float*) &zhelem[threadIdx.x][threadIdx.x]                , zhi.real());
+	atomicAdd((float*) &zhelem[threadIdx.x][threadIdx.x] + sizeof(float), zhi.imag());
+*/
 }
 
 
@@ -241,11 +234,11 @@ __global__ void ghmatecd_kernel(int ne,
 						   int npg,
 						   int ncox,
 						   int n,
-						   complex<double>* zh,
-						   complex<double>* zg,
-						   complex<double> zge,
-						   complex<double> zcs,
-						   complex<double> zcp,
+						   thrust::complex<double>* zh,
+						   thrust::complex<double>* zg,
+						   thrust::complex<double> zge,
+						   thrust::complex<double> zcs,
+						   thrust::complex<double> zcp,
 						   double* zhest_,
 						   double* zgest_,
 						   double cx[],
@@ -272,7 +265,7 @@ __global__ void ghmatecd_kernel(int ne,
     double j1, j2, j3;
 	double co[3][4];
     double r1, r2, r3, r, drn, rd[3];
-    complex<double> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
+    thrust::complex<double> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
                     zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
 
 	
@@ -384,7 +377,7 @@ __global__ void ghmatecd_kernel(int ne,
 			rd[1] = r2/r;
 			rd[2] = r3/r;
 
-			zwi = complex<double>(0, fr);
+			zwi = thrust::complex<double>(0, fr);
 			
 			zc0 = 1.0/(4*(pi)*(zge));
 			zc1 = ((zcp)/(zcs))*((zcp)/(zcs));
@@ -429,9 +422,9 @@ void cuda_ghmatecd_(int* ne,
                     double cym[],
                     double czm[],
                     double etas[][3],
-                    complex<double>* zge,
-                    complex<double>* zcs,
-                    complex<double>* zcp,
+                    thrust::complex<double>* zge,
+                    thrust::complex<double>* zcs,
+                    thrust::complex<double>* zcp,
                     double* c1,
                     double* c2,
                     double* c3,
@@ -440,8 +433,8 @@ void cuda_ghmatecd_(int* ne,
                     double* fr,
                     double* zhest_,
 					double* zgest_,
-					complex<double>* zgp_,
-                    complex<double>* zhp_,
+					thrust::complex<double>* zgp_,
+                    thrust::complex<double>* zhp_,
 					double ome[],
 					double* gi,
 					int* status
@@ -452,61 +445,90 @@ void cuda_ghmatecd_(int* ne,
 	cudaError_t error;
 
     double co[3][4];
+	float cof[3][4];
+	float etasf[*n][3];
+	float gif[*npg];
+	float omef[*npg];
+	float deltaf[3][3];
     int n1, n2, n3, n4;
     int i, j, ii, jj;
-    complex<double> zgelem[3][3];
-	complex<double> zhelem[3][3];
-	complex<float> zgelemf[3][3];
-	complex<float> zhelemf[3][3];
+    thrust::complex<double> zgelem[3][3];
+	thrust::complex<double> zhelem[3][3];
+	thrust::complex<float> zgelemf[3][3];
+	thrust::complex<float> zhelemf[3][3];
 
-	complex<float>* device_zhelem;
-	complex<float>* device_zgelem;
-	double* device_gi;
-	double* device_ome;
-	double* device_etas;
-	double* device_delta;
-	double* device_co;
+	thrust::complex<float>* device_zhelem;
+	thrust::complex<float>* device_zgelem;
+	float* device_gi;
+	float* device_ome;
+	float* device_etas;
+	float* device_delta;
+	float* device_co;
 
 
 	/*Cast os parâmetros de volta para o tipo original*/
 	int (*cone)[*ne]           = (int (*)[*ne]) cone_;
 	double (*zhest)[*nx]       = (double (*)[*nx]) zhest_;
 	double (*zgest)[*nx]       = (double (*)[*nx]) zgest_;
-	complex<double> (*zgp)[*nx] = (complex<double> (*)[*nx]) zgp_;
-	complex<double> (*zhp)[*nx] = (complex<double> (*)[*nx]) zhp_;
+	thrust::complex<double> (*zgp)[*nx] = (thrust::complex<double> (*)[*nx]) zgp_;
+	thrust::complex<double> (*zhp)[*nx] = (thrust::complex<double> (*)[*nx]) zhp_;
 
 	double pi  = 3.141592654;
 
-	error = cudaMalloc(&device_zhelem, 3*3*sizeof(complex<float>));
+	for (i = 0; i < *npg; ++i)
+	{
+		gif[i] = (float) gi[i];
+		omef[i] = (float) ome[i];
+	}
+
+	for (i = 0; i < *n; ++i)
+	{
+		for (j = 0; j < 3; ++j)
+			etasf[i][j] = (float) etas[i][j];
+	}
+
+	for (i = 0; i < 3; ++i)
+		for (j = 0; j < 3; ++j)
+			deltaf[i][j] = (float) delta[i][j];
+
+	
+	for (i = 0; i < 3; ++i)
+		for (j = 0; j < 4; ++j)
+			cof[i][j] = (float) co[i][j];
+	
+	
+	error = cudaMalloc(&device_zhelem, 3*3*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_zgelem, 3*3*sizeof(complex<float>));
+	error = cudaMalloc(&device_zgelem, 3*3*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_gi, (*npg)*sizeof(double));
+	error = cudaMalloc(&device_gi, (*npg)*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_ome, (*npg)*sizeof(double));
+	error = cudaMalloc(&device_ome, (*npg)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_etas, (*nx)*3*sizeof(double));
+	error = cudaMalloc(&device_etas, (*nx)*3*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_delta, 3*3*sizeof(double));
+	error = cudaMalloc(&device_delta, 3*3*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_co,  3*4*sizeof(double));
+	error = cudaMalloc(&device_co,  3*4*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(double), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_gi, gif, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_ome, ome, (*npg)*sizeof(double), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_ome, omef, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(double), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_etas, etasf, (*n)*3*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 	
+	error = cudaMemcpy(device_delta, deltaf, 3*3*sizeof(float), cudaMemcpyHostToDevice);
+	cuda_assert(error);
 
 	for (j = 0; j < *n; ++j)
     {
@@ -528,7 +550,7 @@ void cuda_ghmatecd_(int* ne,
         co[1][3] = cy[n4 - 1];
         co[2][3] = cz[n4 - 1];
 
-		error = cudaMemcpy(device_co, (double*) co,  3*4*sizeof(double), cudaMemcpyHostToDevice);
+		error = cudaMemcpy(device_co, cof,  3*4*sizeof(float), cudaMemcpyHostToDevice);
 		cuda_assert(error);
         
 		jj = 3*j;
@@ -572,9 +594,9 @@ void cuda_ghmatecd_(int* ne,
             else
             {
 				nonsingd_kernel<<<numBlocks, threadsPerBlock>>>(
-						(complex<float> (*)[3]) device_zhelem,
-						(complex<float> (*)[3]) device_zgelem,
-						(double (*)[4])          device_co,
+						(thrust::complex<float> (*)[3]) device_zhelem,
+						(thrust::complex<float> (*)[3]) device_zgelem,
+						(float (*)[4])          device_co,
 						cxm[i],
 						cym[i],
 						czm[i],
@@ -582,14 +604,14 @@ void cuda_ghmatecd_(int* ne,
 						*zge,
 						*zcs,
 						*zcp,
-						(double (*)[3])device_delta,
+						(float (*)[3])device_delta,
 						pi,
 						*fr,
 						device_gi,
 						device_ome,
 						*npg
 						);
-				
+				cudaDeviceSynchronize();				
 				/*
                 nonsingd(zhelem, 
                           zgelem, 
@@ -607,12 +629,12 @@ void cuda_ghmatecd_(int* ne,
                           npg
                          );
 			*/
-	/*	
-				error = cudaMemcpy(zgelemf, device_zgelem, 3*3*sizeof(complex<float>), cudaMemcpyDeviceToHost);
+	
+				error = cudaMemcpy(zgelemf, device_zgelem, 3*3*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 				cuda_assert(error);
-				error = cudaMemcpy(zhelemf, device_zhelem, 3*3*sizeof(complex<float>), cudaMemcpyDeviceToHost);
+				error = cudaMemcpy(zhelemf, device_zhelem, 3*3*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 				cuda_assert(error);
-*/
+
 				for (int jjj = 0; jjj < 3; ++jjj)
 				{   for (int iii = 0; iii < 3; ++iii)
                     {
