@@ -523,4 +523,7 @@ Sorocaba, dia 13 de fevereiro de 2017
 	Por enquanto os resultados ainda não estão corretos, mas isto já
 	dá algum feedback.
 
-
+Sorocaba, dia 22 de fevereiro de 2017
+	Paralelizei a Nonsignd usando CUDA e o erro em main_small é 7E-5 mas
+	não sei se isto é adequado. A velocidade não está adequada pois
+	eu invoco um kernel por iteração de Ghmatecd.

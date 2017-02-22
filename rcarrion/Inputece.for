@@ -7,14 +7,14 @@
       SUBROUTINE INPUTECE (CX,CY,CZ,NE,NCOX,CONE,CXM,CYM,CZM,
      $    N,NBE,NP,NPG,GE,RNU,RMU)
 *
-        IMPLICIT REAL*8 (A-H,O-Y)
-        IMPLICIT COMPLEX*16 (Z)
+        IMPLICIT REAL (A-H,O-Y)
+        IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         CHARACTER*75 TITULO
         DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
         DIMENSION CXM(NE),CYM(NE),CZM(NE)
         INTEGER CONE(NE,4)
-        DOUBLE PRECISION cone_in(4)
+        REAL cone_in(4)
 *
         WRITE(IPR,100)
  100    FORMAT(/' ',79('*')/)
@@ -67,9 +67,9 @@
 *
 * ELEMENTOS QUADRILATERAIS DE QUATRO NÓS
 *
-            CXM(I)=(CX(N1)+CX(N2)+CX(N3)+CX(N4))*0.25D0
-            CYM(I)=(CY(N1)+CY(N2)+CY(N3)+CY(N4))*0.25D0
-            CZM(I)=(CZ(N1)+CZ(N2)+CZ(N3)+CZ(N4))*0.25D0
+            CXM(I)=(CX(N1)+CX(N2)+CX(N3)+CX(N4))*0.250
+            CYM(I)=(CY(N1)+CY(N2)+CY(N3)+CY(N4))*0.250
+            CZM(I)=(CZ(N1)+CZ(N2)+CZ(N3)+CZ(N4))*0.250
             WRITE(IPR,550) I,(CONE(I,J),J=1,4),CXM(I),CYM(I),CZM(I)
  550        FORMAT(I6,4I9,2X,3D12.4)
   18    CONTINUE

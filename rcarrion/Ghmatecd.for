@@ -17,39 +17,39 @@
         COMMON  INP,INQ,IPR,IPS,IPT
         
 
-        DOUBLE PRECISION, INTENT(IN) :: CX(NCOX),CY(NCOX),CZ(NCOX)
-        DOUBLE PRECISION, INTENT(IN) :: CXM(NE),CYM(NE),CZM(NE)
-        DOUBLE PRECISION, INTENT(IN) :: HEST(NX,NX), GEST(NX,NX) 
-        DOUBLE COMPLEX,   INTENT(OUT):: ZH(NX,NX), ZG(NX,NX)
-        DOUBLE COMPLEX,   INTENT(OUT):: ZFI(NX)
-        DOUBLE PRECISION, INTENT(IN) :: DFI(NX)
-        DOUBLE COMPLEX,   INTENT(OUT):: ZDFI(NX)
+        REAL, INTENT(IN) :: CX(NCOX),CY(NCOX),CZ(NCOX)
+        REAL, INTENT(IN) :: CXM(NE),CYM(NE),CZM(NE)
+        REAL, INTENT(IN) :: HEST(NX,NX), GEST(NX,NX) 
+        COMPLEX,   INTENT(OUT):: ZH(NX,NX), ZG(NX,NX)
+        COMPLEX,   INTENT(OUT):: ZFI(NX)
+        REAL, INTENT(IN) :: DFI(NX)
+        COMPLEX,   INTENT(OUT):: ZDFI(NX)
         INTEGER,          INTENT(IN) :: KODE(NX),NE,NX,NCOX,CONE(NE,4)
-        DOUBLE PRECISION, INTENT(IN) :: DELTA(3,3),PI
+        REAL, INTENT(IN) :: DELTA(3,3),PI
         INTEGER,          INTENT(IN) :: N,NBE,NP,NPG
-        DOUBLE PRECISION, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
-        DOUBLE COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
-        DOUBLE PRECISION, INTENT(IN) :: C1,C2,C3,C4
-        DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
+        REAL, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
+        COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
+        REAL, INTENT(IN) :: C1,C2,C3,C4
+        REAL, INTENT(IN) :: ETAS(3,NX)
 
-        DOUBLE COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
-        DOUBLE PRECISION :: CO(4,3)!, ETA(3), A,B,C,R
-        DOUBLE PRECISION :: GI(NPG), OME(NPG)
+        COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
+        REAL :: CO(4,3)!, ETA(3), A,B,C,R
+        REAL :: GI(NPG), OME(NPG)
         INTEGER N1,N2,N3,N4,NN,I,J,II,JJ,RET
 
 #ifdef TEST_GHMATECD_CUDA
-        DOUBLE COMPLEX ZHP(NX,NX), ZGP(NX,NX)
+        COMPLEX ZHP(NX,NX), ZGP(NX,NX)
 #endif
 
-C        DOUBLE PRECISION t0, t1
+C        REAL t0, t1
 C        t0 = OMP_GET_WTIME()
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 *
         DO I=1,NBE
-            ZDFI(3*I-2)=DCMPLX(DFI(3*I-2),0.D0)
-            ZDFI(3*I-1)=DCMPLX(DFI(3*I-1),0.D0)
-            ZDFI(3*I)=DCMPLX(DFI(3*I),0.D0)
+            ZDFI(3*I-2)=CMPLX(DFI(3*I-2),0.0)
+            ZDFI(3*I-1)=CMPLX(DFI(3*I-1),0.0)
+            ZDFI(3*I)=CMPLX(DFI(3*I),0.0)
         ENDDO
 *
 * TRANSFORMAÇÃO DAS MATRIZES [HEST] E [GEST] EM NÚMEROS COMPLEXOS
@@ -57,33 +57,33 @@ C        t0 = OMP_GET_WTIME()
 
 !        DO J=1,N
 !            DO I=1,N
-!               ZHEST((3*I-2),(3*J-2))=DCMPLX(HEST((3*I-2),(3*J-2)),0.D0)
-!               ZHEST((3*I-2),(3*J-1))=DCMPLX(HEST((3*I-2),(3*J-1)),0.D0)
-!               ZHEST((3*I-2),(3*J))  =DCMPLX(HEST((3*I-2),(3*J)),0.D0)
-!               ZHEST((3*I-1),(3*J-2))=DCMPLX(HEST((3*I-1),(3*J-2)),0.D0)
-!               ZHEST((3*I-1),(3*J-1))=DCMPLX(HEST((3*I-1),(3*J-1)),0.D0)
-!               ZHEST((3*I-1),(3*J))  =DCMPLX(HEST((3*I-1),(3*J)),0.D0)
-!               ZHEST((3*I),(3*J-2))  =DCMPLX(HEST((3*I),(3*J-2)),0.D0)
-!               ZHEST((3*I),(3*J-1))  =DCMPLX(HEST((3*I),(3*J-1)),0.D0)
-!               ZHEST((3*I),(3*J))    =DCMPLX(HEST((3*I),(3*J)),0.D0)
+!               ZHEST((3*I-2),(3*J-2))=CMPLX(HEST((3*I-2),(3*J-2)),0.0)
+!               ZHEST((3*I-2),(3*J-1))=CMPLX(HEST((3*I-2),(3*J-1)),0.0)
+!               ZHEST((3*I-2),(3*J))  =CMPLX(HEST((3*I-2),(3*J)),0.0)
+!               ZHEST((3*I-1),(3*J-2))=CMPLX(HEST((3*I-1),(3*J-2)),0.0)
+!               ZHEST((3*I-1),(3*J-1))=CMPLX(HEST((3*I-1),(3*J-1)),0.0)
+!               ZHEST((3*I-1),(3*J))  =CMPLX(HEST((3*I-1),(3*J)),0.0)
+!               ZHEST((3*I),(3*J-2))  =CMPLX(HEST((3*I),(3*J-2)),0.0)
+!               ZHEST((3*I),(3*J-1))  =CMPLX(HEST((3*I),(3*J-1)),0.0)
+!               ZHEST((3*I),(3*J))    =CMPLX(HEST((3*I),(3*J)),0.0)
 !
-!               ZGEST((3*I-2),(3*J-2))=DCMPLX(GEST((3*I-2),(3*J-2)),0.D0)
-!               ZGEST((3*I-2),(3*J-1))=DCMPLX(GEST((3*I-2),(3*J-1)),0.D0)
-!               ZGEST((3*I-2),(3*J))  =DCMPLX(GEST((3*I-2),(3*J)),0.D0)
-!               ZGEST((3*I-1),(3*J-2))=DCMPLX(GEST((3*I-1),(3*J-2)),0.D0)
-!               ZGEST((3*I-1),(3*J-1))=DCMPLX(GEST((3*I-1),(3*J-1)),0.D0)
-!               ZGEST((3*I-1),(3*J))  =DCMPLX(GEST((3*I-1),(3*J)),0.D0)
-!               ZGEST((3*I),(3*J-2))  =DCMPLX(GEST((3*I),(3*J-2)),0.D0)
-!               ZGEST((3*I),(3*J-1))  =DCMPLX(GEST((3*I),(3*J-1)),0.D0)
-!               ZGEST((3*I),(3*J))    =DCMPLX(GEST((3*I),(3*J)),0.D0)
+!               ZGEST((3*I-2),(3*J-2))=CMPLX(GEST((3*I-2),(3*J-2)),0.0)
+!               ZGEST((3*I-2),(3*J-1))=CMPLX(GEST((3*I-2),(3*J-1)),0.0)
+!               ZGEST((3*I-2),(3*J))  =CMPLX(GEST((3*I-2),(3*J)),0.0)
+!               ZGEST((3*I-1),(3*J-2))=CMPLX(GEST((3*I-1),(3*J-2)),0.0)
+!               ZGEST((3*I-1),(3*J-1))=CMPLX(GEST((3*I-1),(3*J-1)),0.0)
+!               ZGEST((3*I-1),(3*J))  =CMPLX(GEST((3*I-1),(3*J)),0.0)
+!               ZGEST((3*I),(3*J-2))  =CMPLX(GEST((3*I),(3*J-2)),0.0)
+!               ZGEST((3*I),(3*J-1))  =CMPLX(GEST((3*I),(3*J-1)),0.0)
+!               ZGEST((3*I),(3*J))    =CMPLX(GEST((3*I),(3*J)),0.0)
 !            ENDDO
 !        ENDDO
 *
 * ZERANDO AS MATRIZES H E G
 *
 
-        ZG(1:3*NBE, 1:3*NBE) = (0.D0, 0.D0)
-        ZH(1:3*NBE, 1:3*NBE) = (0.D0, 0.D0)
+        ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
+        ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
@@ -92,7 +92,7 @@ C        t0 = OMP_GET_WTIME()
 * USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
 *
 
-        CALL GAULEG(-1.D0, 1.D0, GI, OME, NPG)
+        CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -107,7 +107,7 @@ C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) -
 C     $           (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
 C            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
 C     $           (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-C            R=DSQRT(A*A+B*B+C*C)
+C            R=SQRT(A*A+B*B+C*C)
 C            ETA(1)=A/R
 C            ETA(2)=B/R
 C            ETA(3)=C/R
@@ -170,8 +170,8 @@ C            ETA(3)=C/R
 !        ZG(1:NN, 1:NN) = ZGP(1:NN, 1:NN)
 
 #ifdef TEST_GHMATECD_CUDA
-        ZHP = (0.D0,0.D0)
-        ZGP = (0.D0,0.D0)
+        ZHP = (0.0,0.0)
+        ZGP = (0.0,0.0)
 
         CALL cuda_ghmatecd(NE,
      $                      NBE,
@@ -232,12 +232,12 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
       END
 
       SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
-        DOUBLE COMPLEX, INTENT(IN), DIMENSION(NX,NX) :: ZH,ZHP,ZG,ZGP
+        COMPLEX, INTENT(IN), DIMENSION(NX,NX) :: ZH,ZHP,ZG,ZGP
         INTEGER, INTENT(IN) :: NX, NN
 
         INTEGER :: i, j
         LOGICAL :: ghmatecd_asserted = .TRUE.
-        DOUBLE PRECISION :: sum_norms = 0, eps = 1E-10
+        REAL :: sum_norms = 0, eps = 1E-10
 
         sum_norms = 0.0
 
@@ -245,7 +245,9 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             DO i = 1, NN
                 IF (ZHP(i,j) /= ZH(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
-!                    PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
+                    IF (ABS(ZHP(i,j)-ZH(i,j)) > 1E-2) THEN
+                         PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
+                    ENDIF
                 ENDIF
             ENDDO
         ENDDO

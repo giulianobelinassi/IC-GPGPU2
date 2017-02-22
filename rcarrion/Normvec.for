@@ -4,12 +4,12 @@
       SUBROUTINE NORMVEC(cone, cx, cy, cz, nx, ne, ncox, n, etas)
         IMPLICIT NONE
         INTEGER, DIMENSION(NE,4), INTENT(IN) :: CONE
-        DOUBLE PRECISION, DIMENSION(NCOX), INTENT(IN) :: CX, CY, CZ
+        REAL, DIMENSION(NCOX), INTENT(IN) :: CX, CY, CZ
         INTEGER, INTENT(IN) :: NX, NE, NCOX, N
-        DOUBLE PRECISION, DIMENSION(3,nx), INTENT(INOUT) :: ETAS
+        REAL, DIMENSION(3,nx), INTENT(INOUT) :: ETAS
 
         INTEGER J, N1,N2,N3,N4
-        DOUBLE PRECISION A, B, C, R
+        REAL A, B, C, R
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,A,B,C,R)
@@ -24,7 +24,7 @@
      $           (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
             C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
      $           (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-            R=DSQRT(A*A+B*B+C*C)
+            R=SQRT(A*A+B*B+C*C)
             ETAS(1,j)=A/R
             ETAS(2,j)=B/R
             ETAS(3,j)=C/R

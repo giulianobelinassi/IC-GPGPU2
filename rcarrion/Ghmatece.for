@@ -9,8 +9,8 @@
       SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
      $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS)
 *
-        IMPLICIT REAL*8 (A-H,O-Y)
-        IMPLICIT COMPLEX*16 (Z)
+        IMPLICIT REAL (A-H,O-Y)
+        IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
         DIMENSION CXM(NE),CYM(NE),CZM(NE)
@@ -19,23 +19,23 @@
         DIMENSION DELTA(3,3)
         DIMENSION CO(4,3)!, ETA(3)
         INTEGER CONE(NE,4)
-        DOUBLE PRECISION, INTENT(IN) :: ETAS(3,NX)
+        REAL, INTENT(IN) :: ETAS(3,NX)
 *
-        PI=4.D0*DATAN(1.D0)
+        PI=4.0*ATAN(1.0)
 *
 * CONSTANTES USADAS NAS SOLUÇÕES FUNDAMENTAIS ESTÁTICAS
 *
-        C1=1.D0/(16.D0*PI*RMU*(1.D0-RNU))
-        C2=3.D0-(4.D0*RNU)
-        C3=-1.D0/(8.D0*PI*(1.D0-RNU))
-        C4=1.D0-(2.D0*RNU)
+        C1=1.0/(16.0*PI*RMU*(1.0-RNU))
+        C2=3.0-(4.0*RNU)
+        C3=-1.0/(8.0*PI*(1.0-RNU))
+        C4=1.0-(2.0*RNU)
 *
         DO 25 J=1,3
             DO 25 I=1,3
                 IF (I == J) THEN
-                    DELTA(I, J) = 1.D0
+                    DELTA(I, J) = 1.0
                 ELSE
-                    DELTA(I, J) = 0.D0
+                    DELTA(I, J) = 0.0
                 ENDIF
   25    CONTINUE
 *
@@ -43,8 +43,8 @@
 *
         DO 50 I=1,N
                 II=3*(I-1) + 1
-                GEST(II:II+2, II:II+2) = 0.D0
-                HEST(II:II+2, II:II+2) = 0.D0
+                GEST(II:II+2, II:II+2) = 0.0
+                HEST(II:II+2, II:II+2) = 0.0
   50    CONTINUE
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
@@ -117,15 +117,15 @@ C            ETAS(3)=C/R
 * DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
 *
         DO 224 MA=1,NBE
-            HEST(3*MA-2,3*MA-2)=0.D0
-            HEST(3*MA-2,3*MA-1)=0.D0
-            HEST(3*MA-2,3*MA)  =0.D0
-            HEST(3*MA-1,3*MA-2)=0.D0
-            HEST(3*MA-1,3*MA-1)=0.D0
-            HEST(3*MA-1,3*MA)  =0.D0
-            HEST(3*MA,3*MA-2)  =0.D0
-            HEST(3*MA,3*MA-1)  =0.D0
-            HEST(3*MA,3*MA)    =0.D0
+            HEST(3*MA-2,3*MA-2)=0.0
+            HEST(3*MA-2,3*MA-1)=0.0
+            HEST(3*MA-2,3*MA)  =0.0
+            HEST(3*MA-1,3*MA-2)=0.0
+            HEST(3*MA-1,3*MA-1)=0.0
+            HEST(3*MA-1,3*MA)  =0.0
+            HEST(3*MA,3*MA-2)  =0.0
+            HEST(3*MA,3*MA-1)  =0.0
+            HEST(3*MA,3*MA)    =0.0
             DO 227 MB=1, N
                 IF (MA /= MB) THEN
                     HEST(3*MA-2,3*MA-2)=HEST(3*MA-2,3*MA-2) - 
