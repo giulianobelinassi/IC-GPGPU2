@@ -126,15 +126,14 @@ C            ETA(3)=C/R
             CO(4,1)=CX(N4)
             CO(4,2)=CY(N4)
             CO(4,3)=CZ(N4)
-
             JJ=3*(J-1) + 1
             DO I=1,NBE
                 II=3*(I-1) + 1
 
                 IF (I == J) THEN
-*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G SINGULAR
-*                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
-*
+C                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G SINGULAR
+C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
+
                     CALL SING_DE (ZH(II:II+2, JJ:JJ+2),
      $                  ZG(II:II+2, JJ:JJ+2),
      $                  CO,CXM(I),CYM(I),CZM(I),
@@ -159,6 +158,7 @@ C            ETA(3)=C/R
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+
 *
 * TRANSFORMAÇÃO DAS MATRIZES ZHP E ZGP PROVISÓRIAS
 * NAS MATRIZES ZH E ZG FINAIS
@@ -245,9 +245,9 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             DO i = 1, NN
                 IF (ZHP(i,j) /= ZH(i,j)) THEN
                     sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
-                    IF (ABS(ZHP(i,j)-ZH(i,j)) > 1E-2) THEN
-                         PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
-                    ENDIF
+!                    IF (ABS(ZHP(i,j)-ZH(i,j)) > 1E-2) THEN
+!                         PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
+!                    ENDIF
                 ENDIF
             ENDDO
         ENDDO
