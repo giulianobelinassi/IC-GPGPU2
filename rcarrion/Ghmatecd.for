@@ -35,6 +35,7 @@
         COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
         REAL :: CO(4,3)!, ETA(3), A,B,C,R
         REAL :: GI(NPG), OME(NPG)
+        DOUBLE PRECISION :: t1, t2
         INTEGER N1,N2,N3,N4,NN,I,J,II,JJ,RET
 
 #ifdef TEST_GHMATECD_CUDA
@@ -93,6 +94,8 @@ C        t0 = OMP_GET_WTIME()
 *
 
         CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
+
+        t1 = OMP_GET_WTIME()
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -159,6 +162,10 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         ENDDO
 !$OMP END PARALLEL DO
 
+        t2 = OMP_GET_WTIME()
+
+        PRINT *, "Tempo na CPU: ", (t2-t1)
+
 *
 * TRANSFORMAÇÃO DAS MATRIZES ZHP E ZGP PROVISÓRIAS
 * NAS MATRIZES ZH E ZG FINAIS
@@ -172,6 +179,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #ifdef TEST_GHMATECD_CUDA
         ZHP = (0.0,0.0)
         ZGP = (0.0,0.0)
+
+        t1 = OMP_GET_WTIME()
 
         CALL cuda_ghmatecd(NE,
      $                      NBE,
@@ -204,6 +213,11 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      GI,
      $                      RET
      $                      )
+
+        t2 = OMP_GET_WTIME()
+    
+        PRINT *, "Tempo na GPU: ", (t2 - t1)
+
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
 #endif
 *

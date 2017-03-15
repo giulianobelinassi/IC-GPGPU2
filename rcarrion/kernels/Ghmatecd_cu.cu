@@ -58,8 +58,6 @@ void nonsingd_(thrust::complex<float> zhelem[3][3],
                );
 
 
-#define INDEX() 
-
 __global__ void ghmatecd_kernel(
                            int cone[],
                            float cx[],
@@ -79,28 +77,29 @@ __global__ void ghmatecd_kernel(
 						   float fr,
 						   float gi[],
 						   float ome[],
+						   float c1,
+						   float c2,
+						   float c3,
+						   float c4,
 						   int npg,
                            int n,
                            int nbe,
 						   int nx,
-						   int ne
+						   int ne,
+						   int* ret
 						   )
 {
 
-//	const int ig = blockIdx.z%npg;
-//	const int jg = blockIdx.z/npg;
 	const int ig = threadIdx.y;
 	const int jg = threadIdx.x;
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x;
-//	const int i  = threadIdx.y;
-//	const int j  = threadIdx.x;
-//    int index = 3*ii + nx*3*jj + i + nx*j;
 
 	int i, j;
 	
-	float p[4][2], xj[3][2], f[4], co[3][4];
-	float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
+	float p[4][2], f[4], co[3][4];
+	float xj[3][2];
+    float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
     float cxg, cyg, czg, cxp, cyp, czp;
     float j1, j2, j3;
     float r1, r2, r3, r, drn, rd[3];
@@ -163,13 +162,25 @@ __global__ void ghmatecd_kernel(
 	p[2][1] = 0.25f*rp;
 	p[3][1] = 0.25f*rm;
 
-	for (iii = 0; iii < 2; ++iii)
+	
+    /* 
+    for (iii = 0; iii < 2; ++iii)
 	{
 		for (jjj = 0; jjj < 3; ++jjj)
 		{
 			xj[jjj][iii] = p[0][iii]*co[jjj][0] + p[1][iii]*co[jjj][1]+ p[2][iii]*co[jjj][2] + p[3][iii]*co[jjj][3];
 		}
 	}
+    */
+
+    
+    if (threadIdx.y < 2 && threadIdx.x < 3)
+    {
+        int iii = threadIdx.y, jjj = threadIdx.x;
+        xj[jjj][iii] = p[0][iii]*co[jjj][0] + p[1][iii]*co[jjj][1]+ p[2][iii]*co[jjj][2] + p[3][iii]*co[jjj][3];
+    }
+    __syncthreads();
+    
 
     j1 = xj[1][0]*xj[2][1]-xj[1][1]*xj[2][0];
 	j2 = xj[0][1]*xj[2][0]-xj[0][0]*xj[2][1];
@@ -179,16 +190,18 @@ __global__ void ghmatecd_kernel(
 	det = sqrt(j1*j1 + j2*j2 + j3*j3);
 	/**/
 
-/*
+
 	if (det < 1e-5)
 	{
-		//algo deveria acontecer
+		*ret = 1;
+		return;
 	}
-*/
+
 
 	cxg = 0;
 	cyg = 0;
 	czg = 0;
+
 	for (iii = 0; iii < 4; ++iii)
 	{
 		cxg = cxg + co[0][iii]*f[iii];
@@ -234,15 +247,24 @@ __global__ void ghmatecd_kernel(
 
 	p12 = p1*p2*det;
 
-	//if (ii == 1 && jj == 0){
 	for (j = 0; j < 3; ++j)
 	{	for (i = 0; i < 3; ++i)
 		{
 			int index = 3*ii + nx*3*jj + i + nx*j;
 			zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
+			
+
 			zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
 								rd[j]*rn[jj][i])) + rd[i]*rd[j]*drn*zbb + 
 						rd[i]*rn[jj][j]*zcc);
+		
+            
+			if (ii == jj)
+			{
+				zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
+				zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn[jj][i] - rd[i]*rn[jj][j]));
+			}
+			
 			zgi = zgi*p12;
 			zhi = zhi*p12;
 
@@ -253,21 +275,6 @@ __global__ void ghmatecd_kernel(
 			atomicAdd(((float*) &zh[index]) + 1, zhi.imag());
 		}
 	}
-	//}
-/*	
-	zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
-	zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
-						rd[j]*rn[jj][i])) + rd[i]*rd[j]*drn*zbb + 
-				rd[i]*rn[jj][j]*zcc);
-	zgi = zgi*p12;
-	zhi = zhi*p12;
-
-	atomicAdd(((float*) &zg[index])    , zgi.real());
-	atomicAdd(((float*) &zg[index]) + 1, zgi.imag());
-	
-	atomicAdd(((float*) &zh[index])    , zhi.real());
-	atomicAdd(((float*) &zh[index]) + 1, zhi.imag());
-*/
 }
 
 
@@ -498,9 +505,11 @@ void cuda_ghmatecd_(int* ne,
 	float* device_delta;
 	int* device_cone;
 
+	int* device_return_status;
+	int return_status;
 
 	/*Cast os parâmetros de volta para o tipo original*/
-	int (*cone)[*ne]           = (int (*)[*ne]) cone_;
+	int (*cone)[*ne]          = (int (*)[*ne])   cone_;
 	float (*zhest)[*nx]       = (float (*)[*nx]) zhest_;
 	float (*zgest)[*nx]       = (float (*)[*nx]) zgest_;
 	thrust::complex<float> (*zgp)[*nx] = (thrust::complex<float> (*)[*nx]) zgp_;
@@ -508,6 +517,8 @@ void cuda_ghmatecd_(int* ne,
 
 	float pi  = 3.141592654;
 
+	error = cudaMalloc(&device_return_status, sizeof(int));
+	cuda_assert(error);
 
 	error = cudaMalloc(&device_cone, 4*(*ne)*sizeof(int));
 	cuda_assert(error);
@@ -516,6 +527,9 @@ void cuda_ghmatecd_(int* ne,
 	cuda_assert(error);
 
 	error = cudaMalloc(&device_zg, (*nx)*(*nx)*sizeof(thrust::complex<float>));
+	cuda_assert(error);
+
+	error = cudaMemset(device_return_status, 0, sizeof(int));
 	cuda_assert(error);
 
 	error = cudaMemset(device_zh, 0, (*nx)*(*nx)*sizeof(thrust::complex<float>));
@@ -605,24 +619,53 @@ void cuda_ghmatecd_(int* ne,
 						*zge,
 						*zcs,
 						*zcp,
-						(float (*)[3])device_delta,
+						(float (*)[3]) device_delta,
 						pi,
 						*fr,
 						device_gi,
 						device_ome,
+						*c1,
+						*c2,
+						*c3,
+						*c4,
 						*npg,
 						*n,
 						*nbe,
 						*nx,
-						*ne
+						*ne,
+						device_return_status
 						);
 	cudaDeviceSynchronize();
+
+	error = cudaMemcpy(&return_status, device_return_status, sizeof(int), cudaMemcpyDeviceToHost);
+	cuda_assert(error);
+
+	if (return_status != 0)
+	{
+		fputs("Matriz Singular", stderr);
+	}
 
 	error = cudaMemcpy(zhp_, device_zh, (*nx)*(*nx)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
 	error = cudaMemcpy(zgp_, device_zg, (*nx)*(*nx)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
 
+	
+	
+	
+	for (i = 0; i < *nbe; ++i)
+	{
+		ii = 3*i;
+		for (int jjj = 0; jjj < 3; ++jjj)
+		{   for (int iii = 0; iii < 3; ++iii)
+			{
+				zgp[jjj+ii][iii+ii] += zgest[jjj+ii][iii+ii];
+				zhp[jjj+ii][iii+ii] += zhest[jjj+ii][iii+ii];
+			}
+		}
+	}
+
+/*
 	for (j = 0; j < *n; ++j)
     {
 		n1 = cone[0][j];
@@ -645,16 +688,16 @@ void cuda_ghmatecd_(int* ne,
 
 //		error = cudaMemcpy(device_co, co,  3*4*sizeof(float), cudaMemcpyHostToDevice);
 //		cuda_assert(error);
-        
+       		
 		jj = 3*j;
         for (i = 0; i < *nbe; ++i)
         {
             ii = 3*i;
-
 	//		printf("i = %d, j = %d\n", i, j);
             if (i == j)
             {
-                sing_de_(zhelem, 
+
+				sing_de_(zhelem, 
                          zgelem, 
                          co, 
                          &cxm[i], 
@@ -679,15 +722,22 @@ void cuda_ghmatecd_(int* ne,
 				for (int jjj = 0; jjj < 3; ++jjj)
 				{   for (int iii = 0; iii < 3; ++iii)
                     {
-                        zgp[jjj+jj][iii+ii] = zgelem[jjj][iii] + zgest[jjj+jj][iii+ii];
+                    
+						printf("error: %f\n", abs(zgp[jjj+jj][iii+ii] - zgelem[jjj][iii]));
+						if (abs(zgp[jjj+jj][iii+ii] - zgelem[jjj][iii]) > 1E-5)
+						{
+							printf("error: %f\n", abs(zgp[jjj+jj][iii+ii] - zgelem[jjj][iii]));
+						}
+						
+						zgp[jjj+jj][iii+ii] = zgelem[jjj][iii] + zgest[jjj+jj][iii+ii];
                         zhp[jjj+jj][iii+ii] = zhelem[jjj][iii] + zhest[jjj+jj][iii+ii];
-                    }
+					}
 				}
             }
 
-			else
-            {
-		
+//			else
+//          {
+//		
 //                nonsingd_kernel<<<numBlocks, threadsPerBlock>>>(
 //						(thrust::complex<float> (*)[3]) device_zhelem,
 //						(thrust::complex<float> (*)[3]) device_zgelem,
@@ -709,24 +759,24 @@ void cuda_ghmatecd_(int* ne,
 //				cudaDeviceSynchronize();				
 
                 
-                nonsingd_(zhelem, 
-                          zgelem, 
-                          co, 
-                          &cxm[i], 
-                          &cym[i], 
-                          &czm[i],
-                          etas[j],
-                          zge,
-                          zcs,
-                          zcp,
-                          delta,
-                          &pi,
-                          fr,
-						  gi,
-						  ome,
-                          npg
-                         );
-					
+//                nonsingd_(zhelem, 
+//                          zgelem, 
+//                          co, 
+//                          &cxm[i], 
+//                          &cym[i], 
+//                          &czm[i],
+//                          etas[j],
+//                          zge,
+//                          zcs,
+//                          zcp,
+//                          delta,
+//                          &pi,
+//                          fr,
+//						  gi,
+//						  ome,
+//                          npg
+//                         );
+//					
 				
 //				error = cudaMemcpy(zgelem, device_zgelem, 3*3*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 //				cuda_assert(error);
@@ -735,22 +785,23 @@ void cuda_ghmatecd_(int* ne,
 
 				
 
-				for (int jjj = 0; jjj < 3; ++jjj)
-				{   for (int iii = 0; iii < 3; ++iii)
-                    {
-						if (abs(zgp[jjj+jj][iii+ii] - zgelem[jjj][iii]) > 1E-3)
-						{
-							printf("zgp[jjj+jj][iii+ii] = %f,%f\n", zgp[jjj+jj][iii+ii].real(), zgp[jjj+jj][iii+ii].imag());
-						}
-						zgp[jjj+jj][iii+ii] = zgelem[jjj][iii];
-                        zhp[jjj+jj][iii+ii] = zhelem[jjj][iii];
-                    }
-				}
-			}
+//				for (int jjj = 0; jjj < 3; ++jjj)
+//				{   for (int iii = 0; iii < 3; ++iii)
+//                    {
+//						if (abs(zgp[jjj+jj][iii+ii] - zgelem[jjj][iii]) > 1E-3)
+//						{
+//							printf("zgp[jjj+jj][iii+ii] = %f,%f\n", zgp[jjj+jj][iii+ii].real(), zgp[jjj+jj][iii+ii].imag());
+//						}
+//						zgp[jjj+jj][iii+ii] = zgelem[jjj][iii];
+//                        zhp[jjj+jj][iii+ii] = zhelem[jjj][iii];
+//                    }
+//				}
+//			}
+			
         }
     }
 	
-	
+*/	
 	error = cudaFree(device_cone);
 	cuda_assert(error);
 	error = cudaFree(device_zh);

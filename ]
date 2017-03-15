@@ -532,10 +532,3 @@ Sorocaba, dia 27 de fevereiro de 2017
 	Paralelizei a Ghmatecd para a versão não singular em CUDA. O tempo
 	não está nada satisfatório e preciso encontrar maneiras de otimizar
 	o kernel, além de implementar a versão singular.
-
-São Paulo, dia 15 de fevereiro de 2017
-	Até aqui eu consegui paralelizar a Ghmatecd com um erro aceitável.
-	O teste de aceitação está quebrado e preciso ajeitá-lo.
-	O tempo gasto em Ghmatecd usando 8 Núcleos no pegrande é de 10s,
-	já na GeForce 470 do PeGrande é de 35s (teste main). Irei consultar
-	o Marco Gonzálvez sobre alguma possível otimização no kernel.

@@ -1,10 +1,10 @@
 CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument #-funroll-loops -flto -march=native -Ofast
+FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
-NVFLAGS = $(EXTRA) -g -G #-O4 -use_fast_math 
+NVFLAGS = $(EXTRA) -g -G -O4 -use_fast_math 
 FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++
 RM      = rm -f
 
@@ -38,7 +38,7 @@ Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
-	$(FC)  $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
