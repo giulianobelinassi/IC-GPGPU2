@@ -218,7 +218,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
     
         PRINT *, "Tempo na GPU: ", (t2 - t1)
 
-        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
+        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN, NBE, N)
 #endif
 *
 * REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS
@@ -245,49 +245,58 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
 
-      SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN)
+      SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN,
+     $    NBE, N)
         COMPLEX, INTENT(IN), DIMENSION(NX,NX) :: ZH,ZHP,ZG,ZGP
         INTEGER, INTENT(IN) :: NX, NN
 
         INTEGER :: i, j
+        INTEGER :: N3, NBE3
         LOGICAL :: ghmatecd_asserted = .TRUE.
-        REAL :: sum_norms = 0, eps = 1E-10
+        REAL :: sum_norms = 0, eps
+        REAL :: local_sum = 0, max_local_sum = 0
+
+        eps = 1.5E-6*nbe
+
+        N3   = N*3
+        NBE3 = NBE*3 
 
         sum_norms = 0.0
 
-        DO j = 1, NN
-            DO i = 1, NN
-                IF (ZHP(i,j) /= ZH(i,j)) THEN
-                    sum_norms = sum_norms + ABS(ZHP(i,j)-ZH(i,j))
-!                    IF (ABS(ZHP(i,j)-ZH(i,j)) > 1E-2) THEN
-!                         PRINT*, i, j, ABS(ZHP(i,j)-ZH(i,j))
-!                    ENDIF
-                ENDIF
+        DO j = 1, N3
+            local_sum = 0
+            DO i = 1, NBE3
+                local_sum = local_sum + ABS(ZHP(i,j)-ZH(i,j))
             ENDDO
+            sum_norms = sum_norms + local_sum
+            max_local_sum = MAX(local_sum, max_local_sum)
         ENDDO
 
-        IF (sum_norms > eps) THEN
+        IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "Erro em ZH de ", sum_norms
+            PRINT*, "||ZH||_inf = ", max_local_sum
         ENDIF
 
         sum_norms = 0.0
-        DO j = 1, NN
-            DO i = 1, NN
-                IF (ZGP(i,j) /= ZG(i,j)) THEN
-                    sum_norms = sum_norms + ABS(ZGP(i,j)-ZG(i,j))
-!                    PRINT*, i, j, ABS(ZGP(i,j)-ZG(i,j))
-                ENDIF
+        max_local_sum = 0
+        
+        DO j = 1, N3
+            local_sum = 0
+            DO i = 1, NBE3
+                local_sum = local_sum + ABS(ZGP(i,j)-ZG(i,j))
             ENDDO
+            sum_norms = sum_norms + local_sum
+            max_local_sum = MAX(local_sum, max_local_sum)
         ENDDO
 
-        IF (sum_norms > eps) THEN
+        IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "Erro em ZG de ", sum_norms
+            PRINT*, "||ZG||_inf = ", max_local_sum
         ENDIF
 
+ 200    FORMAT (A,ES7.1)     
        WRITE(0,"(A)") "As matrizes ZH e ZG em Ghmatecd_cu sao iguais as"
-        WRITE(0,"(A)") "calculadas em Ghmatecd com um erro de 1E-10?"
+        WRITE(0,200) "calculadas em Ghmatecd com um erro de ", eps
         IF (ghmatecd_asserted .EQV. .TRUE.) THEN
             WRITE(0,"(A)")"[OK]"
         ELSE

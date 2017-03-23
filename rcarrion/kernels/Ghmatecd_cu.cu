@@ -97,8 +97,8 @@ __global__ void ghmatecd_kernel(
 
 	int i, j;
 	
-	float p[4][2], f[4], co[3][4];
-	float xj[3][2];
+	float p[4][2], f[4];
+	float xj[3][2], co[3][4];
     float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
     float cxg, cyg, czg, cxp, cyp, czp;
     float j1, j2, j3;
@@ -107,29 +107,29 @@ __global__ void ghmatecd_kernel(
                     zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
 
 	thrust::complex<float> zhi, zgi;
-	int n1, n2, n3, n4;
+	int n_[4];
 
 	//const float pi  = 3.141592654;
 	
 	int iii, jjj;
 
-	n1 = cone[ne*0 + jj];
-	n2 = cone[ne*1 + jj];
-	n3 = cone[ne*2 + jj];
-	n4 = cone[ne*3 + jj];
+	n_[0] = cone[ne*0 + jj];
+	n_[1] = cone[ne*1 + jj];
+	n_[2] = cone[ne*2 + jj];
+	n_[3] = cone[ne*3 + jj];
 
-	co[0][0] = cx[n1 - 1];
-	co[1][0] = cy[n1 - 1];
-	co[2][0] = cz[n1 - 1];
-	co[0][1] = cx[n2 - 1];
-	co[1][1] = cy[n2 - 1];
-	co[2][1] = cz[n2 - 1];
-	co[0][2] = cx[n3 - 1];
-	co[1][2] = cy[n3 - 1];
-	co[2][2] = cz[n3 - 1];
-	co[0][3] = cx[n4 - 1];
-	co[1][3] = cy[n4 - 1];
-	co[2][3] = cz[n4 - 1];
+	co[0][0] = cx[n_[0] - 1];
+	co[1][0] = cy[n_[0] - 1];
+	co[2][0] = cz[n_[0] - 1];
+	co[0][1] = cx[n_[1] - 1];
+	co[1][1] = cy[n_[1] - 1];
+	co[2][1] = cz[n_[1] - 1];
+	co[0][2] = cx[n_[2] - 1];
+	co[1][2] = cy[n_[2] - 1];
+	co[2][2] = cz[n_[2] - 1];
+	co[0][3] = cx[n_[3] - 1];
+	co[1][3] = cy[n_[3] - 1];
+	co[2][3] = cz[n_[3] - 1];
 
 	cxp = cxm[ii];
 	cyp = cym[ii];
@@ -163,7 +163,7 @@ __global__ void ghmatecd_kernel(
 	p[3][1] = 0.25f*rm;
 
 	
-    /* 
+   
     for (iii = 0; iii < 2; ++iii)
 	{
 		for (jjj = 0; jjj < 3; ++jjj)
@@ -171,16 +171,15 @@ __global__ void ghmatecd_kernel(
 			xj[jjj][iii] = p[0][iii]*co[jjj][0] + p[1][iii]*co[jjj][1]+ p[2][iii]*co[jjj][2] + p[3][iii]*co[jjj][3];
 		}
 	}
-    */
-
     
+    /*
     if (threadIdx.y < 2 && threadIdx.x < 3)
     {
         int iii = threadIdx.y, jjj = threadIdx.x;
         xj[jjj][iii] = p[0][iii]*co[jjj][0] + p[1][iii]*co[jjj][1]+ p[2][iii]*co[jjj][2] + p[3][iii]*co[jjj][3];
     }
     __syncthreads();
-    
+    */
 
     j1 = xj[1][0]*xj[2][1]-xj[1][1]*xj[2][0];
 	j2 = xj[0][1]*xj[2][0]-xj[0][0]*xj[2][1];
@@ -214,13 +213,14 @@ __global__ void ghmatecd_kernel(
 	r2    = cyg - cyp;
 	r3    = czg - czp;
 
-	/*otimizar*/
+
+	
 	r     = sqrt(r1*r1 + r2*r2 + r3*r3);
 	drn   = (r1*rn[jj][0] + r2*rn[jj][1] + r3*rn[jj][2])/r;
 	rd[0] = r1/r;
 	rd[1] = r2/r;
 	rd[2] = r3/r;
-	/**/
+	
 
 	zwi = thrust::complex<float>(0, fr);
 	
@@ -273,8 +273,10 @@ __global__ void ghmatecd_kernel(
 	
 			atomicAdd(((float*) &zh[index])    , zhi.real());
 			atomicAdd(((float*) &zh[index]) + 1, zhi.imag());
+		
 		}
 	}
+	
 }
 
 
@@ -603,7 +605,7 @@ void cuda_ghmatecd_(int* ne,
 
 	cudaDeviceSynchronize();
 
-	printf("n = %d, npg = %d\n", *n, *npg);
+	printf("n = %d, nbe = %d, npg = %d\n", *n,*nbe, *npg);
 
 	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
 						device_cone,
