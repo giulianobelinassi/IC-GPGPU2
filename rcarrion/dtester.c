@@ -4,9 +4,34 @@
 
 #define BUF_SIZE 4096
 
+#define USE_FLOATS
+
+#ifdef USE_FLOATS
+#define REAL float
+#define FORMAT_82 "%4d  %f,%f  %f,%f  %f,%f"
+#define FORMAT_SIGMA "%4d  %f,%f  %f,%f  %f,%f  %f,%f  %f,%f  %f,%f  %f,%f  %f,%f  %f,%f"
+#endif
+
+#ifdef USE_DOUBLES
+#define REAL double
+#define FORMAT_82 "%4d  %lf,%lf  %lf,%lf  %lf,%lf"
+#define FORMAT_SIGMA "%4d  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf"
+#endif
 
 static char buffer[BUF_SIZE];
 
+
+int jump_to(int len, const char* text, char buffer[len], FILE* file)
+{
+	while (fgets(buffer, len, file) != NULL)
+	{
+		if (strstr(buffer, text))
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
 
 void get_dimension_data(int* n,
 					   int* nbe,
@@ -16,7 +41,7 @@ void get_dimension_data(int* n,
 {
 	#define MALHA_STR    " N\332MERO DE ELEMENTOS DA MALHA="
 	#define CONTORNO_STR " N\332MERO DE ELEMENTOS DE CONTORNO="
-	#define INTERNO_STR  " N\332MERO DE PONTOS INTERNOS="
+	#define N_INTERNO_STR  " N\332MERO DE PONTOS INTERNOS="
 
 	rewind(file);
 
@@ -30,34 +55,38 @@ void get_dimension_data(int* n,
 		{
 			sscanf(buffer, CONTORNO_STR "%5d", nbe);
 		}
-		else if (strstr(buffer, INTERNO_STR))
+		else if (strstr(buffer, N_INTERNO_STR))
 		{
-			sscanf(buffer, INTERNO_STR "%5d", ni);
+			sscanf(buffer, N_INTERNO_STR "%5d", ni);
 		}
 
 	}
 	rewind(file);
 }
 
-void get_nos_contorno(int nbe, float complex nos_contorno[nbe][3], FILE* file)
+void replace_D_with_E(int bufsize, char buffer[bufsize])
 {
-	float reals[3][2];
+	unsigned int i = 0;
+	while (i < bufsize && buffer[i] != '\0')
+	{	if (buffer[i] == 'd' || buffer[i] == 'D')
+			buffer[i] = 'E';
+		++i;
+	}
+}
+
+void get_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], FILE* file)
+{
+	REAL reals[3][2];
 	int index, i, j;
 
 	rewind(file);
 
 	#define NOS_CONTORNO_STR " N\323S DO CONTORNO"
 
-	while (fgets(buffer, BUF_SIZE, file) != NULL)
-	{
-		if (strstr(buffer, NOS_CONTORNO_STR))
-		{
-			break;
-		}
-	}
+	jump_to(BUF_SIZE, NOS_CONTORNO_STR, buffer, file);
 
 	/*Descarta as tres próximas linhas*/
-	for (i = 0; i < 4; ++i)
+	for (i = 0; i < 3; ++i)
 	{
 		fgets(buffer, BUF_SIZE, file);
 	}
@@ -65,16 +94,107 @@ void get_nos_contorno(int nbe, float complex nos_contorno[nbe][3], FILE* file)
 	/*Lê de fato os resultados.*/
 	for (i = 0; i < nbe; ++i)
 	{
-		#define FORMAT_67 "%4d  %f,%f  %f,%f  %f,%f"
-		sscanf(buffer, FORMAT_67, &index, &reals[0][0], &reals[0][1], &reals[1][0], &reals[1][1], &reals[2][0], &reals[2][1]);
+		if (fgets(buffer, BUF_SIZE, file) == NULL)
+			return;
+		replace_D_with_E(BUF_SIZE, buffer);
+		sscanf(buffer, FORMAT_82, &index, &reals[0][0], &reals[0][1], &reals[1][0], &reals[1][1], &reals[2][0], &reals[2][1]);
 		
 		for (j = 0; j < 3; ++j)
-		{
-			nos_contorno[index][j] = reals[j][0] + I*reals[j][1];
-		}
+			nos_contorno[index-1][j] = reals[j][0] + I*reals[j][1];
 	}
 }
 
+void get_tractions(int nbe, REAL complex tractions[nbe][3], FILE* file)
+{
+	REAL reals[3][2];
+	int index, i, j;
+
+	rewind(file);
+
+	#define TRACTION_STR "  ELEM        TRACTION X               TRACTION Y               TRACTION Z"
+	
+	jump_to(BUF_SIZE, TRACTION_STR, buffer, file);
+
+	/*Descarta a próxima linha*/
+	fgets(buffer, BUF_SIZE, file);
+
+	/*Lê de fato os resultados.*/
+	for (i = 0; i < nbe; ++i)
+	{
+		if (fgets(buffer, BUF_SIZE, file) == NULL)
+			return;
+		replace_D_with_E(BUF_SIZE, buffer);
+		sscanf(buffer, FORMAT_82, &index, &reals[0][0], &reals[0][1], &reals[1][0], &reals[1][1], &reals[2][0], &reals[2][1]);
+		
+		for (j = 0; j < 3; ++j)
+			tractions[index-1][j] = reals[j][0] + I*reals[j][1];
+	}
+	rewind(file);
+}
+
+void get_deslocamentos_internos(int ni, REAL complex deslocamentos[ni][3], FILE* file)
+{
+	REAL reals[3][2];
+	int index, i, j;
+
+	rewind(file);
+
+	#define INTERNO_STR "  PONTOS INTERNOS"
+	
+	jump_to(BUF_SIZE, INTERNO_STR, buffer, file);
+
+	for (i = 0; i < 2; ++i)
+		fgets(buffer, BUF_SIZE, file);
+
+
+	/*Lê de fato os resultados.*/
+	for (i = 0; i < ni; ++i)
+	{
+		if (fgets(buffer, BUF_SIZE, file) == NULL)
+			return;
+		replace_D_with_E(BUF_SIZE, buffer);
+		sscanf(buffer, FORMAT_82, &index, &reals[0][0], &reals[0][1], &reals[1][0], &reals[1][1], &reals[2][0], &reals[2][1]);
+		
+		for (j = 0; j < 3; ++j)
+			deslocamentos[index-1][j] = reals[j][0] + I*reals[j][1];
+	}
+	rewind(file);
+}
+
+void get_sigmas_internos(int ni, REAL complex sigmas[ni][3][3], FILE* file)
+{
+	REAL reals[3][3][2];
+	int index, i, j, k;
+
+	rewind(file);
+
+	#define SIGMA_STR "  PONTO        SIGMAXX                 SIGMAXY"
+
+	jump_to(BUF_SIZE, SIGMA_STR, buffer, file);
+
+	/*Lê de fato os resultados.*/
+	for (i = 0; i < ni; ++i)
+	{
+		if (fgets(buffer, BUF_SIZE, file) == NULL)
+			return;
+		replace_D_with_E(BUF_SIZE, buffer);
+		sscanf(buffer, FORMAT_SIGMA, &index, 
+				&reals[0][0][0], &reals[0][0][1], 	
+				&reals[0][1][0], &reals[0][1][1], 
+				&reals[0][2][0], &reals[0][2][1], 
+				&reals[1][0][0], &reals[1][0][1], 
+				&reals[1][1][0], &reals[1][1][1], 
+				&reals[1][2][0], &reals[1][2][1], 
+				&reals[2][0][0], &reals[2][0][1], 
+				&reals[2][1][0], &reals[2][1][1], 
+				&reals[2][2][0], &reals[2][2][1] 
+		);	
+		for (j = 0; j < 3; ++j)
+			for (k = 0; k < 3; ++k)
+			sigmas[index-1][j][k] = reals[j][k][0] + I*reals[j][k][1];
+	}
+	rewind(file);
+}
 
 int main(int argc, char* argv[])
 {
@@ -90,8 +210,13 @@ int main(int argc, char* argv[])
 	}
 	get_dimension_data(&n, &nbe, &ni, file);
 
-	float complex nos_contorno[nbe][3];
+	REAL complex nos_contorno[nbe][3], tractions[nbe][3], 
+		         deslocamentos[ni][3], sigmas[ni][3][3];
 	get_nos_contorno(nbe, nos_contorno, file);
+	get_tractions(nbe, tractions, file);
+	get_deslocamentos_internos(ni, deslocamentos, file);
+	get_sigmas_internos(ni, sigmas, file);
+
 
 
 	return 0;
