@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <complex.h>
+#include <stdbool.h>
 
 #define BUF_SIZE 4096
 
@@ -27,10 +28,10 @@ int jump_to(int len, const char* text, char buffer[len], FILE* file)
 	{
 		if (strstr(buffer, text))
 		{
-			return 1;
+			return 0;
 		}
 	}
-	return 0;
+	return 1;
 }
 
 void get_dimension_data(int* n,
@@ -111,7 +112,7 @@ void get_tractions(int nbe, REAL complex tractions[nbe][3], FILE* file)
 
 	rewind(file);
 
-	#define TRACTION_STR "  ELEM        TRACTION X               TRACTION Y               TRACTION Z"
+	#define TRACTION_STR "TRACTION X"
 	
 	jump_to(BUF_SIZE, TRACTION_STR, buffer, file);
 
@@ -168,7 +169,7 @@ void get_sigmas_internos(int ni, REAL complex sigmas[ni][3][3], FILE* file)
 
 	rewind(file);
 
-	#define SIGMA_STR "  PONTO        SIGMAXX                 SIGMAXY"
+	#define SIGMA_STR "SIGMAXX"
 
 	jump_to(BUF_SIZE, SIGMA_STR, buffer, file);
 
@@ -196,14 +197,31 @@ void get_sigmas_internos(int ni, REAL complex sigmas[ni][3][3], FILE* file)
 	rewind(file);
 }
 
+bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL complex nos_contorno_sol[nbe][3])
+{
+	int i, j;
+	double acc = 0;
+
+	for (i = 0; i < nbe; ++i)
+	{
+		for (j = 0; j < 3; ++j)
+		{
+			acc += cabs(nos_contorno[i][j] - nos_contorno_sol[i][j]);
+		}
+	}
+	printf("Erro nos Nós de Contorno: %e\n", acc);
+	return true;
+}
+
 int main(int argc, char* argv[])
 {
-	FILE* file;
+	FILE* file, *file_sol;
 	int n, nbe, ni;
 
 
 	file = fopen(argv[1], "r");
-	if (!file)	
+	file_sol = fopen(argv[2], "r");
+	if (!file || !file_sol)	
 	{
 		fputs("Error: Invalid filepath\n", stderr);
 		return 1;
@@ -212,12 +230,21 @@ int main(int argc, char* argv[])
 
 	REAL complex nos_contorno[nbe][3], tractions[nbe][3], 
 		         deslocamentos[ni][3], sigmas[ni][3][3];
+
+	REAL complex nos_contorno_sol[nbe][3], tractions_sol[nbe][3], 
+		         deslocamentos_sol[ni][3], sigmas_sol[ni][3][3];
+	
 	get_nos_contorno(nbe, nos_contorno, file);
 	get_tractions(nbe, tractions, file);
 	get_deslocamentos_internos(ni, deslocamentos, file);
 	get_sigmas_internos(ni, sigmas, file);
 
+	get_nos_contorno(nbe, nos_contorno_sol, file);
+	get_tractions(nbe, tractions_sol, file);
+	get_deslocamentos_internos(ni, deslocamentos_sol, file);
+	get_sigmas_internos(ni, sigmas_sol, file);
 
+	compare_nos_contorno(nbe, nos_contorno, nos_contorno_sol);
 
 	return 0;
 }
