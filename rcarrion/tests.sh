@@ -40,8 +40,9 @@ else
 	print_failed
 fi
 
-echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é igual ao SSOLO240D_-5+5.SOL ?"
-if cmp -s "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"; then
+echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é compatível em precião ao SSOLO240D_-5+5.SOL ?"
+./dtester "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"
+if [ $? -eq 0 ]; then
 	print_ok
 else 
 	print_failed

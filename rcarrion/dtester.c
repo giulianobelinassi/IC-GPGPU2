@@ -19,6 +19,8 @@
 #define FORMAT_SIGMA "%4d  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf"
 #endif
 
+#define EPS 0.0001
+
 static char buffer[BUF_SIZE];
 
 
@@ -197,19 +199,55 @@ void get_sigmas_internos(int ni, REAL complex sigmas[ni][3][3], FILE* file)
 	rewind(file);
 }
 
-bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL complex nos_contorno_sol[nbe][3])
+double sum_errors(int m, int n, REAL complex A[m][n], REAL complex B[m][n])
 {
 	int i, j;
 	double acc = 0;
 
-	for (i = 0; i < nbe; ++i)
+	for (i = 0; i < m; ++i)
 	{
-		for (j = 0; j < 3; ++j)
-		{
-			acc += cabs(nos_contorno[i][j] - nos_contorno_sol[i][j]);
-		}
+		for (j = 0; j < n; ++j)
+			acc += cabs(A[i][j] - B[i][j]);
 	}
-	printf("Erro nos Nós de Contorno: %e\n", acc);
+	return acc;
+}
+
+#define ASSERT(acc) if (acc > EPS) return false
+bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL complex nos_contorno_sol[nbe][3])
+{
+	double acc = sum_errors(nbe, 3, nos_contorno, nos_contorno_sol);
+
+	ASSERT(acc);
+
+	return true;
+}
+
+bool compare_tractions(int nbe, REAL complex tractions[nbe][3], REAL complex tractions_sol[nbe][3])
+{
+	double acc = sum_errors(nbe, 3, tractions, tractions_sol);
+	
+	ASSERT(acc);
+	return true;
+}
+
+bool compare_deslocamentos_internos(int ni, REAL complex deslocamentos[ni][3], REAL complex deslocamentos_sol[ni][3])
+{
+	double acc = sum_errors(ni, 3, deslocamentos, deslocamentos_sol);
+	
+	ASSERT(acc);
+	return true;
+}
+
+bool compare_sigmas_internos(int ni, REAL complex sigma[ni][3][3], REAL complex sigma_sol[ni][3][3])
+{
+	double acc = 0;
+	int i;
+
+	for (i = 0; i < ni; ++i)
+		acc += sum_errors(3, 3, sigma[i], sigma_sol[i]);
+	
+	ASSERT(acc);
+	
 	return true;
 }
 
@@ -221,10 +259,17 @@ int main(int argc, char* argv[])
 
 	file = fopen(argv[1], "r");
 	file_sol = fopen(argv[2], "r");
+	
+	if (argc != 3)
+	{
+		fputs("Error: Wrong number of arguments\n", stderr);
+		return 500;
+	}
+
 	if (!file || !file_sol)	
 	{
 		fputs("Error: Invalid filepath\n", stderr);
-		return 1;
+		return 501;
 	}
 	get_dimension_data(&n, &nbe, &ni, file);
 
@@ -233,7 +278,9 @@ int main(int argc, char* argv[])
 
 	REAL complex nos_contorno_sol[nbe][3], tractions_sol[nbe][3], 
 		         deslocamentos_sol[ni][3], sigmas_sol[ni][3][3];
-	
+
+	bool validity = true;
+
 	get_nos_contorno(nbe, nos_contorno, file);
 	get_tractions(nbe, tractions, file);
 	get_deslocamentos_internos(ni, deslocamentos, file);
@@ -244,7 +291,14 @@ int main(int argc, char* argv[])
 	get_deslocamentos_internos(ni, deslocamentos_sol, file);
 	get_sigmas_internos(ni, sigmas_sol, file);
 
-	compare_nos_contorno(nbe, nos_contorno, nos_contorno_sol);
+	validity &= compare_nos_contorno(nbe, nos_contorno, nos_contorno_sol);
+	validity &= compare_tractions(nbe, tractions, tractions_sol);
+	validity &= compare_deslocamentos_internos(ni, deslocamentos, deslocamentos_sol);
+	validity &= compare_sigmas_internos(ni, sigmas, sigmas_sol);
 
-	return 0;
+//	printf("validity = %d\n", (unsigned int) validity);
+
+	if (validity)
+		return 0;
+	else return 1;
 }
