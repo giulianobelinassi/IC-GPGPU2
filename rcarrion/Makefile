@@ -4,7 +4,7 @@ NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
-NVFLAGS = $(EXTRA) -g -G -use_fast_math -lineinfo --gpu-architecture=sm_52 
+NVFLAGS = $(EXTRA) -g -G -use_fast_math -O3 #-lineinfo --gpu-architecture=sm_52 
 FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
 RM      = rm -f
 

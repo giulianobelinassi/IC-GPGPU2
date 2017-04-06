@@ -83,8 +83,15 @@ C        t0 = OMP_GET_WTIME()
 * ZERANDO AS MATRIZES H E G
 *
 
-        ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
-        ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
+        DO j = 1, 3*NBE
+            DO i = 1, 3*NBE
+                ZG(i, j) = (0.0, 0.0)
+                ZH(i, j) = (0.0, 0.0)
+            ENDDO
+        ENDDO
+
+!       ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
+!       ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *

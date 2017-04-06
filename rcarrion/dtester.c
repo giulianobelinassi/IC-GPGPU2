@@ -19,7 +19,7 @@
 #define FORMAT_SIGMA "%4d  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf  %lf,%lf"
 #endif
 
-#define EPS 0.0001
+#define EPS 0.001
 
 static char buffer[BUF_SIZE];
 
@@ -199,24 +199,30 @@ void get_sigmas_internos(int ni, REAL complex sigmas[ni][3][3], FILE* file)
 	rewind(file);
 }
 
-double sum_errors(int m, int n, REAL complex A[m][n], REAL complex B[m][n])
+double norm_1_delta(int m, int n, REAL complex A[m][n], REAL complex B[m][n])
 {
 	int i, j;
 	double acc = 0;
+	double acc_max = 0;
 
 	for (i = 0; i < m; ++i)
 	{
+		acc = 0;
 		for (j = 0; j < n; ++j)
 			acc += cabs(A[i][j] - B[i][j]);
+	
+		if (acc > acc_max)
+			acc_max = acc;
 	}
-	return acc;
+	return acc_max;
 }
 
 #define ASSERT(acc) if (acc > EPS) return false
 bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL complex nos_contorno_sol[nbe][3])
 {
-	double acc = sum_errors(nbe, 3, nos_contorno, nos_contorno_sol);
+	double acc = norm_1_delta(nbe, 3, nos_contorno, nos_contorno_sol);
 
+	printf("%f\n",acc);
 	ASSERT(acc);
 
 	return true;
@@ -224,16 +230,18 @@ bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL compl
 
 bool compare_tractions(int nbe, REAL complex tractions[nbe][3], REAL complex tractions_sol[nbe][3])
 {
-	double acc = sum_errors(nbe, 3, tractions, tractions_sol);
+	double acc = norm_1_delta(nbe, 3, tractions, tractions_sol);
 	
+	printf("%f\n",acc);
 	ASSERT(acc);
 	return true;
 }
 
 bool compare_deslocamentos_internos(int ni, REAL complex deslocamentos[ni][3], REAL complex deslocamentos_sol[ni][3])
 {
-	double acc = sum_errors(ni, 3, deslocamentos, deslocamentos_sol);
+	double acc = norm_1_delta(ni, 3, deslocamentos, deslocamentos_sol);
 	
+	printf("%f\n",acc);
 	ASSERT(acc);
 	return true;
 }
@@ -241,11 +249,16 @@ bool compare_deslocamentos_internos(int ni, REAL complex deslocamentos[ni][3], R
 bool compare_sigmas_internos(int ni, REAL complex sigma[ni][3][3], REAL complex sigma_sol[ni][3][3])
 {
 	double acc = 0;
+	double acc_max = 0;
 	int i;
 
+
 	for (i = 0; i < ni; ++i)
-		acc += sum_errors(3, 3, sigma[i], sigma_sol[i]);
-	
+		acc += norm_1_delta(3, 3, sigma[i], sigma_sol[i]);
+	if (acc > acc_max)
+		acc_max = acc;
+
+	printf("%f\n",acc);
 	ASSERT(acc);
 	
 	return true;
@@ -256,16 +269,15 @@ int main(int argc, char* argv[])
 	FILE* file, *file_sol;
 	int n, nbe, ni;
 
-
-	file = fopen(argv[1], "r");
-	file_sol = fopen(argv[2], "r");
-	
 	if (argc != 3)
 	{
 		fputs("Error: Wrong number of arguments\n", stderr);
 		return 500;
 	}
 
+	file = fopen(argv[1], "r");
+	file_sol = fopen(argv[2], "r");
+	
 	if (!file || !file_sol)	
 	{
 		fputs("Error: Invalid filepath\n", stderr);
@@ -286,10 +298,10 @@ int main(int argc, char* argv[])
 	get_deslocamentos_internos(ni, deslocamentos, file);
 	get_sigmas_internos(ni, sigmas, file);
 
-	get_nos_contorno(nbe, nos_contorno_sol, file);
-	get_tractions(nbe, tractions_sol, file);
-	get_deslocamentos_internos(ni, deslocamentos_sol, file);
-	get_sigmas_internos(ni, sigmas_sol, file);
+	get_nos_contorno(nbe, nos_contorno_sol, file_sol);
+	get_tractions(nbe, tractions_sol, file_sol);
+	get_deslocamentos_internos(ni, deslocamentos_sol, file_sol);
+	get_sigmas_internos(ni, sigmas_sol, file_sol);
 
 	validity &= compare_nos_contorno(nbe, nos_contorno, nos_contorno_sol);
 	validity &= compare_tractions(nbe, tractions, tractions_sol);
