@@ -4,16 +4,16 @@ NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
-NVFLAGS = $(EXTRA) -g -G -use_fast_math -O3 #-lineinfo --gpu-architecture=sm_52 
-FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
+NVFLAGS = $(EXTRA) -g -G -use_fast_math -O3 -arch=sm_35 -rdc=true #--lineinfo
+FLFLAGS = libopenblas.a -fopenmp -lcudadevrt -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
 RM      = rm -f
 
 all: main main_small
 
-main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o unl_stack.o Ghmatecd_cu.o
+main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o unl_stack.o Ghmatecd_cu.o Ghmatecd_link.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
-main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main_small.o unl_stack.o Ghmatecd_cu.o
+main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main_small.o unl_stack.o Ghmatecd_cu.o Ghmatecd_link.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
 Main.o: Main.for Inputece.for
@@ -23,7 +23,10 @@ Main_small.o: Main_small.for Inputece.for
 	$(FC) $(FCFLAGS) -c $<
 
 Ghmatecd_cu.o: kernels/Ghmatecd_cu.cu Sing_de.for Nonsingd.for
-	$(NVCC) $(NVFLAGS) -c $<
+	$(NVCC) $(NVFLAGS) -dc $<
+
+Ghmatecd_link.o: Ghmatecd_cu.o Sing_de.o Nonsingd.o
+	$(NVCC) $(NVFLAGS) -dlink $< -o $@
 
 Normvec.o: Normvec.for
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<

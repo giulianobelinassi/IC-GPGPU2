@@ -31,7 +31,7 @@ rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.
 
 echo -e "Dado a execução do programa 'main_small'"
 
-./main_small > /dev/null
+./main_small
 
 echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
 if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
@@ -50,7 +50,7 @@ fi
 
 echo -e "Dado a execução do programa 'main'"
 
-./main > /dev/null
+./main
 
 echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
 if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
