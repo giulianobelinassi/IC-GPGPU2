@@ -98,8 +98,10 @@ __global__ void ghmatecd_kernel(
 	int i, j;
 	
 	float p[4][2], f[4];
-	float xj[3][2], co[3][4];
-    float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
+	float xj[3][2];
+	__shared__ float co[3][4];
+    __shared__ float rn_cached[3];
+	float g0, g1, g2, p1, p2, p12, sp, sm, rp, rm, temp, det;
     float cxg, cyg, czg, cxp, cyp, czp;
     float j1, j2, j3;
     float r1, r2, r3, r, drn, rd[3];
@@ -107,29 +109,29 @@ __global__ void ghmatecd_kernel(
                     zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
 
 	thrust::complex<float> zhi, zgi;
-	int n_[4];
+
+	__shared__ thrust::complex<float> zhelem[3][3], zgelem[3][3];
 
 	//const float pi  = 3.141592654;
 	
 	int iii, jjj;
 
-	n_[0] = cone[ne*0 + jj];
-	n_[1] = cone[ne*1 + jj];
-	n_[2] = cone[ne*2 + jj];
-	n_[3] = cone[ne*3 + jj];
-
-	co[0][0] = cx[n_[0] - 1];
-	co[1][0] = cy[n_[0] - 1];
-	co[2][0] = cz[n_[0] - 1];
-	co[0][1] = cx[n_[1] - 1];
-	co[1][1] = cy[n_[1] - 1];
-	co[2][1] = cz[n_[1] - 1];
-	co[0][2] = cx[n_[2] - 1];
-	co[1][2] = cy[n_[2] - 1];
-	co[2][2] = cz[n_[2] - 1];
-	co[0][3] = cx[n_[3] - 1];
-	co[1][3] = cy[n_[3] - 1];
-	co[2][3] = cz[n_[3] - 1];
+	if (threadIdx.x < 3 && threadIdx.y < 3)
+	{
+		zgelem[threadIdx.x][threadIdx.y] = 0;
+		zhelem[threadIdx.x][threadIdx.x] = 0;
+	}
+	if (threadIdx.x < 4 && threadIdx.y == 1)
+	{
+		co[0][threadIdx.x] = cx[cone[ne*threadIdx.x + jj] - 1];
+		co[1][threadIdx.x] = cy[cone[ne*threadIdx.x + jj] - 1];
+		co[2][threadIdx.x] = cz[cone[ne*threadIdx.x + jj] - 1];
+	}
+	if (threadIdx.x < 3 && threadIdx.y == 1)
+	{
+		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
+	}
+	__syncthreads();
 
 	cxp = cxm[ii];
 	cyp = cym[ii];
@@ -216,7 +218,7 @@ __global__ void ghmatecd_kernel(
 
 	
 	r     = sqrt(r1*r1 + r2*r2 + r3*r3);
-	drn   = (r1*rn[jj][0] + r2*rn[jj][1] + r3*rn[jj][2])/r;
+	drn   = (r1*rn_cached[0] + r2*rn_cached[1] + r3*rn_cached[2])/r;
 	rd[0] = r1/r;
 	rd[1] = r2/r;
 	rd[2] = r3/r;
@@ -246,6 +248,7 @@ __global__ void ghmatecd_kernel(
 	zcc = (zc1-2.f)*(zaa + 0.5f*zbb-3.0f*zcappa/r)-2.0f*zcappa/r;
 
 	p12 = p1*p2*det;
+	
 
 	for (j = 0; j < 3; ++j)
 	{	for (i = 0; i < 3; ++i)
@@ -255,28 +258,42 @@ __global__ void ghmatecd_kernel(
 			
 
 			zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
-								rd[j]*rn[jj][i])) + rd[i]*rd[j]*drn*zbb + 
-						rd[i]*rn[jj][j]*zcc);
+								rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
+						rd[i]*rn_cached[j]*zcc);
 		
             
 			if (ii == jj)
 			{
 				zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
-				zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn[jj][i] - rd[i]*rn[jj][j]));
+				zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
 			}
 			
 			zgi = zgi*p12;
 			zhi = zhi*p12;
 
-			atomicAdd(((float*) &zg[index])    , zgi.real());
-			atomicAdd(((float*) &zg[index]) + 1, zgi.imag());
+			atomicAdd(((float*) &zgelem[j][i])    , zgi.real());
+			atomicAdd(((float*) &zgelem[j][i]) + 1, zgi.imag());
+
+			atomicAdd(((float*) &zhelem[j][i])    , zhi.real());
+			atomicAdd(((float*) &zhelem[j][i]) + 1, zhi.imag());
+
+//			atomicAdd(((float*) &zg[index])    , zgi.real());
+//			atomicAdd(((float*) &zg[index]) + 1, zgi.imag());
 	
-			atomicAdd(((float*) &zh[index])    , zhi.real());
-			atomicAdd(((float*) &zh[index]) + 1, zhi.imag());
+//			atomicAdd(((float*) &zh[index])    , zhi.real());
+//			atomicAdd(((float*) &zh[index]) + 1, zhi.imag());
 		
 		}
 	}
+
+	__syncthreads();
 	
+	if (jg < 3 && ig < 3)
+	{
+		int index = 3*ii + nx*3*jj + ig + nx*jg;
+		zg[index] = zgelem[jg][ig];
+		zh[index] = zhelem[jg][ig];
+	}
 }
 
 
@@ -607,6 +624,7 @@ void cuda_ghmatecd_(int* ne,
 
 	printf("n = %d, nbe = %d, npg = %d\n", *n,*nbe, *npg);
 
+//	cudaFuncSetCacheConfig(ghmatecd_kernel, cudaFuncCachePreferShared);
 	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
 						device_cone,
 						device_cx,
