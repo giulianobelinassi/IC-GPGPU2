@@ -27,9 +27,9 @@
           Z1=Z
           Z=Z1-P1/PP
         IF(DABS(Z-Z1).GT.EPS)GO TO 1
-        X(I)=XM-XL*Z
-        X(N+1-I)=XM+XL*Z
-        W(I)=2.0*XL/((1.-Z*Z)*PP*PP)
+        X(I)=REAL(XM-XL*Z)
+        X(N+1-I)=REAL(XM+XL*Z)
+        W(I)=REAL(2.0*XL/((1.-Z*Z)*PP*PP))
         W(N+1-I)=W(I)
 12    CONTINUE
       RETURN

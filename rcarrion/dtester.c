@@ -222,7 +222,7 @@ bool compare_nos_contorno(int nbe, REAL complex nos_contorno[nbe][3], REAL compl
 {
 	double acc = norm_1_delta(nbe, 3, nos_contorno, nos_contorno_sol);
 
-	printf("%f\n",acc);
+//	printf("%f\n",acc);
 	ASSERT(acc);
 
 	return true;
@@ -232,7 +232,7 @@ bool compare_tractions(int nbe, REAL complex tractions[nbe][3], REAL complex tra
 {
 	double acc = norm_1_delta(nbe, 3, tractions, tractions_sol);
 	
-	printf("%f\n",acc);
+//	printf("%f\n",acc);
 	ASSERT(acc);
 	return true;
 }
@@ -241,7 +241,7 @@ bool compare_deslocamentos_internos(int ni, REAL complex deslocamentos[ni][3], R
 {
 	double acc = norm_1_delta(ni, 3, deslocamentos, deslocamentos_sol);
 	
-	printf("%f\n",acc);
+//	printf("%f\n",acc);
 	ASSERT(acc);
 	return true;
 }
@@ -258,7 +258,7 @@ bool compare_sigmas_internos(int ni, REAL complex sigma[ni][3][3], REAL complex 
 	if (acc > acc_max)
 		acc_max = acc;
 
-	printf("%f\n",acc);
+//	printf("%f\n",acc);
 	ASSERT(acc);
 	
 	return true;

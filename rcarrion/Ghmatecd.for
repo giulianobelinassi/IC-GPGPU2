@@ -32,77 +32,48 @@
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,NX)
 
-        COMPLEX ZCH!,ZHEST(NX,NX),ZGEST(NX,NX)
-        REAL :: CO(4,3)!, ETA(3), A,B,C,R
+        COMPLEX ZCH
         REAL :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-        INTEGER N1,N2,N3,N4,NN,I,J,II,JJ,RET
+        INTEGER NN,I,J
 
 #ifdef TEST_GHMATECD_CUDA
+#undef  GHMATECD_USE_CPU
+#undef  GHMATECD_USE_GPU
+#define GHMATECD_USE_CPU
+#define GHMATECD_USE_GPU
         COMPLEX ZHP(NX,NX), ZGP(NX,NX)
 #endif
 
-C        REAL t0, t1
-C        t0 = OMP_GET_WTIME()
+#ifdef GHMATECD_USE_CPU
+        INTEGER N1,N2,N3,N4,II,JJ
+        REAL :: CO(4,3)
+#endif
+#ifdef GHMATECD_USE_GPU
+        INTEGER RET
+#endif
+
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 *
         DO I=1,NBE
-            ZDFI(3*I-2)=CMPLX(DFI(3*I-2),0.0)
-            ZDFI(3*I-1)=CMPLX(DFI(3*I-1),0.0)
-            ZDFI(3*I)=CMPLX(DFI(3*I),0.0)
+            ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
+            ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
+            ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
         ENDDO
-*
-* TRANSFORMAÇÃO DAS MATRIZES [HEST] E [GEST] EM NÚMEROS COMPLEXOS
-*
-
-!        DO J=1,N
-!            DO I=1,N
-!               ZHEST((3*I-2),(3*J-2))=CMPLX(HEST((3*I-2),(3*J-2)),0.0)
-!               ZHEST((3*I-2),(3*J-1))=CMPLX(HEST((3*I-2),(3*J-1)),0.0)
-!               ZHEST((3*I-2),(3*J))  =CMPLX(HEST((3*I-2),(3*J)),0.0)
-!               ZHEST((3*I-1),(3*J-2))=CMPLX(HEST((3*I-1),(3*J-2)),0.0)
-!               ZHEST((3*I-1),(3*J-1))=CMPLX(HEST((3*I-1),(3*J-1)),0.0)
-!               ZHEST((3*I-1),(3*J))  =CMPLX(HEST((3*I-1),(3*J)),0.0)
-!               ZHEST((3*I),(3*J-2))  =CMPLX(HEST((3*I),(3*J-2)),0.0)
-!               ZHEST((3*I),(3*J-1))  =CMPLX(HEST((3*I),(3*J-1)),0.0)
-!               ZHEST((3*I),(3*J))    =CMPLX(HEST((3*I),(3*J)),0.0)
-!
-!               ZGEST((3*I-2),(3*J-2))=CMPLX(GEST((3*I-2),(3*J-2)),0.0)
-!               ZGEST((3*I-2),(3*J-1))=CMPLX(GEST((3*I-2),(3*J-1)),0.0)
-!               ZGEST((3*I-2),(3*J))  =CMPLX(GEST((3*I-2),(3*J)),0.0)
-!               ZGEST((3*I-1),(3*J-2))=CMPLX(GEST((3*I-1),(3*J-2)),0.0)
-!               ZGEST((3*I-1),(3*J-1))=CMPLX(GEST((3*I-1),(3*J-1)),0.0)
-!               ZGEST((3*I-1),(3*J))  =CMPLX(GEST((3*I-1),(3*J)),0.0)
-!               ZGEST((3*I),(3*J-2))  =CMPLX(GEST((3*I),(3*J-2)),0.0)
-!               ZGEST((3*I),(3*J-1))  =CMPLX(GEST((3*I),(3*J-1)),0.0)
-!               ZGEST((3*I),(3*J))    =CMPLX(GEST((3*I),(3*J)),0.0)
-!            ENDDO
-!        ENDDO
-*
-* ZERANDO AS MATRIZES H E G
-*
-
-        DO j = 1, 3*NBE
-            DO i = 1, 3*NBE
-                ZG(i, j) = (0.0, 0.0)
-                ZH(i, j) = (0.0, 0.0)
-            ENDDO
-        ENDDO
-
-!       ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
-!       ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 *
-* CÁLCULO DAS COMPONENTES DO VETOR NORMAL
-* USANDO O PRODUTO VETORIAL DOS LADOS 1-2 E 1-3
-*
-
         CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
 
         t1 = OMP_GET_WTIME()
+
+#ifdef GHMATECD_USE_CPU
+* ZERANDO AS MATRIZES H E G
+*
+        ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
+        ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -111,16 +82,6 @@ C        t0 = OMP_GET_WTIME()
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
-C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
-C     $           (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
-C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
-C     $           (CX(N2)-CX(N1))*(CZ(N3)-CZ(N1))
-C            C=(CX(N2)-CX(N1))*(CY(N3)-CY(N1)) - 
-C     $           (CY(N2)-CY(N1))*(CX(N3)-CX(N1))
-C            R=SQRT(A*A+B*B+C*C)
-C            ETA(1)=A/R
-C            ETA(2)=B/R
-C            ETA(3)=C/R
 *
 * ARMAZENA AS COORDENADAS DOS PONTOS EXTREMOS DO ELEMENTO NO VETOR CO
 *
@@ -168,25 +129,18 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
-
         t2 = OMP_GET_WTIME()
-
-        PRINT *, "Tempo na CPU: ", (t2-t1)
-
-*
-* TRANSFORMAÇÃO DAS MATRIZES ZHP E ZGP PROVISÓRIAS
-* NAS MATRIZES ZH E ZG FINAIS
-*
+        PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
+#endif
         NN=3*NBE
 
-! MATRIZES PROVISÓRIAS ELIMINADAS. 
-!        ZH(1:NN, 1:NN) = ZHP(1:NN, 1:NN)
-!        ZG(1:NN, 1:NN) = ZGP(1:NN, 1:NN)
-
 #ifdef TEST_GHMATECD_CUDA
-        ZHP = (0.0,0.0)
-        ZGP = (0.0,0.0)
+!FAÇA UMA CÓPIA DAS MATRIZES ZG E ZH PARA COMPARAÇÃO COM O RESULTADO DA GPU.
+        ZGP = ZG
+        ZHP = ZH
+#endif
 
+#ifdef GHMATECD_USE_GPU
         t1 = OMP_GET_WTIME()
 
         CALL cuda_ghmatecd(NE,
@@ -214,17 +168,23 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      FR,
      $                      HEST,
      $                      GEST,
-     $                      ZGP,
-     $                      ZHP,
+     $                      ZG,
+     $                      ZH,
      $                      OME,
      $                      GI,
      $                      RET
      $                      )
 
+        IF (RET /= 0) THEN
+            PRINT*, "GHMATECD: Erro: Matriz Singular."
+        ENDIF
+
         t2 = OMP_GET_WTIME()
     
-        PRINT *, "Tempo na GPU: ", (t2 - t1)
-
+        PRINT *, "GHMATECD: Tempo na GPU: ", (t2 - t1)
+#endif
+        
+#ifdef TEST_GHMATECD_CUDA
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN, NBE, N)
 #endif
 *

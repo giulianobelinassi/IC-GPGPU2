@@ -4,7 +4,7 @@ NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -march=native -Ofast
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
-NVFLAGS = $(EXTRA) -g -G -use_fast_math -O3 -arch=sm_50 -maxrregcount=32 -Xptxas -v,-abi=no  --ptxas-options=-v #-lineinfo --gpu-architecture=sm_52 
+NVFLAGS = $(EXTRA) -use_fast_math -O3 -arch=sm_50 -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
 RM      = rm -f
 
@@ -38,7 +38,7 @@ Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECD_USE_GPU -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<

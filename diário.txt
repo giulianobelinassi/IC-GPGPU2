@@ -539,3 +539,25 @@ São Paulo, dia 15 de fevereiro de 2017
 	O tempo gasto em Ghmatecd usando 8 Núcleos no pegrande é de 10s,
 	já na GeForce 470 do PeGrande é de 35s (teste main). Irei consultar
 	o Marco Gonzálvez sobre alguma possível otimização no kernel.
+
+Quarta Feira, dia 17 de Maio de 2017
+	Tentei fazer com que o ghmatecd_kernel realizasse uma redução ao
+	invés de executar vários atomicAdd. O resultado foi desastroso.
+	Em seguida também tentei paralelilzar o laço com os atomicAdd. O 
+	resultado também não foi bom.
+
+	Entretanto, uma modificação deu algum resultado: Guardar temporariamente
+	os resultados de zh e zg em memória compartilhada e também guardar
+	co e rn em memória compartilhada. Com estas modificações e uma
+	diminuição na quantidade de registradores por thread, o tempo de
+	execução em CUDA diminuiu de 30s para 21s, mas ainda assim não
+	consegue encarar os 10s em 4 núcleos da CPU.
+
+Sábado, dia 20 de Maio de 2017
+	Após uma longa conversa com o Marcos González descobrimos que havia
+	um problema na flag de otimização do compilador NVCC. Apenas especificar
+	-O3 não otimiza o código na GPU. Especificar -Xptxas --opt-level=3
+	acelerou os resultados. É interessante notar que a documentação no]
+	site da NVIDIA não deixa isto claro, em minha opinião.
+
+
