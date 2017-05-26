@@ -560,4 +560,35 @@ Sábado, dia 20 de Maio de 2017
 	acelerou os resultados. É interessante notar que a documentação no]
 	site da NVIDIA não deixa isto claro, em minha opinião.
 
+Sexta-Feira, dia 26 de Maio de 2017
+	Executei o NVPROF no exemplo de 2160D, e os resultados trás algumas
+	informações sobre o problema:
+	  1-) FLOP Efficiency(Peak Single) 1%: Isto sugere que o algoritmo
+	  executado é Memory-Bound e portanto tentar otimizar o fluxo de dados
+	  é uma boa ideia.
 
+	  2-) Issue Stall Reasons(Execution Depencency) 81%: Há instruções que
+	  Estão aguardando pela disponibilidade de um dado que ainda não foi
+	  calculado.
+
+	  3-) Local Memory Overhead 94%: Razão entre o trafico entre os caches
+	  L1 e L2. Isto sugere que melhorar o acesso à memória pode trazer
+	  ganhos.
+
+	  4-) L2 Hit Rate (Texture Reads) 99.6%: Isto mostra que os dados
+	  estão organizados de forma adequada, caso contrário haveria muitos
+	  cache-misses pela necessidade de buscar dados na memória principal.
+
+	  5-) L2 Hit Rate (Texture Writes) 87.4%: O mesmo que (4-), porém este
+	  parece ser passível de melhorias.
+
+	  6-) Multiprocessor Acrivity: 99.5%: Isto mostra que as warps estão
+	  (quase) sempre ativas nos multiprocessadores.
+	  
+	  7-) Branch Efficiency: 57%: Isto mostra que há branches que contém
+	  divergências. Isto precisa ser melhorado.
+
+	Com isto em mãos, algumas melhorias ainda podem ser feitas.
+
+	Descobri que se comentar os atomicAdds, temos que o tempo na GPU baixa 
+	de 3.5s para 0.5s. Irei tentar removê-los do código.
