@@ -592,3 +592,10 @@ Sexta-Feira, dia 26 de Maio de 2017
 
 	Descobri que se comentar os atomicAdds, temos que o tempo na GPU baixa 
 	de 3.5s para 0.5s. Irei tentar removê-los do código.
+
+Segunda-Feira, dia 29 de Maio de 2017
+	Consegui reduzir o tempo do kernel para 1s na GTX980, porém fiz um hack
+	um tanto o quanto sujo. A dimensão-coluna da matriz rn é 3, mas se
+	aproveitármos o if da inicialização da matriz CO (que tem dimensão
+	coluna 4) consegue-se uma melhora de ~150ms no Kernel. Averiguarei uma
+	maineira mais limpa de se conseguir o mesmo resultado.

@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <cmath>
 #include <thrust/complex.h>
+#include <thrust/reduce.h>
+#include <thrust/execution_policy.h>
 
 extern "C"{
 
@@ -54,7 +56,6 @@ void nonsingd_(thrust::complex<float> zhelem[3][3],
                int* npg
                );
 
-
 __global__ void ghmatecd_kernel(
                            int cone[],
                            float cx[],
@@ -97,7 +98,7 @@ __global__ void ghmatecd_kernel(
 	float p[4][2], f[4];
 	float xj[3][2];
 	__shared__ float co[3][4];
-	__shared__ float rn_cached[3];
+	__shared__ float rn_cached[4];
 	float g1, g2, p1, p2, p12, sp, sm, rp, rm, det;
 	float cxg, cyg, czg, cxp, cyp, czp;
 	float j1, j2, j3;
@@ -107,27 +108,48 @@ __global__ void ghmatecd_kernel(
 
 	thrust::complex<float> zhi, zgi;
 
-	__shared__ thrust::complex<float> zhelem[3][3], zgelem[3][3];
+	__shared__ thrust::complex<float> zhelem[3][3][64], zgelem[3][3][64];
 
 	//const float pi  = 3.141592654;
 	
 	int iii, jjj;
 
-	if (threadIdx.x < 3 && threadIdx.y < 3)
-	{
-		zgelem[threadIdx.x][threadIdx.y] = 0;
-		zhelem[threadIdx.x][threadIdx.x] = 0;
-	}
+	zgelem[0][0][npg*ig + jg] = 0;
+	zgelem[0][1][npg*ig + jg] = 0;
+	zgelem[0][2][npg*ig + jg] = 0;
+	zgelem[1][0][npg*ig + jg] = 0;
+	zgelem[1][1][npg*ig + jg] = 0;
+	zgelem[1][2][npg*ig + jg] = 0;
+	zgelem[2][0][npg*ig + jg] = 0;
+	zgelem[2][1][npg*ig + jg] = 0;
+	zgelem[2][2][npg*ig + jg] = 0;
+
+	zhelem[0][0][npg*ig + jg] = 0;
+	zhelem[0][1][npg*ig + jg] = 0;
+	zhelem[0][2][npg*ig + jg] = 0;
+	zhelem[1][0][npg*ig + jg] = 0;
+	zhelem[1][1][npg*ig + jg] = 0;
+	zhelem[1][2][npg*ig + jg] = 0;
+	zhelem[2][0][npg*ig + jg] = 0;
+	zhelem[2][1][npg*ig + jg] = 0;
+	zhelem[2][2][npg*ig + jg] = 0;
+	
 	if (threadIdx.x < 4 && threadIdx.y == 1)
 	{
 		co[0][threadIdx.x] = cx[cone[ne*threadIdx.x + jj] - 1];
 		co[1][threadIdx.x] = cy[cone[ne*threadIdx.x + jj] - 1];
 		co[2][threadIdx.x] = cz[cone[ne*threadIdx.x + jj] - 1];
+		//Note que a dimensão coluna de rn é 3, mas estamos acessando o elemento
+		//na posição 4. Isto pode levar a um segfault, entretanto consegue-se
+		//uma melhora de ~100ms no kernel se fizermos esta alteração.
+		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
 	}
+/*
 	if (threadIdx.x < 3 && threadIdx.y == 1)
 	{
 		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
 	}
+*/
 	__syncthreads();
 
 	cxp = cxm[ii];
@@ -249,11 +271,8 @@ __global__ void ghmatecd_kernel(
 			zgi = zgi*p12;
 			zhi = zhi*p12;
 
-			atomicAdd(((float*) &zgelem[j][i])    , zgi.real());
-			atomicAdd(((float*) &zgelem[j][i]) + 1, zgi.imag());
-
-			atomicAdd(((float*) &zhelem[j][i])    , zhi.real());
-			atomicAdd(((float*) &zhelem[j][i]) + 1, zhi.imag());
+			zgelem[j][i][ig*npg + jg] = zgi;
+			zhelem[j][i][ig*npg + jg] = zhi;
 		}
 	}
 
@@ -262,8 +281,10 @@ __global__ void ghmatecd_kernel(
 	if (jg < 3 && ig < 3)
 	{
 		int index = 3*ii + nx*3*jj + ig + nx*jg;
-		zg[index] = zgelem[jg][ig];
-		zh[index] = zhelem[jg][ig];
+
+		zg[index] = thrust::reduce(thrust::seq, &zgelem[jg][ig][0], &zgelem[jg][ig][npg*npg]);
+		zh[index] = thrust::reduce(thrust::seq, &zhelem[jg][ig][0], &zhelem[jg][ig][npg*npg]);
+
 	}
 }
 
