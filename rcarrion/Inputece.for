@@ -3,6 +3,16 @@
 *      ESTA SUBROTINA LÊ E IMPRIME OS DADOS DO ARQUIVO DE ENTRADA      *
 *                                                                      *
 ************************************************************************
+
+
+      SUBROUTINE ALLOCATE_ASSERT(stats)
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: stats
+        IF (stats == 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE!"
+            STOP
+        ENDIF
+      END
 *
       SUBROUTINE INPUTECE (CX,CY,CZ,NE,NCOX,CONE,CXM,CYM,CZM,
      $    N,NBE,NP,NPG,GE,RNU,RMU)
@@ -11,10 +21,11 @@
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         CHARACTER*75 TITULO
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXM(NE),CYM(NE),CZM(NE)
-        INTEGER CONE(NE,4)
+        REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CX, CY, CZ, CXM
+        REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CYM, CZM
+        INTEGER, DIMENSION(:,:), INTENT(OUT), ALLOCATABLE :: CONE
         REAL cone_in(4)
+        INTEGER stats
 *
         WRITE(IPR,100)
  100    FORMAT(/' ',79('*')/)
@@ -26,6 +37,7 @@
 *
 * LEITURA DO NÚMERO DE NÓS E DAS PROPRIEDADES DO MATERIAL
 *
+
         READ(INP,*)N,NBE,NP,NPG,GE,RNU 
         WRITE(IPR,200)N,NBE,NP,NPG,GE,RNU     
  200    FORMAT(//'DADOS'//2X,'NÚMERO DE ELEMENTOS DA MALHA= ',I4/
@@ -35,7 +47,25 @@
      $      2X,'MÓDULO DE CISALHAMENTO= 'D14.7/
      $      2X,'COEFICIENTE DE POISSON= ',D14.7)
 *
-        RMU=GE 
+        RMU=GE
+
+        ALLOCATE(CX(NP), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+        ALLOCATE(CY(NP), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+        ALLOCATE(CZ(NP), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+
+        ALLOCATE(CXM(N), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+        ALLOCATE(CYM(N), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+        ALLOCATE(CZM(N), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+
+        ALLOCATE(CONE(N, 4), STAT = stats)
+        CALL ALLOCATE_ASSERT(stats)
+
 *
 * LEITURA DAS COORDENADAS DOS PONTOS EXTREMOS DOS ELEMENTOS DE CONTORNO
 * NAS DIREÇÕES 'X','Y' E 'Z'

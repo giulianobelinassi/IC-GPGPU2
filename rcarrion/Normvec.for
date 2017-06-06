@@ -1,15 +1,21 @@
 ! Subrotina que calcula o produto vetorial usado originalmente em Ghmatecd.for,
 ! Ghmatece.for e Interec.for, evitando cálculos redundantes.
 
-      SUBROUTINE NORMVEC(cone, cx, cy, cz, nx, ne, ncox, n, etas)
+      FUNCTION NORMVEC(cone, cx, cy, cz, n, np) RESULT(ETAS)
         IMPLICIT NONE
-        INTEGER, DIMENSION(NE,4), INTENT(IN) :: CONE
-        REAL, DIMENSION(NCOX), INTENT(IN) :: CX, CY, CZ
-        INTEGER, INTENT(IN) :: NX, NE, NCOX, N
-        REAL, DIMENSION(3,nx), INTENT(INOUT) :: ETAS
+        
+        INTEGER, DIMENSION(n,4), INTENT(IN) :: CONE
+        REAL, DIMENSION(np), INTENT(IN) :: CX, CY, CZ
+        INTEGER, INTENT(IN) :: n, np
+        REAL, DIMENSION(:,:), ALLOCATABLE:: ETAS
 
-        INTEGER J, N1,N2,N3,N4
+        INTEGER J, N1,N2,N3,N4, stats
         REAL A, B, C, R
+
+        ALLOCATE(ETAS(3, n), STAT = stats)
+        IF (stats == 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE!"
+        ENDIF
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,A,B,C,R)
@@ -30,5 +36,4 @@
             ETAS(3,j)=C/R
         ENDDO
 !$OMP END PARALLEL DO
-
-      END SUBROUTINE NORMVEC
+      END FUNCTION NORMVEC

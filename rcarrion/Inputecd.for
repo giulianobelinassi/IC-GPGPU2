@@ -12,13 +12,13 @@
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         CHARACTER*75 TITULO
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXM(NE),CYM(NE),CZM(NE)
-        DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
+        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+        REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CXI, CYI, CZI 
         DIMENSION BC(NX)
         DIMENSION AFR(NFRX)
-C       DIMENSION DELTA(3,3)
-        INTEGER CONE(NE,4),KODE(NX)
+        INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
+        INTEGER KODE(NX), stats1, stats2, stats3
 *
         WRITE(IPS,100)
  100    FORMAT(/' ',79('*')/)
@@ -43,6 +43,14 @@ C       DIMENSION DELTA(3,3)
      $      2X,'COEFICIENTE DE AMORTECIMENTO= ',D14.7/
      $      2X,'DENSIDADE DE MASSA= ',D14.7)
 *
+        ALLOCATE(CXI(L), STAT = stats1)
+        ALLOCATE(CYI(L), STAT = stats2)
+        ALLOCATE(CZI(L), STAT = stats3)
+        IF(stats1 == 0 .or. stats2 == 0 .or. stats3 == 0) THEN
+            PRINT*, "MEMORIA INSUFICIENTE!"
+            STOP
+        ENDIF
+
         ZGE=CMPLX(GE,GE*2.0*DAM)
         ZCS=CSQRT(ZGE/RHO)
         ZCP=ZCS*SQRT((2.0-2.0*RNU)/(1.0-2.0*RNU))

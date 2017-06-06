@@ -31,19 +31,18 @@
 C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         PARAMETER (NE=2200,NX=3*NE,NCOX=2200,NPIX=10,NFRX=7)
         COMMON INP,INQ,IPR,IPS,IPT
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXM(NE),CYM(NE),CZM(NE)
+        REAL, DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM, CYM, CZM
+        INTEGER, DIMENSION(:,:), ALLOCATABLE :: CONE
         DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
-        DIMENSION HEST(NX,NX),GEST(NX,NX)
+        REAL, DIMENSION(:,:), ALLOCATABLE :: HEST, GEST
         DIMENSION ZH(NX,NX),ZG(NX,NX)
         DIMENSION ZDFI(NX),ZFI(NX),ZDSOL(3*NPIX)
-C       DIMENSION ZVETSOL(NX)
         DIMENSION ZSSOL(9*NPIX)
         DIMENSION DELTA(3,3)
         DIMENSION BC(NX),DFI(NX),AFR(NFRX)
-        INTEGER CONE(NE,4),KODE(NX)
         INTEGER PIV(NX)
-        REAL, DIMENSION(3,NX) :: ETAS
+        REAL, DIMENSION(:,:), ALLOCATABLE :: ETAS
+        !REAL, DIMENSION(3,NX) :: ETAS
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
 * NX = DIMENSÃO MÁXIMA DO SISTEMA DE EQUAÇÕES       
@@ -91,7 +90,7 @@ C OPERACIONAL SOBRE A STACK
 ! Aciona a rotina que calcula as normas originalmente usadas em
 ! Ghmatece.for Ghmatecd.for e Interec.for. Isto evita calculos
 ! reduntantes.
-        CALL NORMVEC(CONE, CX, CY, CZ, NX, NE, NCOX, N, ETAS)
+        ETAS = NORMVEC(CONE, CX, CY, CZ, NX, NE, NCOX, N)
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
 *
@@ -146,6 +145,22 @@ C OPERACIONAL SOBRE A STACK
             CALL OUTPUTEC(ZFI,ZDFI,ZDSOL,ZSSOL,NPIX,NX,N,NBE,L,FR)
  12     CONTINUE
 *
+*
+            DEALLOCATE(CX)
+            DEALLOCATE(CY)
+            DEALLOCATE(CZ)
+
+            DEALLOCATE(CXM)
+            DEALLOCATE(CYM)
+            DEALLOCATE(CZM)
+            
+            DEALLOCATE(CONE) 
+            
+            DEALLOCATE(ETAS)
+
+            DEALLOCATE(HEST)
+            DEALLOCATE(GEST)
+
             CLOSE (INP)          
             CLOSE (INQ)
             CLOSE (IPR)          

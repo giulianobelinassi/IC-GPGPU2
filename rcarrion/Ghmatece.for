@@ -12,14 +12,16 @@
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXM(NE),CYM(NE),CZM(NE)
-        DIMENSION HEST(NX,NX),GEST(NX,NX)
+        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+        INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
+        REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
+        
         DIMENSION HELEM(3,3),GELEM(3,3)
         DIMENSION DELTA(3,3)
-        DIMENSION CO(4,3)!, ETA(3)
-        INTEGER CONE(NE,4)
+        DIMENSION CO(4,3)
         REAL, INTENT(IN) :: ETAS(3,NX)
+        INTEGER stats1, stats2
 *
         PI=4.0*ATAN(1.0)
 *
@@ -41,11 +43,16 @@
 *
 * ZERANDO AS MATRIZES H E G
 *
-        DO 50 I=1,N
-                II=3*(I-1) + 1
-                GEST(II:II+2, II:II+2) = 0.0
-                HEST(II:II+2, II:II+2) = 0.0
-  50    CONTINUE
+        ALLOCATE(HEST(3*NBE, 3*N), STAT = stats1)        
+        ALLOCATE(GEST(3*NBE, 3*N), STAT = stats2)
+        
+        IF (stats1 == 0 .or. stats2 == 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE!"
+            STOP
+        ENDIF
+
+        GEST = 0
+        HEST = 0
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
