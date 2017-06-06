@@ -599,3 +599,8 @@ Segunda-Feira, dia 29 de Maio de 2017
 	aproveitármos o if da inicialização da matriz CO (que tem dimensão
 	coluna 4) consegue-se uma melhora de ~150ms no Kernel. Averiguarei uma
 	maineira mais limpa de se conseguir o mesmo resultado.
+
+Terça-Feira, dia 6 de Junho de 2017
+	O Ronaldo eniou entradas maiores para teste, entretanto a maior delas
+	(14400) não executa pelo fato das matrizes serem alocadas no .bss .
+	Uma refatoração será necessária.
