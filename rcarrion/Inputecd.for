@@ -15,10 +15,10 @@
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CXI, CYI, CZI 
-        DIMENSION BC(NX)
-        DIMENSION AFR(NFRX)
+        REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: BC, AFR
+        INTEGER, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: KODE
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        INTEGER KODE(NX), stats1, stats2, stats3
+        INTEGER, DIMENSION(6) :: stats
 *
         WRITE(IPS,100)
  100    FORMAT(/' ',79('*')/)
@@ -43,13 +43,19 @@
      $      2X,'COEFICIENTE DE AMORTECIMENTO= ',D14.7/
      $      2X,'DENSIDADE DE MASSA= ',D14.7)
 *
-        ALLOCATE(CXI(L), STAT = stats1)
-        ALLOCATE(CYI(L), STAT = stats2)
-        ALLOCATE(CZI(L), STAT = stats3)
-        IF(stats1 == 0 .or. stats2 == 0 .or. stats3 == 0) THEN
+        ALLOCATE(CXI(L), STAT = stats(1))
+        ALLOCATE(CYI(L), STAT = stats(2))
+        ALLOCATE(CZI(L), STAT = stats(3))
+        ALLOCATE(BC(3*NBE), STAT = stats(4))
+        ALLOCATE(KODE(3*NBE), STAT = stats(5))
+        ALLOCATE(AFR(NFR), STAT = stats(6))
+        IF(stats(1) == 0 .or. stats(2) == 0 .or. stats(3) == 0 .or.
+     $    stats(4) == 0 .or. stats(5) == 0 .or. stats(6) == 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE!"
             STOP
         ENDIF
+         
+
 
         ZGE=CMPLX(GE,GE*2.0*DAM)
         ZCS=CSQRT(ZGE/RHO)
