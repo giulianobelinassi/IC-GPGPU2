@@ -19,8 +19,8 @@
 **                                                                    **
 ** DATA: 18/07/01                                                     **
 **                                                                    **
-** Modificado por: Giuliano Augusto Faulin Belinassi                  ** 
-** Data: 12/2016                                                      **
+** MODIFICADO POR: GIULIANO AUGUSTO FAULIN BELINASSI                  ** 
+** DATA: 12/2016                                                      **
 ************************************************************************
 ************************************************************************
 *
@@ -32,16 +32,18 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         PARAMETER (NE=2200,NX=3*NE,NCOX=2200,NPIX=10,NFRX=7)
         COMMON INP,INQ,IPR,IPS,IPT
         REAL, DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM, CYM, CZM
-        INTEGER, DIMENSION(:,:), ALLOCATABLE :: CONE
-        DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
+        INTEGER, DIMENSION(:,:), ALLOCATABLE :: CONE, KODE
+        REAL, DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
+        REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
         REAL, DIMENSION(:,:), ALLOCATABLE :: HEST, GEST
-        DIMENSION ZH(NX,NX),ZG(NX,NX)
-        DIMENSION ZDFI(NX),ZFI(NX),ZDSOL(3*NPIX)
-        DIMENSION ZSSOL(9*NPIX)
+        COMPLEX, DIMENSION(:,:), ALLOCATABLE :: ZH, ZG
+        COMPLEX, DIMENSION(:), ALLOCATABLE :: ZDFI, ZFI, ZDSOL, ZSSOL
+     
+
         DIMENSION DELTA(3,3)
-        DIMENSION BC(NX),DFI(NX),AFR(NFRX)
-        INTEGER PIV(NX)
+        INTEGER, DIMENSION(:), ALLOCATABLE :: PIV
         REAL, DIMENSION(:,:), ALLOCATABLE :: ETAS
+        INTEGER stats1
         !REAL, DIMENSION(3,NX) :: ETAS
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
@@ -102,11 +104,15 @@ C OPERACIONAL SOBRE A STACK
         CALL INPUTECD (CX,CY,CZ,CXI,CYI,CZI,KODE,BC,NFR,AFR,NE,NX,
      $     NCOX,NPIX,NFRX,CONE,CXM,CYM,CZM,N,NBE,NP,NPG,GE,RNU,RMU,
      $     L,FR,DAM,RHO,ZGE,ZCS,ZCP)
+       
         
         NN=3*NBE
-        DO 40 J=1,NN
-            DFI(J)=BC(J)
-  40    CONTINUE
+        ALLOCATE(DFI(NN), STAT = ITER)
+        IF (ITER == 0) THEN
+            PRINT*, "Memória insuficiente"
+        ENDIF
+
+        DFI = BC
         
         DO 12 I=1,NFR
             FR=AFR(I)
@@ -122,8 +128,13 @@ C OPERACIONAL SOBRE A STACK
 *
 * ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES (LAPACK)
 *
+            ALLOCATE(PIV(NN), STAT = stats1)
+            IF (stats1 == 0) THEN
+                PRINT*, "MEMORIA INSUFICIENTE"
+                STOP
+            ENDIF
 
-            CALL CGESV(NN,1,ZH,NX,PIV,ZFI,NX,ITER)
+            CALL CGESV(NN,1,ZH,NN,PIV,ZFI,NN,ITER)
             IF (ITER < 0) THEN
                 PRINT *, "Erro em ZGESV :-("
             ELSE IF (ITER > 0) THEN
@@ -153,13 +164,33 @@ C OPERACIONAL SOBRE A STACK
             DEALLOCATE(CXM)
             DEALLOCATE(CYM)
             DEALLOCATE(CZM)
-            
+           
+            DEALLOCATE(CXI)
+            DEALLOCATE(CYI)
+            DEALLOCATE(CZI)
+
+            DEALLOCATE(BC)
+            DEALLOCATE(KODE)
+            DEALLOCATE(AFR)
+
             DEALLOCATE(CONE) 
             
             DEALLOCATE(ETAS)
 
             DEALLOCATE(HEST)
             DEALLOCATE(GEST)
+    
+            DEALLOCATE(ZH)
+            DEALLOCATE(ZG)
+
+            DEALLOCATE(ZDFI)
+            DEALLOCATE(ZFI)
+
+            DEALLOCATE(DFI)
+            DEALLOCATE(ZDSOL)
+            DEALLOCATE(ZSSOL)
+            DEALLOCATE(PIV)
+
 
             CLOSE (INP)          
             CLOSE (INQ)

@@ -17,32 +17,33 @@
         COMMON  INP,INQ,IPR,IPS,IPT
         
 
-        REAL, INTENT(IN) :: CX(NCOX),CY(NCOX),CZ(NCOX)
-        REAL, INTENT(IN) :: CXM(NE),CYM(NE),CZM(NE)
-        REAL, INTENT(IN) :: HEST(NX,NX), GEST(NX,NX) 
-        COMPLEX,   INTENT(OUT):: ZH(NX,NX), ZG(NX,NX)
-        COMPLEX,   INTENT(OUT):: ZFI(NX)
-        REAL, INTENT(IN) :: DFI(NX)
-        COMPLEX,   INTENT(OUT):: ZDFI(NX)
-        INTEGER,          INTENT(IN) :: KODE(NX),NE,NX,NCOX,CONE(NE,4)
+        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+        REAL, DIMENSION(3*NBE, 3*N), INTENT(IN) :: HEST, GEST
+
+        COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
+        COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
+        REAL, INTENT(IN) :: DFI(3*NBE)
+        COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
+        INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
         REAL, INTENT(IN) :: DELTA(3,3),PI
         INTEGER,          INTENT(IN) :: N,NBE,NP,NPG
         REAL, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
         COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
-        REAL, INTENT(IN) :: ETAS(3,NX)
+        REAL, INTENT(IN) :: ETAS(3,N)
 
         COMPLEX ZCH
         REAL :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-        INTEGER NN,I,J
+        INTEGER NN,I,J, stats1, stats2
 
 #ifdef TEST_GHMATECD_CUDA
 #undef  GHMATECD_USE_CPU
 #undef  GHMATECD_USE_GPU
 #define GHMATECD_USE_CPU
 #define GHMATECD_USE_GPU
-        COMPLEX ZHP(NX,NX), ZGP(NX,NX)
+        COMPLEX ZHP(3*NBE,3*N), ZGP(3*NBE,3*N)
 #endif
 
 #ifdef GHMATECD_USE_CPU
@@ -56,6 +57,14 @@
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 *
+        NN = 3*NBE
+
+        ALLOCATE(ZDFI(NN), STAT = stats1)
+        ALLOCATE(ZFI(NN) , STAT = stats2)
+        IF (stats1 == 0 .OR. stats2 == 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE"
+        ENDIF
+
         DO I=1,NBE
             ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
             ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
@@ -67,13 +76,20 @@
 *
         CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
 
+        ALLOCATE(ZH(3*NBE, 3*N), STAT = stats1)
+        ALLOCATE(ZG(3*NBE, 3*N), STAT = stats2)
+
+        IF (stats1 == 0 .or. stats2 == 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE"
+        ENDIF
+
         t1 = OMP_GET_WTIME()
 
 #ifdef GHMATECD_USE_CPU
 * ZERANDO AS MATRIZES H E G
 *
-        ZG(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
-        ZH(1:3*NBE, 1:3*NBE) = (0.0, 0.0)
+        ZH = 0
+        ZG = 0
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -132,7 +148,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
-        NN=3*NBE
 
 #ifdef TEST_GHMATECD_CUDA
 !FAÇA UMA CÓPIA DAS MATRIZES ZG E ZH PARA COMPARAÇÃO COM O RESULTADO DA GPU.
@@ -185,7 +200,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #endif
         
 #ifdef TEST_GHMATECD_CUDA
-        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN, NBE, N)
+        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
 #endif
 *
 * REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS
@@ -206,16 +221,16 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
         
-        ZFI(1:NN) = MATMUL(ZG(1:NN, 1:NN), ZDFI(1:NN))
+        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
 C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
 
-      SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NX, NN,
-     $    NBE, N)
-        COMPLEX, INTENT(IN), DIMENSION(NX,NX) :: ZH,ZHP,ZG,ZGP
-        INTEGER, INTENT(IN) :: NX, NN
+      SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
+        IMPLICIT NONE
+        COMPLEX, INTENT(IN), DIMENSION(3*NBE,3*N) :: ZH,ZHP,ZG,ZGP
+        INTEGER, INTENT(IN) :: NBE, N  
 
         INTEGER :: i, j
         INTEGER :: N3, NBE3

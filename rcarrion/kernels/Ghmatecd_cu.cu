@@ -81,8 +81,6 @@ __global__ void ghmatecd_kernel(
                            int npg,
                            int n,
                            int nbe,
-                           int nx,
-                           int ne,
                            int* ret
                            )
 {
@@ -136,9 +134,9 @@ __global__ void ghmatecd_kernel(
 	
 	if (threadIdx.x < 4 && threadIdx.y == 1)
 	{
-		co[0][threadIdx.x] = cx[cone[ne*threadIdx.x + jj] - 1];
-		co[1][threadIdx.x] = cy[cone[ne*threadIdx.x + jj] - 1];
-		co[2][threadIdx.x] = cz[cone[ne*threadIdx.x + jj] - 1];
+		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
+		co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
+		co[2][threadIdx.x] = cz[cone[n*threadIdx.x + jj] - 1];
 		//Note que a dimensão coluna de rn é 3, mas estamos acessando o elemento
 		//na posição 4. Isto pode levar a um segfault, entretanto consegue-se
 		//uma melhora de ~100ms no kernel se fizermos esta alteração.
@@ -280,7 +278,7 @@ __global__ void ghmatecd_kernel(
 	
 	if (jg < 3 && ig < 3)
 	{
-		int index = 3*ii + nx*3*jj + ig + nx*jg;
+		int index = 3*ii + (3*nbe)*3*jj + ig + (3*nbe)*jg;
 
 		zg[index] = thrust::reduce(thrust::seq, &zgelem[jg][ig][0], &zgelem[jg][ig][npg*npg]);
 		zh[index] = thrust::reduce(thrust::seq, &zhelem[jg][ig][0], &zhelem[jg][ig][npg*npg]);
@@ -288,12 +286,10 @@ __global__ void ghmatecd_kernel(
 	}
 }
 
-void cuda_ghmatecd_(int* ne,
-                    int* nbe,
-                    int* nx,
+void cuda_ghmatecd_(int* nbe,
                     int* npg,
-                    int* ncox,
                     int* n,
+                    int* np,
                     int* cone_,
                     float cx[],
                     float cy[],
@@ -345,11 +341,11 @@ void cuda_ghmatecd_(int* ne,
 	int return_status;
 
 	/*Cast os parâmetros de volta para o tipo original*/
-	int (*cone)[*ne]          = (int (*)[*ne])   cone_;
-	float (*zhest)[*nx]       = (float (*)[*nx]) zhest_;
-	float (*zgest)[*nx]       = (float (*)[*nx]) zgest_;
-	thrust::complex<float> (*zgp)[*nx] = (thrust::complex<float> (*)[*nx]) zgp_;
-	thrust::complex<float> (*zhp)[*nx] = (thrust::complex<float> (*)[*nx]) zhp_;
+	int (*cone)[*n]          = (int (*)[*n])   cone_;
+	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
+	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
+	thrust::complex<float> (*zgp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zgp_;
+	thrust::complex<float> (*zhp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zhp_;
 
 
 	int i, ii;
@@ -357,40 +353,40 @@ void cuda_ghmatecd_(int* ne,
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cone, 4*(*ne)*sizeof(int));
+	error = cudaMalloc(&device_cone, 4*(*n)*sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_zh, (*nx)*(*nx)*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_zg, (*nx)*(*nx)*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
 	error = cudaMemset(device_return_status, 0, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMemset(device_zh, 0, (*nx)*(*nx)*sizeof(thrust::complex<float>));
+	error = cudaMemset(device_zh, 0, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMemset(device_zg, 0, (*nx)*(*nx)*sizeof(thrust::complex<float>));
+	error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cx, (*ncox)*sizeof(float));
+	error = cudaMalloc(&device_cx, (*np)*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cy, (*ncox)*sizeof(float));
+	error = cudaMalloc(&device_cy, (*np)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_cz, (*ncox)*sizeof(float));
+	error = cudaMalloc(&device_cz, (*np)*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cxm, (*ne)*sizeof(float));
+	error = cudaMalloc(&device_cxm, (*n)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_cym, (*ne)*sizeof(float));
+	error = cudaMalloc(&device_cym, (*n)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_czm, (*ne)*sizeof(float));
+	error = cudaMalloc(&device_czm, (*n)*sizeof(float));
 	cuda_assert(error);
 	
 	error = cudaMalloc(&device_gi, (*npg)*sizeof(float));
@@ -399,31 +395,31 @@ void cuda_ghmatecd_(int* ne,
 	error = cudaMalloc(&device_ome, (*npg)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_etas, (*nx)*3*sizeof(float));
+	error = cudaMalloc(&device_etas, (*n)*3*sizeof(float));
 	cuda_assert(error);
 	
 	error = cudaMalloc(&device_delta, 3*3*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_cone, cone, 4*(*ne)*sizeof(int), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cone, cone, 4*(*n)*sizeof(int), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_cx, cx, (*ncox)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cx, cx, (*np)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_cy, cy, (*ncox)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cy, cy, (*np)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 	
-	error = cudaMemcpy(device_cz, cz, (*ncox)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cz, cz, (*np)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_cxm, cxm, (*ne)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cxm, cxm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_cym, cym, (*ne)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_cym, cym, (*n)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 	
-	error = cudaMemcpy(device_czm, czm, (*ne)*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_czm, czm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
 	error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
@@ -467,8 +463,6 @@ void cuda_ghmatecd_(int* ne,
 						*npg,
 						*n,
 						*nbe,
-						*nx,
-						*ne,
 						device_return_status
 						);
 	cudaDeviceSynchronize();
@@ -481,9 +475,9 @@ void cuda_ghmatecd_(int* ne,
 		fputs("Matriz Singular\n", stderr);
 	}
 
-	error = cudaMemcpy(zhp_, device_zh, (*nx)*(*nx)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zhp_, device_zh, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-	error = cudaMemcpy(zgp_, device_zg, (*nx)*(*nx)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
 
 	
