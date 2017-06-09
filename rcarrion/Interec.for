@@ -13,17 +13,19 @@
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
-        DIMENSION CX(NCOX),CY(NCOX),CZ(NCOX)
-        DIMENSION CXI(NPIX),CYI(NPIX),CZI(NPIX)
-        DIMENSION ZHELEM(3,3),ZGELEM(3,3)
-        DIMENSION CO(4,3)!,ETA(3)
-        DIMENSION DELTA(3,3)
-        DIMENSION ZFI(NX),ZDFI(NX),ZDSOL(3*NPIX),ZSSOL(9*NPIX)
-        INTEGER CONE(NE,4),KODE(NX)
+        
+        REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ
+        REAL, DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
+        COMPLEX, DIMENSION(3,3) :: ZHELEM, ZGELEM 
+        REAL CO(4,3), DELTA(3,3)
+        COMPLEX, DIMENSION(3*NBE), INTENT(INOUT) :: ZDFI, ZFI
+        COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: ZDSOL, ZSSOL 
+        INTEGER, INTENT(IN) ::  CONE(N,4),KODE(3*NBE)
         DIMENSION ZD(3,3,3),ZS(3,3,3)
         REAL, INTENT(IN) :: ETAS(3,NX)
         
         REAL :: GI(NPG), OME(NPG)
+        INTEGER stats1, stats2
 
         CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
 *
@@ -45,11 +47,14 @@
 *
       IF(L <= 0) RETURN
 *
-        DO 30 K=1,L*3
-            ZDSOL(K)=(0.0,0.0)
-  30    CONTINUE
+        ALLOCATE(ZDSOL(3*L), STAT = stats1)
+        ALLOCATE(ZSSOL(9*L), STAT = stats2)
+        IF (stats1 == 0 .OR. stats2 == 0) THEN
+            PRINT*, "MEMORIA INSUFCIENTE"
+            STOP
+        ENDIF
 
-
+        ZDSOL = 0
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
@@ -112,7 +117,13 @@ C                ENDDO
 * CÁLCULO DAS TENSÕES EM PONTOS INTERNOS
 *
        
-        ZSSOL(1:L*9) = 0.0
+            
+        ALLOCATE(ZSSOL(9*L), STAT = stats1)
+        IF (stats1 == 0) THEN
+            PRINT*, "MEMORIA INSUFCIENTE"
+            STOP
+        ENDIF
+        ZSSOL = 0
        
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
