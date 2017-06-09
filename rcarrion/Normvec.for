@@ -13,7 +13,7 @@
         REAL A, B, C, R
 
         ALLOCATE(ETAS(3, n), STAT = stats)
-        IF (stats == 0) THEN
+        IF (stats /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE!"
         ENDIF
 

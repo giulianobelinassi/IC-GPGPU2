@@ -49,14 +49,12 @@
         ALLOCATE(BC(3*NBE), STAT = stats(4))
         ALLOCATE(KODE(3*NBE), STAT = stats(5))
         ALLOCATE(AFR(NFR), STAT = stats(6))
-        IF(stats(1) == 0 .or. stats(2) == 0 .or. stats(3) == 0 .or.
-     $    stats(4) == 0 .or. stats(5) == 0 .or. stats(6) == 0) THEN
+        IF(stats(1) /= 0 .or. stats(2) /= 0 .or. stats(3) /= 0 .or.
+     $    stats(4) /= 0 .or. stats(5) /= 0 .or. stats(6) /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE!"
             STOP
         ENDIF
          
-
-
         ZGE=CMPLX(GE,GE*2.0*DAM)
         ZCS=CSQRT(ZGE/RHO)
         ZCP=ZCS*SQRT((2.0-2.0*RNU)/(1.0-2.0*RNU))

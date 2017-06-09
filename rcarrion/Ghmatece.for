@@ -20,7 +20,7 @@
         DIMENSION HELEM(3,3),GELEM(3,3)
         DIMENSION DELTA(3,3)
         DIMENSION CO(4,3)
-        REAL, INTENT(IN) :: ETAS(3,NX)
+        REAL, INTENT(IN) :: ETAS(3,n)
         INTEGER stats1, stats2
 *
         PI=4.0*ATAN(1.0)
@@ -46,7 +46,7 @@
         ALLOCATE(HEST(3*NBE, 3*N), STAT = stats1)        
         ALLOCATE(GEST(3*NBE, 3*N), STAT = stats2)
         
-        IF (stats1 == 0 .or. stats2 == 0) THEN
+        IF (stats1 /= 0 .or. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE!"
             STOP
         ENDIF

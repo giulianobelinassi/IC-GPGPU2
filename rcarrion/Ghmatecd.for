@@ -27,8 +27,8 @@
         COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
         INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
         REAL, INTENT(IN) :: DELTA(3,3),PI
-        INTEGER,          INTENT(IN) :: N,NBE,NP,NPG
-        REAL, INTENT(IN) :: GE,RNU,RMU,L,FR,DAM,RHO
+        INTEGER, INTENT(IN) :: L,N,NBE,NP,NPG
+        REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
         COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,N)
@@ -61,7 +61,7 @@
 
         ALLOCATE(ZDFI(NN), STAT = stats1)
         ALLOCATE(ZFI(NN) , STAT = stats2)
-        IF (stats1 == 0 .OR. stats2 == 0) THEN
+        IF (stats1 /= 0 .OR. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
         ENDIF
 
@@ -79,8 +79,9 @@
         ALLOCATE(ZH(3*NBE, 3*N), STAT = stats1)
         ALLOCATE(ZG(3*NBE, 3*N), STAT = stats2)
 
-        IF (stats1 == 0 .or. stats2 == 0) THEN
+        IF (stats1 /= 0 .or. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
+            STOP
         ENDIF
 
         t1 = OMP_GET_WTIME()

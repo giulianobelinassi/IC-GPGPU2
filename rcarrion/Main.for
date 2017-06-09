@@ -28,11 +28,116 @@
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
+        INTERFACE 
+          SUBROUTINE INPUTECE(CX,CY,CZ,NE,NCOX,CONE,CXM,CYM,CZM,
+     $        N,NBE,NP,NPG,GE,RNU,RMU)
+            IMPLICIT REAL(A-H, O-Y)
+            IMPLICIT COMPLEX(Z)
+            REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CX, CY, CZ
+            REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CXM,CYM, CZM
+            INTEGER, DIMENSION(:,:), INTENT(OUT), ALLOCATABLE :: CONE
+          END
+        END INTERFACE 
+
+        INTERFACE
+          FUNCTION NORMVEC(cone, cx, cy, cz, n, np) RESULT(ETAS)
+            IMPLICIT NONE
+            INTEGER, DIMENSION(n,4), INTENT(IN) :: CONE
+            REAL, DIMENSION(np), INTENT(IN) :: CX, CY, CZ
+            INTEGER, INTENT(IN) :: n, np
+            REAL, DIMENSION(:,:), ALLOCATABLE:: ETAS
+          END
+        END INTERFACE 
+
+        INTERFACE
+          SUBROUTINE GHMATECE(CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
+     $        CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS)
+            IMPLICIT REAL (A-H,O-Y)
+            IMPLICIT COMPLEX (Z)
+            COMMON INP,INQ,IPR,IPS,IPT
+            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+            REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+            INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
+            REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
+            REAL :: DELTA(3,3), ETAS(3, n)
+          END
+        END INTERFACE
+
+        INTERFACE
+          SUBROUTINE INPUTECD (CX,CY,CZ,CXI,CYI,CZI,KODE,BC,NFR,AFR,NE,
+     $      NX,NCOX,NPIX,NFRX,CONE,CXM,CYM,CZM,N,NBE,NP,NPG,GE,RNU,RMU,
+     $      L,FR,DAM,RHO,ZGE,ZCS,ZCP)
+              
+            IMPLICIT REAL (A-H,O-Y)
+            IMPLICIT COMPLEX (Z)
+            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+            REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CXI, CYI
+            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CZI, BC
+            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: AFR
+            INTEGER, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: KODE
+            INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
+          END
+        END INTERFACE
+
+        INTERFACE
+          SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,
+     $      DFI,ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,
+     $      RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS)
+          
+            IMPLICIT NONE
+            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+            REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+            REAL, DIMENSION(3*NBE, 3*N), INTENT(IN) :: HEST, GEST
+
+            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH
+            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZG
+            COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
+            REAL, INTENT(IN) :: DFI(3*NBE)
+            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
+            INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
+            REAL, INTENT(IN) :: DELTA(3,3),PI
+            INTEGER, INTENT(IN) :: N,NBE,NP,NPG, L
+            REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
+            COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
+            REAL, INTENT(IN) :: C1,C2,C3,C4
+            REAL, INTENT(IN) :: ETAS(3,N)
+          END
+        END INTERFACE
+
+        INTERFACE
+          SUBROUTINE INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,
+     $      ZSSOL,NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,
+     $      NBE,RHO,ETAS)
+            
+            IMPLICIT REAL (A-H,O-Y)
+            IMPLICIT COMPLEX (Z)
+            REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ
+            REAL, DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
+            COMPLEX, DIMENSION(3,3) :: ZHELEM, ZGELEM 
+            REAL, INTENT(IN) :: DELTA(3,3)
+            COMPLEX, DIMENSION(3*NBE), INTENT(INOUT) :: ZDFI, ZFI
+            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDSOL(:), ZSSOL(:)
+            INTEGER, INTENT(IN) ::  CONE(N,4),KODE(3*NBE)
+            DIMENSION ZD(3,3,3),ZS(3,3,3)
+            REAL, INTENT(IN) :: ETAS(3,NX)
+          END 
+        END INTERFACE
+       
+        INTERFACE
+          SUBROUTINE OUTPUTEC(ZFI,ZDFI,ZDSOL,ZSSOL,NPIX,NX,N,NBE,L,FR)
+            IMPLICIT REAL (A-H,O-Y)
+            IMPLICIT COMPLEX (Z)
+            COMMON INP,INQ,IPR,IPS,IPT
+            DIMENSION ZFI(3*NBE),ZDFI(3*NBE),ZDSOL(3*L),ZSSOL(9*L)
+          END
+        END INTERFACE
+
 C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         PARAMETER (NE=2200,NX=3*NE,NCOX=2200,NPIX=10,NFRX=7)
         COMMON INP,INQ,IPR,IPS,IPT
         REAL, DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM, CYM, CZM
-        INTEGER, DIMENSION(:,:), ALLOCATABLE :: CONE, KODE
+        INTEGER, ALLOCATABLE :: CONE(:,:), KODE(:)
         REAL, DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
         REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
         REAL, DIMENSION(:,:), ALLOCATABLE :: HEST, GEST
@@ -74,11 +179,11 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 
 C ACIONA ROTINA QUE REMOVE AS RESTRIÇÕES IMPOSTAS PELO SISTEMA
 C OPERACIONAL SOBRE A STACK
-        CALL request_unlimited_stack(ITER)
-        IF (ITER /= 0) THEN
-            PRINT*, "Falha ao pedir uma stack de tamanho ilimitado! :-("
-            STOP
-        ENDIF
+!        CALL request_unlimited_stack(ITER)
+!        IF (ITER /= 0) THEN
+!            PRINT*, "Falha ao pedir uma stack de tamanho ilimitado! :-("
+!            STOP
+!        ENDIF
 
 *
 *
@@ -92,7 +197,7 @@ C OPERACIONAL SOBRE A STACK
 ! Aciona a rotina que calcula as normas originalmente usadas em
 ! Ghmatece.for Ghmatecd.for e Interec.for. Isto evita calculos
 ! reduntantes.
-        ETAS = NORMVEC(CONE, CX, CY, CZ, NX, NE, NCOX, N)
+        ETAS = NORMVEC(CONE, CX, CY, CZ, N, NP)
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
 *
@@ -108,7 +213,7 @@ C OPERACIONAL SOBRE A STACK
         
         NN=3*NBE
         ALLOCATE(DFI(NN), STAT = ITER)
-        IF (ITER == 0) THEN
+        IF (ITER /= 0) THEN
             PRINT*, "Memória insuficiente"
         ENDIF
 
@@ -129,7 +234,7 @@ C OPERACIONAL SOBRE A STACK
 * ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES (LAPACK)
 *
             ALLOCATE(PIV(NN), STAT = stats1)
-            IF (stats1 == 0) THEN
+            IF (stats1 /= 0) THEN
                 PRINT*, "MEMORIA INSUFICIENTE"
                 STOP
             ENDIF

@@ -8,7 +8,7 @@
       SUBROUTINE ALLOCATE_ASSERT(stats)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: stats
-        IF (stats == 0) THEN
+        IF (stats /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE!"
             STOP
         ENDIF
