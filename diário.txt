@@ -604,3 +604,9 @@ Terça-Feira, dia 6 de Junho de 2017
 	O Ronaldo eniou entradas maiores para teste, entretanto a maior delas
 	(14400) não executa pelo fato das matrizes serem alocadas no .bss .
 	Uma refatoração será necessária.
+
+Segunda-Feira, 10 de Julho de 2017
+	A Refatoração está quase pronta, falta apenas resolver um problema
+	relacionado a dimensão de ZFI. Foi resolvido um bug no testador
+	'dtester', que não considerava valores com NaN como erro.
+

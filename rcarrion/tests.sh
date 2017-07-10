@@ -18,6 +18,7 @@ function print_failed {
 
 #recompila tudo com as macros que habilitam testes que rodam internamente no programa.
 make clean
+#make EXTRA=-DGHMATECD_USE_CPU
 make EXTRA=-DTEST_GHMATECD_CUDA
 
 #remove os arquivos antigos.
@@ -31,7 +32,7 @@ rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.
 
 echo -e "Dado a execução do programa 'main_small'"
 
-#./main_small
+optirun --no-xorg ./main
 
 echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
 if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
@@ -48,23 +49,23 @@ else
 	print_failed
 fi
 
-echo -e "Dado a execução do programa 'main'"
+#echo -e "Dado a execução do programa 'main'"
 
-./main
-
-echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
-if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
-	print_ok
-else 
-	print_failed
-fi
-
-echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
-./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
-if [ $? -eq 0 ]; then
-	print_ok
-else 
-	print_failed
-fi
+#./main
+#
+#echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
+#if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+#	print_ok
+#else 
+#	print_failed
+#fi
+#
+#echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
+#./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
+#if [ $? -eq 0 ]; then
+#	print_ok
+#else 
+#	print_failed
+#fi
 
 echo -e "Este é o fim dos testes.\n\n"

@@ -43,7 +43,7 @@
 #undef  GHMATECD_USE_GPU
 #define GHMATECD_USE_CPU
 #define GHMATECD_USE_GPU
-        COMPLEX ZHP(3*NBE,3*N), ZGP(3*NBE,3*N)
+        COMPLEX, ALLOCATABLE :: ZHP(:,:), ZGP(:,:)
 #endif
 
 #ifdef GHMATECD_USE_CPU
@@ -152,6 +152,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 
 #ifdef TEST_GHMATECD_CUDA
 !FAÇA UMA CÓPIA DAS MATRIZES ZG E ZH PARA COMPARAÇÃO COM O RESULTADO DA GPU.
+        ALLOCATE(ZHP(3*NBE, 3*N))
+        ALLOCATE(ZGP(3*NBE, 3*N))
         ZGP = ZG
         ZHP = ZH
 #endif
@@ -159,12 +161,11 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #ifdef GHMATECD_USE_GPU
         t1 = OMP_GET_WTIME()
 
-        CALL cuda_ghmatecd(NE,
+        CALL cuda_ghmatecd(
      $                      NBE,
-     $                      NX,
      $                      NPG,
-     $                      NCOX,
      $                      N,
+     $                      NP,
      $                      CONE,
      $                      CX,
      $                      CY,
@@ -202,6 +203,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         
 #ifdef TEST_GHMATECD_CUDA
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
+        DEALLOCATE(ZHP)
+        DEALLOCATE(ZGP)
 #endif
 *
 * REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <complex.h>
 #include <stdbool.h>
+#include <math.h>
+#include <float.h>
 
 #define BUF_SIZE 4096
 
@@ -264,6 +266,22 @@ bool compare_sigmas_internos(int ni, REAL complex sigma[ni][3][3], REAL complex 
 	return true;
 }
 
+bool has_nans(int m, int n, REAL complex A[m][n])
+{
+	int i, j;
+
+	for (i = 0; i < m; ++i)
+	{
+		for (j = 0; j < n; ++j)
+		{
+			if (isnan(creal(A[i][j])) || isnan(cimag(A[i][j])))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
 int main(int argc, char* argv[])
 {
 	FILE* file, *file_sol;
@@ -297,7 +315,12 @@ int main(int argc, char* argv[])
 	get_tractions(nbe, tractions, file);
 	get_deslocamentos_internos(ni, deslocamentos, file);
 	get_sigmas_internos(ni, sigmas, file);
-
+	
+	validity &= !has_nans(nbe, 3, nos_contorno);
+	validity &= !has_nans(nbe, 3, tractions);
+	validity &= !has_nans(ni,  3, deslocamentos);
+	validity &= !has_nans(ni,  9, sigmas);
+	
 	get_nos_contorno(nbe, nos_contorno_sol, file_sol);
 	get_tractions(nbe, tractions_sol, file_sol);
 	get_deslocamentos_internos(ni, deslocamentos_sol, file_sol);

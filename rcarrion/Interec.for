@@ -49,16 +49,17 @@
 *
         ALLOCATE(ZDSOL(3*L), STAT = stats1)
         ALLOCATE(ZSSOL(9*L), STAT = stats2)
-        IF (stats1 == 0 .OR. stats2 == 0) THEN
+        IF (stats1 /= 0 .OR. stats2 /= 0) THEN
             PRINT*, "MEMORIA INSUFCIENTE"
             STOP
         ENDIF
 
         ZDSOL = 0
+        ZSSOL = 0
 
-!$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
-!$OMP& REDUCTION(+:ZDSOL)
+C!$OMP  PARALLEL DO DEFAULT(SHARED)
+C!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
+C!$OMP& REDUCTION(+:ZDSOL)
         DO J=1,N
 *
             N1=CONE(J,1)
@@ -89,6 +90,12 @@ C            ETA(3)=C/R
             CO(4,2)=CY(N4)
             CO(4,3)=CZ(N4)
             JJ=3*(J-1)
+
+            IF (J == 103) THEN
+                PRINT*, "DEBUG ME"
+            ENDIF
+
+C            PRINT*, J , ZDSOL(1:3*L)
 *
             DO K=1,L
 *
@@ -109,25 +116,17 @@ C                    ENDDO
 C                ENDDO
             ENDDO
         ENDDO
-!$OMP END PARALLEL DO
+C!$OMP END PARALLEL DO
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ
 * O CÁLCULO PARA OS DESLOCAMENTOS EM PONTOS INTERNOS).
 *
 * CÁLCULO DAS TENSÕES EM PONTOS INTERNOS
 *
-       
-            
-        ALLOCATE(ZSSOL(9*L), STAT = stats1)
-        IF (stats1 == 0) THEN
-            PRINT*, "MEMORIA INSUFCIENTE"
-            STOP
-        ENDIF
-        ZSSOL = 0
-       
+
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
-!$OMP& REDUCTION(+:ZDSOL)
+!$OMP& REDUCTION(+:ZSSOL)
         DO K=1,L
             DO J=1,N
 *
