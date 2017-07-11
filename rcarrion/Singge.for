@@ -9,7 +9,7 @@
 ************************************************************************
 *
       SUBROUTINE SINGGE(HELEM,GELEM,CXM,CYM,CZM,ETA,CX,CY,CZ,
-     $  N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA)
+     $  N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA,GI,OME)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
@@ -70,7 +70,7 @@
 * INTEGRAÇÃO SOBRE O ELEMENTO QUADRILATERAL COLAPSADO
 *
             CALL NONSINGE(HP,GP,CO,CXM,CYM,CZM,ETA,N,NP,NPG,GE,RNU,RMU,
-     $          C1,C2,C3,C4,DELTA)
+     $          C1,C2,C3,C4,DELTA, GI, OME)
 *
             
             GELEM = GELEM + GP

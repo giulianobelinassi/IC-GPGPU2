@@ -1,9 +1,9 @@
 CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -march=native -Ofast
+FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -Ofast -march=native
 PARALLEL= -fopenmp
-CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -march=native -Wall
+CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -Wall -march=native
 NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
 RM      = rm -f

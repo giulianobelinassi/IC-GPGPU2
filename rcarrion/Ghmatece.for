@@ -16,7 +16,8 @@
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
         REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
-        
+        REAL, DIMENSION(NPG) :: GI, OME 
+
         DIMENSION HELEM(3,3),GELEM(3,3)
         DIMENSION DELTA(3,3)
         DIMENSION CO(4,3)
@@ -24,6 +25,11 @@
         INTEGER stats1, stats2
 *
         PI=4.0*ATAN(1.0)
+
+* ACIONA ROTINA QUE CALCULA OS PONTOS E PESOS DE GAUSS
+*
+        CALL GAULEG(-1.0,1.0,GI,OME,NPG)
+
 *
 * CONSTANTES USADAS NAS SOLUÇÕES FUNDAMENTAIS ESTÁTICAS
 *
@@ -103,13 +109,13 @@ C            ETAS(3)=C/R
                     CALL SINGGE(HELEM,GELEM,CXM(I),CYM(I),CZM(I),
      $                      ETAS(1:3,J),CX,
      $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,
-     $                  C2,C3,C4,DELTA)
+     $                  C2,C3,C4,DELTA,GI,OME)
                 ELSE
 
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
                     CALL NONSINGE(HELEM,GELEM,CO,CXM(I),CYM(I),CZM(I),
      $                  ETAS(1:3,J),N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,
-     $                  DELTA)
+     $                  DELTA,GI,OME)
                 ENDIF
 
                 II=3*(I-1) + 1

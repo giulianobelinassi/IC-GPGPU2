@@ -9,7 +9,7 @@
 ************************************************************************
 *
       SUBROUTINE NONSINGE(HELEM,GELEM,CO,CXP,CYP,CZP,ETA,
-     $N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA)
+     $N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA, GI, OME)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
@@ -24,9 +24,6 @@
         HELEM = 0.0
         GELEM = 0.0
 *
-* ACIONA ROTINA QUE CALCULA OS PONTOS E PESOS DE GAUSS
-*
-        CALL GAULEG(-1.0,1.0,GI,OME,NPG)
 *
         DO 400 JG=1,NPG
 *
