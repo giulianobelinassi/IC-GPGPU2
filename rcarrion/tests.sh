@@ -30,42 +30,42 @@ rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.
 # (Compaq Visual Fortran 2003, no Windows) convertido para o formato
 # Unix (sem o carriage return).
 
-echo -e "Dado a execução do programa 'main_small'"
-
-optirun --no-xorg ./main
-
-echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
-if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
-	print_ok
-else 
-	print_failed
-fi
-
-echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é compatível em precião ao SSOLO240D_-5+5.SOL ?"
-./dtester "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"
-if [ $? -eq 0 ]; then
-	print_ok
-else 
-	print_failed
-fi
-
-#echo -e "Dado a execução do programa 'main'"
-
-#./main
+#echo -e "Dado a execução do programa 'main_small'"
 #
-#echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
-#if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+#optirun --no-xorg ./main
+#
+#echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
+#if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
 #	print_ok
 #else 
 #	print_failed
 #fi
 #
-#echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
-#./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
+#echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é compatível em precião ao SSOLO240D_-5+5.SOL ?"
+#./dtester "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"
 #if [ $? -eq 0 ]; then
 #	print_ok
 #else 
 #	print_failed
 #fi
+
+echo -e "Dado a execução do programa 'main'"
+
+optirun --no-xorg ./main
+
+echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
+if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
+./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
+if [ $? -eq 0 ]; then
+	print_ok
+else 
+	print_failed
+fi
 
 echo -e "Este é o fim dos testes.\n\n"

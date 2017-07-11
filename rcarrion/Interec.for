@@ -57,10 +57,10 @@
         ZDSOL = 0
         ZSSOL = 0
 
-C!$OMP  PARALLEL DO DEFAULT(SHARED)
-C!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
-C!$OMP& REDUCTION(+:ZDSOL)
-        DO J=1,N
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
+!$OMP& REDUCTION(+:ZDSOL)
+        DO J=1,NBE
 *
             N1=CONE(J,1)
             N2=CONE(J,2)
@@ -91,18 +91,13 @@ C            ETA(3)=C/R
             CO(4,3)=CZ(N4)
             JJ=3*(J-1)
 
-            IF (J == 103) THEN
-                PRINT*, "DEBUG ME"
-            ENDIF
-
-C            PRINT*, J , ZDSOL(1:3*L)
-*
             DO K=1,L
 *
                 CALL NONSINGD(ZHELEM,ZGELEM,CO,CXI(K),CYI(K),CZI(K),
      $              ETAS(1:3,J),ZGE,ZCS,ZCP,DELTA,PI,FR,GI,OME,NPG)
 *
                 KK=3*(K-1)
+
                 ZDSOL(KK+1:KK+3)=ZDSOL(KK+1:KK+3) +
      $              MATMUL(ZGELEM,ZDFI(JJ+1:JJ+3))-
      $              MATMUL(ZHELEM,ZFI(JJ+1:JJ+3))
@@ -116,7 +111,7 @@ C                    ENDDO
 C                ENDDO
             ENDDO
         ENDDO
-C!$OMP END PARALLEL DO
+!$OMP END PARALLEL DO
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ
 * O CÁLCULO PARA OS DESLOCAMENTOS EM PONTOS INTERNOS).
@@ -128,7 +123,7 @@ C!$OMP END PARALLEL DO
 !$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
 !$OMP& REDUCTION(+:ZSSOL)
         DO K=1,L
-            DO J=1,N
+            DO J=1,NBE
 *
                 N1=CONE(J,1)
                 N2=CONE(J,2)
