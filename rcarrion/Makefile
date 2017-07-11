@@ -38,7 +38,7 @@ Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECD_USE_CPU -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -DTEST_GHMATECD_CUDA -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
