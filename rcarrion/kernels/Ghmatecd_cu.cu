@@ -15,46 +15,7 @@ void cuda_assert(cudaError_t error)
 	}
 }
 
-// Interfaces para as subrotinas do Fortran·
-void sing_de_(thrust::complex<float> zhelem[3][3],
-              thrust::complex<float> zgelem[3][3],
-              float co[][4],
-              float* cxm,
-              float* cym,
-              float* czm,
-              float eta[],
-              thrust::complex<float>* zge,
-              thrust::complex<float>* zcs,
-              thrust::complex<float>* zcp,
-              float* c1,
-              float* c2,
-              float* c3,
-              float* c4,
-              float delta[][3],
-              float* pi,
-              float* fr,
-			  float gi[],
-			  float ome[],
-              int* npg
-              );
-
-void nonsingd_(thrust::complex<float> zhelem[3][3],
-               thrust::complex<float> zgelem[3][3],
-               float co[][4],
-               float* cxm,
-               float* cym,
-               float* czm,
-               float eta[],
-               thrust::complex<float>* zge,
-               thrust::complex<float>* zcs,
-               thrust::complex<float>* zcp,
-               float delta[][3],
-			   float* pi,
-               float* fr,
-               float gi[],
-			   float ome[],
-               int* npg
-               );
+__constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
 __global__ void ghmatecd_kernel(
                            int cone[],
@@ -70,7 +31,6 @@ __global__ void ghmatecd_kernel(
                            thrust::complex<float> zge,
                            thrust::complex<float> zcs,
                            thrust::complex<float> zcp,
-                           float delta[3][3],
                            float fr,
                            float gi[],
                            float ome[],
@@ -132,7 +92,7 @@ __global__ void ghmatecd_kernel(
 	zhelem[2][1][npg*ig + jg] = 0;
 	zhelem[2][2][npg*ig + jg] = 0;
 	
-	if (threadIdx.x < 4 && threadIdx.y == 1)
+	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
 		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
 		co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
@@ -142,12 +102,6 @@ __global__ void ghmatecd_kernel(
 		//uma melhora de ~100ms no kernel se fizermos esta alteração.
 		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
 	}
-/*
-	if (threadIdx.x < 3 && threadIdx.y == 1)
-	{
-		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
-	}
-*/
 	__syncthreads();
 
 	cxp = cxm[ii];
@@ -251,7 +205,6 @@ __global__ void ghmatecd_kernel(
 	for (j = 0; j < 3; ++j)
 	{	for (i = 0; i < 3; ++i)
 		{
-//			int index = 3*ii + nx*3*jj + i + nx*j;
 			zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
 			
 
@@ -282,7 +235,6 @@ __global__ void ghmatecd_kernel(
 
 		zg[index] = thrust::reduce(thrust::seq, &zgelem[jg][ig][0], &zgelem[jg][ig][npg*npg]);
 		zh[index] = thrust::reduce(thrust::seq, &zhelem[jg][ig][0], &zhelem[jg][ig][npg*npg]);
-
 	}
 }
 
@@ -305,7 +257,6 @@ void cuda_ghmatecd_(int* nbe,
                     float* c2,
                     float* c3,
                     float* c4,
-                    float delta[3][3],
                     float* fr,
                     float* zhest_,
                     float* zgest_,
@@ -398,9 +349,6 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMalloc(&device_etas, (*n)*3*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_delta, 3*3*sizeof(float));
-	cuda_assert(error);
-
 	error = cudaMemcpy(device_cone, cone, 4*(*n)*sizeof(int), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
@@ -431,9 +379,6 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 	
-	error = cudaMemcpy(device_delta, delta, 3*3*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
 	cudaDeviceSynchronize();
 
 //	printf("n = %d, nbe = %d, npg = %d\n", *n,*nbe, *npg);
@@ -452,7 +397,6 @@ void cuda_ghmatecd_(int* nbe,
 						*zge,
 						*zcs,
 						*zcp,
-						(float (*)[3]) device_delta,
 						*fr,
 						device_gi,
 						device_ome,
@@ -479,9 +423,6 @@ void cuda_ghmatecd_(int* nbe,
 	cuda_assert(error);
 	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-
-	
-	
 	
 	for (i = 0; i < *nbe; ++i)
 	{
@@ -494,8 +435,8 @@ void cuda_ghmatecd_(int* nbe,
 			}
 		}
 	}
-
-	error = cudaFree(device_cone);
+	
+    error = cudaFree(device_cone);
 	cuda_assert(error);
 	error = cudaFree(device_zh);
 	cuda_assert(error);
@@ -506,8 +447,6 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaFree(device_ome);
 	cuda_assert(error);
 	error = cudaFree(device_etas);
-	cuda_assert(error);
-	error = cudaFree(device_delta);
 	cuda_assert(error);
 	error = cudaFree(device_cx);
 	cuda_assert(error);

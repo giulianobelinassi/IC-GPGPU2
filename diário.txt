@@ -609,4 +609,21 @@ Segunda-Feira, 10 de Julho de 2017
 	A Refatoração está quase pronta, falta apenas resolver um problema
 	relacionado a dimensão de ZFI. Foi resolvido um bug no testador
 	'dtester', que não considerava valores com NaN como erro.
+Quinta-Feira, 13 de Julho de 2017
+	Paralelizei parte da subrotina Ghmatece e tive muitos problemas
+	de "precisão" (que na verdade eram problemas de acesso indevido
+	à memória) que me tomaram este dia quase que inteiro.
+	A paralelização foi feita da mesma maneira que Ghmatecd.
+	O erro foi 0. Por que?? E por que o erro em Ghmatecd é da ordem
+	de 1.0e-5? Seriam devido aos cálculos com complexos?
+
+	Sim. Na paralelização na GPU da subrotina GHMATECD, basta notar
+	que para o exemplo de 240 pontos o maior erro na matriz é na
+	posição (i,j) = (73, 75) (Matriz indexada de 1) e que as variáveis
+	zfhidr em fortran vale (-1.73247719,0.174237788), mas em CUDA
+	ela é calculada com o valor: {-1.73247623, 0.174237266}. Também
+	há erros em zcappadr. O Artigo aqui discute sobre erros de FP
+	em CUDA: https://developer.nvidia.com/sites/default/files/akamai/cuda/files/NVIDIA-CUDA-Floating-Point.pdf
+
+
 

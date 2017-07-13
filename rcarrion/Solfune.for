@@ -24,8 +24,8 @@
         RD(2)=R2/R
         RD(3)=R3/R
 *
-        DO 10 I=1,3
-             DO 10 J=1,3
+        DO 10 J=1,3
+             DO 10 I=1,3
                 U(I,J)=(C1/R)*(C2*DELTA(I,J)+RD(I)*RD(J))
                 T(I,J)=(C3/(R*R))*(RDN*(C4*DELTA(I,J)+3.0*RD(I)*RD(J))+
      $              C4*(RD(J)*ETA(I)-RD(I)*ETA(J)))

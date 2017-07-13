@@ -200,14 +200,6 @@ C        OPEN(UNIT=IPS,FILE='SSOLO14400D_-40+40.DAT',STATUS='UNKNOWN')
 
 C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 
-C ACIONA ROTINA QUE REMOVE AS RESTRIÇÕES IMPOSTAS PELO SISTEMA
-C OPERACIONAL SOBRE A STACK
-!        CALL request_unlimited_stack(ITER)
-!        IF (ITER /= 0) THEN
-!            PRINT*, "Falha ao pedir uma stack de tamanho ilimitado! :-("
-!            STOP
-!        ENDIF
-
 *
 *
 * ACIONA ROTINA QUE LÊ OS DADOS DE ENTRADA PARA O PROBLEMA ESTÁTICO

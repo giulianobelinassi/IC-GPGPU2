@@ -1,7 +1,7 @@
 CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -funroll-loops -flto -Ofast -march=native
+FCFLAGS = $(EXTRA) -g -cpp# -Wall -Wno-unused-dummy-argument -funroll-loops -flto -Ofast -march=native
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -Wall -march=native
 NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
@@ -10,19 +10,16 @@ RM      = rm -f
 
 all: main
 
-main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o unl_stack.o Ghmatecd_cu.o
+main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o Ghmatecd_cu.o Ghmatece_cu.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
-main_small: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main_small.o unl_stack.o Ghmatecd_cu.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
-
-Main.o: Main.for Inputece.for
-	$(FC) $(FCFLAGS) -c $<
-
-Main_small.o: Main_small.for Inputece.for
+Main.o: Main.for Inputece.for Ghmatecd.for Ghmatece.for
 	$(FC) $(FCFLAGS) -c $<
 
 Ghmatecd_cu.o: kernels/Ghmatecd_cu.cu Sing_de.for Nonsingd.for
+	$(NVCC) $(NVFLAGS) -c $<
+
+Ghmatece_cu.o: kernels/Ghmatece_cu.cu
 	$(NVCC) $(NVFLAGS) -c $<
 
 Normvec.o: Normvec.for
@@ -35,10 +32,10 @@ Inputecd.o: Inputecd.for
 	$(FC) $(FCFLAGS) -c $<
 
 Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECE_USE_CPU -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -DTEST_GHMATECD_CUDA -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECD_USE_CPU -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
@@ -72,10 +69,6 @@ Nonsingd.o: Nonsingd.for
 
 Nonsinge.o: Nonsinge.for
 	$(FC) $(FCFLAGS) -c $<
-
-unl_stack.o: unl_stack.c
-	$(CC) $(CFLAGS) -c $<
-	
 
 clean:
 	$(RM) main main_small *.o fort.*

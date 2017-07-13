@@ -18,6 +18,8 @@
         DIMENSION HELEM(3,3),GELEM(3,3),U(3,3),T(3,3)
         DIMENSION GI(NPG),OME(NPG)
         DIMENSION CO(4,3),ETA(3),P(2,4),XJ(2,3),F(4)
+!        CHARACTER(len=50) ::format_str="(I2, I2, I2, I2, F10.6, F10.6)"
+
 *
 * ZERA AS MATRIZES ELEMENTARES HELEM E GELEM
 *
@@ -94,7 +96,7 @@
      $              N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA)
 *
                 P12=P1*P2*DET
- 
+
                 HELEM = HELEM + T*P12
                 GELEM = GELEM + U*P12
                 

@@ -92,8 +92,8 @@
         ZH = 0
         ZG = 0
 
-!$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
+C!$OMP  PARALLEL DO DEFAULT(SHARED)
+C!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
         DO J=1,N
             N1=CONE(J,1)
             N2=CONE(J,2)
@@ -145,7 +145,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
                 ENDIF
             ENDDO
         ENDDO
-!$OMP END PARALLEL DO
+C!$OMP END PARALLEL DO
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
@@ -181,7 +181,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      C2,
      $                      C3,
      $                      C4,
-     $                      DELTA,
      $                      FR,
      $                      HEST,
      $                      GEST,
@@ -243,7 +242,6 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         REAL :: local_sum = 0, max_local_sum = 0
 
         eps = 1.5E-6*nbe
-
         N3   = N*3
         NBE3 = NBE*3 
 
@@ -252,7 +250,10 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         DO j = 1, N3
             local_sum = 0
             DO i = 1, NBE3
-                local_sum = local_sum + ABS(ZHP(i,j)-ZH(i,j))
+!                IF (ABS(ZHP(i,j) - ZH(i,j)) > 1e-5 ) THEN
+!                    PRINT*, i, j, ABS(ZHP(i,j) - ZH(i,j))
+!                ENDIF
+                local_sum = local_sum + ABS(ZHP(i,j) - ZH(i,j))
             ENDDO
             sum_norms = sum_norms + local_sum
             max_local_sum = MAX(local_sum, max_local_sum)
@@ -269,7 +270,7 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         DO j = 1, N3
             local_sum = 0
             DO i = 1, NBE3
-                local_sum = local_sum + ABS(ZGP(i,j)-ZG(i,j))
+                local_sum = local_sum + ABS(ZGP(i,j) - ZG(i,j))
             ENDDO
             sum_norms = sum_norms + local_sum
             max_local_sum = MAX(local_sum, max_local_sum)
