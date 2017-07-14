@@ -92,8 +92,8 @@
         ZH = 0
         ZG = 0
 
-C!$OMP  PARALLEL DO DEFAULT(SHARED)
-C!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
         DO J=1,N
             N1=CONE(J,1)
             N2=CONE(J,2)
@@ -145,7 +145,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
                 ENDIF
             ENDDO
         ENDDO
-C!$OMP END PARALLEL DO
+!$OMP END PARALLEL DO
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
@@ -224,7 +224,9 @@ C!$OMP END PARALLEL DO
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
         
-        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
+!        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
+        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
+
 C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN

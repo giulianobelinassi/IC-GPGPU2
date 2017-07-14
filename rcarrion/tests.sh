@@ -18,8 +18,8 @@ function print_failed {
 
 #recompila tudo com as macros que habilitam testes que rodam internamente no programa.
 make clean
-make EXTRA=-DTEST_GHMATECD_CUDA
-#make EXTRA="-DTEST_GHMATECD_CUDA -DTEST_GHMATECE_CUDA"
+#make EXTRA=-DTEST_GHMATECD_CUDA
+make EXTRA="-DTEST_GHMATECD_CUDA -DTEST_GHMATECE_CUDA"
 
 #remove os arquivos antigos.
 rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
