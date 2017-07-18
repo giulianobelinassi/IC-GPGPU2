@@ -102,13 +102,13 @@ C            ETA(3)=C/R
      $              MATMUL(ZGELEM,ZDFI(JJ+1:JJ+3))-
      $              MATMUL(ZHELEM,ZFI(JJ+1:JJ+3))
 
-C                DO IN=1,3
-C                    DO JN=1,3
-C                        ZDSOL(KK+IN)=ZDSOL(KK+IN)+
-C     $                      ZDFI(JJ+JN)*ZGELEM(IN,JN)-
-C     $                      ZFI(JJ+JN)*ZHELEM(IN,JN)
-C                    ENDDO
-C                ENDDO
+!                DO IN=1,3
+!                    DO JN=1,3
+!                        ZDSOL(KK+IN)=ZDSOL(KK+IN)+
+!     $                      ZDFI(JJ+JN)*ZGELEM(IN,JN)-
+!     $                      ZFI(JJ+JN)*ZHELEM(IN,JN)
+!                    ENDDO
+!                ENDDO
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO

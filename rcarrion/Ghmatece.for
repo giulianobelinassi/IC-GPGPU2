@@ -310,7 +310,7 @@ C            ETAS(3)=C/R
         REAL :: sum_norms = 0, eps
         REAL :: local_sum = 0, max_local_sum = 0
 
-        eps = 0
+        eps = 1.0E-5
 
         N3   = N*3
         NBE3 = NBE*3 

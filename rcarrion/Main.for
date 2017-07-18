@@ -151,6 +151,13 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         INTEGER stats1, i
         CHARACTER(len=100) :: input_e, input_d, output_e, output_d
 
+! Contorne um problema com o OpenBLAS. A primeira execução do programa
+! tem um comportamento indevido na qual a primeira chamada de CGEMV
+! retorna NaN.
+        COMPLEX :: W(1,1), x(1), b(1)
+        CALL CGEMV('N', 1, 1, (1.0,0), W, 1, x, 1, 0, b, 1)
+!
+
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
 * NX = DIMENSÃO MÁXIMA DO SISTEMA DE EQUAÇÕES       
