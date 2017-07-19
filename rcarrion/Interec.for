@@ -8,7 +8,7 @@
 *
       SUBROUTINE INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,ZSSOL,
      $  NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,NBE,RHO,
-     $  ETAS)
+     $  ETAS,GI,OME)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
@@ -24,10 +24,9 @@
         DIMENSION ZD(3,3,3),ZS(3,3,3)
         REAL, INTENT(IN) :: ETAS(3,NX)
         
-        REAL :: GI(NPG), OME(NPG)
+        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER stats1, stats2
 
-        CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
 *
@@ -102,16 +101,11 @@ C            ETA(3)=C/R
      $              MATMUL(ZGELEM,ZDFI(JJ+1:JJ+3))-
      $              MATMUL(ZHELEM,ZFI(JJ+1:JJ+3))
 
-!                DO IN=1,3
-!                    DO JN=1,3
-!                        ZDSOL(KK+IN)=ZDSOL(KK+IN)+
-!     $                      ZDFI(JJ+JN)*ZGELEM(IN,JN)-
-!     $                      ZFI(JJ+JN)*ZHELEM(IN,JN)
-!                    ENDDO
-!                ENDDO
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+
+
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ
 * O CÁLCULO PARA OS DESLOCAMENTOS EM PONTOS INTERNOS).
@@ -154,7 +148,7 @@ C                ETA(3)=C/R
                 CO(4,3)=CZ(N4)
 *
                 CALL SIGMAEC(CO,CXI(K),CYI(K),CZI(K),ETAS(1:3,J),DELTA,
-     $              PI,FR,ZGE,RHO,ZCS,ZCP,NPG,ZD,ZS)
+     $              PI,FR,ZGE,RHO,ZCS,ZCP,NPG,ZD,ZS,GI,OME)
 *
                 ZSSOL(9*K-8)=ZSSOL(9*K-8)+ZDFI(3*J-2)*ZD(1,1,1)+
      $                                    ZDFI(3*J-1)*ZD(2,1,1)+

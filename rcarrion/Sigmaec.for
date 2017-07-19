@@ -7,7 +7,7 @@
 ************************************************************************
 *
        SUBROUTINE SIGMAEC(CO,CXP,CYP,CZP,RN,DELTA,PI,FR,ZGE,RHO,ZCS,
-     $ZCP,NPG,ZD,ZS)
+     $ZCP,NPG,ZD,ZS,GI,OME)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
@@ -27,7 +27,6 @@ C       DIMENSION ETA(3)
 *
 * ACIONA ROTINA QUE CALCULA OS PONTOS E PESOS DE GAUSS
 *
-        CALL GAULEG(-1.0,1.0,GI,OME,NPG)
 *
         DO 400 JG=1,NPG
 *

@@ -7,7 +7,7 @@
 ************************************************************************
 *
       SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
-     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS)
+     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,OME)
 *
         USE omp_lib        
 
@@ -18,7 +18,7 @@
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
         REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
-        REAL, DIMENSION(NPG) :: GI, OME 
+        REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
 
         DIMENSION HELEM(3,3),GELEM(3,3)
         DIMENSION DELTA(3,3)
@@ -37,10 +37,8 @@
 #endif
 
         PI=4.0*ATAN(1.0)
-* ACIONA ROTINA QUE CALCULA OS PONTOS E PESOS DE GAUSS
-*
-        CALL GAULEG(-1.0,1.0,GI,OME,NPG)
-*
+
+
 * CONSTANTES USADAS NAS SOLUÇÕES FUNDAMENTAIS ESTÁTICAS
 *
         C1=1.0/(16.0*PI*RMU*(1.0-RNU))

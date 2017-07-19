@@ -8,7 +8,7 @@
 
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
-     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS)
+     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
         
         USE omp_lib
 
@@ -34,7 +34,7 @@
         REAL, INTENT(IN) :: ETAS(3,N)
 
         COMPLEX ZCH
-        REAL :: GI(NPG), OME(NPG)
+        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
         INTEGER NN,I,J, stats1, stats2
 
@@ -74,8 +74,6 @@
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 *
-        CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
-
         ALLOCATE(ZH(3*NBE, 3*N), STAT = stats1)
         ALLOCATE(ZG(3*NBE, 3*N), STAT = stats2)
 
@@ -224,8 +222,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
         
-!        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
-        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
+        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
+!        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
 
 C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)

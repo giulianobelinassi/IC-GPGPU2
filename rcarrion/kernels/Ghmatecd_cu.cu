@@ -41,6 +41,7 @@ __global__ void ghmatecd_kernel(
                            int npg,
                            int n,
                            int nbe,
+                           int interec,
                            int* ret
                            )
 {
@@ -213,7 +214,7 @@ __global__ void ghmatecd_kernel(
 						rd[i]*rn_cached[j]*zcc);
 		
             
-			if (ii == jj)
+			if (ii == jj && !interec)
 			{
 				zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
 				zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
@@ -285,7 +286,6 @@ void cuda_ghmatecd_(int* nbe,
 	float* device_gi;
 	float* device_ome;
 	float* device_etas;
-	float* device_delta;
 	int* device_cone;
 
 	int* device_return_status;
@@ -407,6 +407,7 @@ void cuda_ghmatecd_(int* nbe,
 						*npg,
 						*n,
 						*nbe,
+                        0,
 						device_return_status
 						);
 	cudaDeviceSynchronize();
