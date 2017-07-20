@@ -1,3 +1,5 @@
+#include "shared.h"
+
 #include <cstdio>
 #include <cmath>
 #include <thrust/complex.h>
@@ -5,10 +7,6 @@
 #include <thrust/execution_policy.h>
 
 extern "C"{
-
-void cuda_assert(cudaError_t error);
-
-__constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
 __global__ void ghmatecd_kernel(
                            int cone[],
@@ -236,14 +234,6 @@ void cuda_ghmatecd_(int* nbe,
                     int* npg,
                     int* n,
                     int* np,
-                    int* cone_,
-                    float cx[],
-                    float cy[],
-                    float cz[],
-                    float cxm[],
-                    float cym[],
-                    float czm[],
-                    float etas[][3],
                     thrust::complex<float>* zge,
                     thrust::complex<float>* zcs,
                     thrust::complex<float>* zcp,
@@ -256,8 +246,6 @@ void cuda_ghmatecd_(int* nbe,
                     float* zgest_,
                     thrust::complex<float>* zgp_,
                     thrust::complex<float>* zhp_,
-                    float ome[],
-                    float* gi,
                     int* status
                    )
 {
@@ -270,34 +258,19 @@ void cuda_ghmatecd_(int* nbe,
 
 	thrust::complex<float>* device_zh;
 	thrust::complex<float>* device_zg;
-	float* device_cx;
-	float* device_cy;
-	float* device_cz;
-	float* device_cxm;
-	float* device_cym;
-	float* device_czm;
-	float* device_gi;
-	float* device_ome;
-	float* device_etas;
-	int* device_cone;
 
 	int* device_return_status;
 	int return_status;
 
 	/*Cast os parâmetros de volta para o tipo original*/
-	int (*cone)[*n]          = (int (*)[*n])   cone_;
 	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
 	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
 	thrust::complex<float> (*zgp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zgp_;
 	thrust::complex<float> (*zhp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zhp_;
 
-
 	int i, ii;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_cone, 4*(*n)*sizeof(int));
 	cuda_assert(error);
 
 	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
@@ -315,67 +288,7 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cx, (*np)*sizeof(float));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_cy, (*np)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_cz, (*np)*sizeof(float));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_cxm, (*n)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_cym, (*n)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_czm, (*n)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_gi, (*npg)*sizeof(float));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_ome, (*npg)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_etas, (*n)*3*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_cone, cone, 4*(*n)*sizeof(int), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cx, cx, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cy, cy, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_cz, cz, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cxm, cxm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cym, cym, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_czm, czm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_ome, ome, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
 	cudaDeviceSynchronize();
-
-//	printf("n = %d, nbe = %d, npg = %d\n", *n,*nbe, *npg);
-
 	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
 						device_cone,
 						device_cx,
@@ -430,30 +343,12 @@ void cuda_ghmatecd_(int* nbe,
 		}
 	}
 	
-    error = cudaFree(device_cone);
-	cuda_assert(error);
 	error = cudaFree(device_zh);
 	cuda_assert(error);
 	error = cudaFree(device_zg);
 	cuda_assert(error);
-	error = cudaFree(device_gi);
-	cuda_assert(error);
-	error = cudaFree(device_ome);
-	cuda_assert(error);
-	error = cudaFree(device_etas);
-	cuda_assert(error);
-	error = cudaFree(device_cx);
-	cuda_assert(error);
-	error = cudaFree(device_cy);
-	cuda_assert(error);
-	error = cudaFree(device_cz);
-	cuda_assert(error);
-	error = cudaFree(device_cxm);
-	cuda_assert(error);
-	error = cudaFree(device_cym);
-	cuda_assert(error);
-	error = cudaFree(device_czm);
-	cuda_assert(error);
 	*status = return_status;
+    error = cudaFree(device_return_status);
+    cuda_assert(error);
 }
 }

@@ -164,14 +164,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      NPG,
      $                      N,
      $                      NP,
-     $                      CONE,
-     $                      CX,
-     $                      CY,
-     $                      CZ,
-     $                      CXM,
-     $                      CYM,
-     $                      CZM,
-     $                      ETAS,
      $                      ZGE,
      $                      ZCS,
      $                      ZCP,
@@ -184,8 +176,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      GEST,
      $                      ZG,
      $                      ZH,
-     $                      OME,
-     $                      GI,
      $                      RET
      $                      )
 
