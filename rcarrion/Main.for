@@ -231,6 +231,12 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 ! Ghmatece.for Ghmatecd.for e Interec.for. Isto evita calculos
 ! reduntantes.
         ETAS = NORMVEC(CONE, CX, CY, CZ, N, NP)
+
+! Aciona a rotina que envia dados que são usados em diversas subrotinas
+! para a GPU
+!        CALL send_shared_data_to_gpu(CX,CY,CZ,CXM,CYM,CZM,ETAS,GI,OME, 
+!     $      CONE,NP,NPG,N,NBE) 
+
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
 *
