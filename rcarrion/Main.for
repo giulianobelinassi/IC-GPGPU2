@@ -272,6 +272,8 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 *
 * ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES (LAPACK)
 *
+            DEALLOCATE(ZG)
+            
             ALLOCATE(PIV(NN), STAT = stats1)
             IF (stats1 /= 0) THEN
                 PRINT*, "MEMORIA INSUFICIENTE"
@@ -284,11 +286,11 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
             ELSE IF (ITER > 0) THEN
                 PRINT *, "Matriz Singular :-|"
             ENDIF
-
+            DEALLOCATE(PIV)
 *
 * ACIONA ROTINA QUE CALCULA OS DESLOCAMENTOS EM PONTOS INTERNOS
 *
-    
+            DEALLOCATE(ZH)
             CALL INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,ZSSOL,
      $          NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,
      $          NBE,RHO,ETAS,GI,OME
@@ -298,6 +300,11 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 * ACIONA ROTINA QUE IMPRIME AS VARIÁVEIS NO CONTORNO E PONTOS INTERNOS
 *
             CALL OUTPUTEC(ZFI,ZDFI,ZDSOL,ZSSOL,NPIX,NX,N,NBE,L,FR)
+
+            DEALLOCATE(ZDFI)
+            DEALLOCATE(ZFI)
+            DEALLOCATE(ZDSOL)
+            DEALLOCATE(ZSSOL)
  12     CONTINUE
 *
 *
@@ -327,17 +334,9 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
             DEALLOCATE(HEST)
             DEALLOCATE(GEST)
     
-            DEALLOCATE(ZH)
-            DEALLOCATE(ZG)
-
-            DEALLOCATE(ZDFI)
-            DEALLOCATE(ZFI)
-
             DEALLOCATE(DFI)
-            DEALLOCATE(ZDSOL)
-            DEALLOCATE(ZSSOL)
-            DEALLOCATE(PIV)
 
+            CALL deallocate_shared_gpu_data() 
 
             CLOSE (INP)          
             CLOSE (INQ)
