@@ -8,7 +8,7 @@
 *
       SUBROUTINE INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,ZSSOL,
      $  NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,NBE,RHO,
-     $  ETAS,GI,OME)
+     $  ETAS,GI,OME,NP)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
@@ -26,6 +26,9 @@
         
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER stats1, stats2
+
+        COMPLEX, DIMENSION(3*L, 3*NBE) :: ZG, ZH
+        COMPLEX, DIMENSION(3*L) :: ZDSOLP
 
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
@@ -105,6 +108,34 @@ C            ETA(3)=C/R
         ENDDO
 !$OMP END PARALLEL DO
 
+            CALL cuda_interec1(
+     $          NBE,
+     $          NPG,
+     $          L,
+     $          NP,
+     $          CXI,
+     $          CYI,
+     $          CZI,
+     $          ZGE,
+     $          ZCS,
+     $          ZCP,
+     $          0.,
+     $          0.,
+     $          0.,
+     $          0.,
+     $          FR,
+     $          ZG,
+     $          ZH,
+     $          ZDFI,
+     $          ZFI,
+     $          STATS1
+     $        )
+
+            ZDSOLP = MATMUL(ZG, ZDFI) - MATMUL(ZH, ZFI)
+
+            DO j = 1, 3*L
+                PRINT*, ZDSOLP(j), ZDSOL(j)
+            ENDDO
 
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ

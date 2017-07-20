@@ -1,3 +1,4 @@
+#include "shared.h"
 
 #include <cstdio>
 #include <cmath>
@@ -7,11 +8,9 @@
 
 extern "C"{
 
-void cuda_assert(cudaError_t error);
-
-__constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-
-__global__ void interec1_kernel(
+/*Reaproveite este kernel pois ele pode ser usado para resolver a parte
+ * de deslocamentos de pontos internos de Interec.for*/
+__global__ void ghmatecd_kernel(
                            int cone[],
                            float cx[],
                            float cy[],
@@ -35,206 +34,17 @@ __global__ void interec1_kernel(
                            int npg,
                            int n,
                            int nbe,
+                           int interec,
                            int* ret
-                           )
-{
-
-	const int ig = threadIdx.y;
-	const int jg = threadIdx.x;
-	const int ii = blockIdx.y;
-	const int jj = blockIdx.x;
-
-	int i, j;
-	
-	const float pi  = 3.141592654;
-	float p[4][2], f[4];
-	float xj[3][2];
-	__shared__ float co[3][4];
-	__shared__ float rn_cached[4];
-	float g1, g2, p1, p2, p12, sp, sm, rp, rm, det;
-	float cxg, cyg, czg, cxp, cyp, czp;
-	float j1, j2, j3;
-	float r1, r2, r3, r, drn, rd[3];
-	thrust::complex<float> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
-                    zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
-
-	thrust::complex<float> zhi, zgi;
-
-	__shared__ thrust::complex<float> zhelem[3][3][64], zgelem[3][3][64];
-
-	int iii, jjj;
-
-	zgelem[0][0][npg*ig + jg] = 0;
-	zgelem[0][1][npg*ig + jg] = 0;
-	zgelem[0][2][npg*ig + jg] = 0;
-	zgelem[1][0][npg*ig + jg] = 0;
-	zgelem[1][1][npg*ig + jg] = 0;
-	zgelem[1][2][npg*ig + jg] = 0;
-	zgelem[2][0][npg*ig + jg] = 0;
-	zgelem[2][1][npg*ig + jg] = 0;
-	zgelem[2][2][npg*ig + jg] = 0;
-
-	zhelem[0][0][npg*ig + jg] = 0;
-	zhelem[0][1][npg*ig + jg] = 0;
-	zhelem[0][2][npg*ig + jg] = 0;
-	zhelem[1][0][npg*ig + jg] = 0;
-	zhelem[1][1][npg*ig + jg] = 0;
-	zhelem[1][2][npg*ig + jg] = 0;
-	zhelem[2][0][npg*ig + jg] = 0;
-	zhelem[2][1][npg*ig + jg] = 0;
-	zhelem[2][2][npg*ig + jg] = 0;
-	
-	if (threadIdx.x < 4 && threadIdx.y == 0)
-	{
-		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
-		co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
-		co[2][threadIdx.x] = cz[cone[n*threadIdx.x + jj] - 1];
-		//Note que a dimensão coluna de rn é 3, mas estamos acessando o elemento
-		//na posição 4. Isto pode levar a um segfault, entretanto consegue-se
-		//uma melhora de ~100ms no kernel se fizermos esta alteração.
-		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
-	}
-	__syncthreads();
-
-	cxp = cxm[ii];
-	cyp = cym[ii];
-	czp = czm[ii];
-
-	g2 = gi[jg];
-	p2 = ome[jg];
-	sp = 1 + g2;
-	sm = 1 - g2;
-	p[0][0] = -0.25f*sm;
-	p[1][0] =  0.25f*sm;
-	p[2][0] =  0.25f*sp;
-	p[3][0] = -0.25f*sp;
-
-	g1 = gi[ig];
-	p1 = ome[ig];
-	rp = 1 + g1;
-	rm = 1 - g1;
-	f[0] = 0.25f*rm*sm;
-	f[1] = 0.25f*rp*sm;
-	f[2] = 0.25f*rp*sp;
-	f[3] = 0.25f*rm*sp;
-	p[0][1] = -0.25f*rm;
-	p[1][1] = -0.25f*rp;
-	p[2][1] = 0.25f*rp;
-	p[3][1] = 0.25f*rm;
-
-	
-   
-	for (iii = 0; iii < 2; ++iii)
-	{
-		for (jjj = 0; jjj < 3; ++jjj)
-		{
-			xj[jjj][iii] = p[0][iii]*co[jjj][0] + p[1][iii]*co[jjj][1]+ p[2][iii]*co[jjj][2] + p[3][iii]*co[jjj][3];
-		}
-	}
-    
-
-    j1 = xj[1][0]*xj[2][1]-xj[1][1]*xj[2][0];
-	j2 = xj[0][1]*xj[2][0]-xj[0][0]*xj[2][1];
-	j3 = xj[0][0]*xj[1][1]-xj[0][1]*xj[1][0];
-
-	det = sqrt(j1*j1 + j2*j2 + j3*j3);
-
-	if (det < 1e-5)
-	{
-		*ret = 1;
-		return;
-	}
-
-
-	cxg = 0;
-	cyg = 0;
-	czg = 0;
-
-	for (iii = 0; iii < 4; ++iii)
-	{
-		cxg = cxg + co[0][iii]*f[iii];
-		cyg = cyg + co[1][iii]*f[iii];
-		czg = czg + co[2][iii]*f[iii];
-	}
-
-	r1    = cxg - cxp;
-	r2    = cyg - cyp;
-	r3    = czg - czp;
-
-	r     = sqrt(r1*r1 + r2*r2 + r3*r3);
-	drn   = (r1*rn_cached[0] + r2*rn_cached[1] + r3*rn_cached[2])/r;
-	rd[0] = r1/r;
-	rd[1] = r2/r;
-	rd[2] = r3/r;
-	
-
-	zwi = thrust::complex<float>(0, fr);
-	
-	zc0 = 1.f/(4.f*(pi)*(zge));
-	zc1 = ((zcp)/(zcs))*((zcp)/(zcs));
-	zc2 = ((zcs)/(zcp))*((zcs)/(zcp));
-	zkp = -zwi/(zcp);
-	zks = -zwi/(zcs);
-	zzp = zkp*r;
-	zzs = zks*r;
-	zezp= exp(zzp);
-	zezs= exp(zzs);
-	zp2 = zzp*zzp;
-	zs2 = zzs*zzs;
-
-	zfhi    = (1.f + 1.f/zs2 - 1.f/zzs)*zezs/r - zc2*(1.f/zp2 - 1.f/zzp)*zezp/r;
-	zcappa  = (1.f + 3.f/zs2 - 3.f/zzs)*zezs/r - zc2*(1.f + 3.f/zp2 - 3.f/zzp)*zezp/r;
-	zfhidr  = (-2.f+ zzs + 3.f/zzs - 3.f/zs2)*zezs/(r*r) - zc2*(-1.f + 3.f/zzp - 3.f/zp2)*zezp/(r*r);
-	zcappadr= (zzs - 4.f + 9.f/zzs - 9.f/zs2)*zezs/(r*r) - zc2*(zzp - 4.f + 9.f/zzp - 9.f/zp2)*zezp/(r*r);
-
-	zaa = zfhidr-zcappa/r;
-	zbb = 4.f*zcappa/r - 2.f*zcappadr;
-	zcc = (zc1-2.f)*(zaa + 0.5f*zbb-3.0f*zcappa/r)-2.0f*zcappa/r;
-
-	p12 = p1*p2*det;
-	
-
-	for (j = 0; j < 3; ++j)
-	{	for (i = 0; i < 3; ++i)
-		{
-			zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
-			
-
-			zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
-								rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
-						rd[i]*rn_cached[j]*zcc);
-			
-            zgi = zgi*p12;
-			zhi = zhi*p12;
-
-			zgelem[j][i][ig*npg + jg] = zgi;
-			zhelem[j][i][ig*npg + jg] = zhi;
-		}
-	}
-
-	__syncthreads();
-	
-	if (jg < 3 && ig < 3)
-	{
-		int index = 3*ii + (3*nbe)*3*jj + ig + (3*nbe)*jg;
-
-		zg[index] = thrust::reduce(thrust::seq, &zgelem[jg][ig][0], &zgelem[jg][ig][npg*npg]);
-		zh[index] = thrust::reduce(thrust::seq, &zhelem[jg][ig][0], &zhelem[jg][ig][npg*npg]);
-	}
-}
+                           );
 
 void cuda_interec1_(int* nbe,
                     int* npg,
-                    int* n,
+                    int* l,
                     int* np,
-                    int* cone_,
-                    float cx[],
-                    float cy[],
-                    float cz[],
-                    float cxm[],
-                    float cym[],
-                    float czm[],
-                    float etas[][3],
+					float cxi[],
+					float cyi[],
+					float czi[],
                     thrust::complex<float>* zge,
                     thrust::complex<float>* zcs,
                     thrust::complex<float>* zcp,
@@ -243,17 +53,15 @@ void cuda_interec1_(int* nbe,
                     float* c3,
                     float* c4,
                     float* fr,
-                    float* zhest_,
-                    float* zgest_,
                     thrust::complex<float>* zgp_,
                     thrust::complex<float>* zhp_,
-                    float ome[],
-                    float gi[],
+                    thrust::complex<float> zdfi[],
+					thrust::complex<float> zfi[],
                     int* status
                    )
 {
 	dim3 threadsPerBlock(*npg,*npg);
-	dim3 numBlocks(*l, *nbe);
+	dim3 numBlocks(*nbe, *l);
 	cudaError_t error;
     
 	thrust::complex<float> zhelem[3][3];
@@ -261,119 +69,66 @@ void cuda_interec1_(int* nbe,
 
 	thrust::complex<float>* device_zh;
 	thrust::complex<float>* device_zg;
-	float* device_cx;
-	float* device_cy;
-	float* device_cz;
-	float* device_cxm;
-	float* device_cym;
-	float* device_czm;
-	float* device_gi;
-	float* device_ome;
-	float* device_etas;
-	int* device_cone;
+	float* device_cxi;
+	float* device_cyi;
+	float* device_czi;
 
 	int* device_return_status;
 	int return_status;
 
-	/*Cast os parâmetros de volta para o tipo original*/
-	int (*cone)[*n]          = (int (*)[*n])   cone_;
-	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
-	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
-	thrust::complex<float> (*zgp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zgp_;
-	thrust::complex<float> (*zhp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zhp_;
-
+	thrust::complex<float> (*zgp)[3*(*l)] = (thrust::complex<float> (*)[3*(*l)]) zgp_;
+	thrust::complex<float> (*zhp)[3*(*l)] = (thrust::complex<float> (*)[3*(*l)]) zhp_;
 
 	int i, ii;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cone, 4*(*n)*sizeof(int));
+	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
 	error = cudaMemset(device_return_status, 0, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMemset(device_zh, 0, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
+	error = cudaMemset(device_zh, 0, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>));
+	error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_cx, (*np)*sizeof(float));
-	cuda_assert(error);
 
-	error = cudaMalloc(&device_cy, (*np)*sizeof(float));
+	error = cudaMalloc(&device_cxi, (*l)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_cz, (*np)*sizeof(float));
-	cuda_assert(error);
-
-	error = cudaMalloc(&device_cxm, (*n)*sizeof(float));
+	error = cudaMalloc(&device_cyi, (*l)*sizeof(float));
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_cym, (*n)*sizeof(float));
+	error = cudaMalloc(&device_czi, (*l)*sizeof(float));
+	cuda_assert(error);
+
+	error = cudaMemcpy(device_cxi, cxi, (*l)*sizeof(float), cudaMemcpyHostToDevice);
+	cuda_assert(error);
+
+	error = cudaMemcpy(device_cyi, cyi, (*l)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 	
-	error = cudaMalloc(&device_czm, (*n)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_gi, (*npg)*sizeof(float));
+	error = cudaMemcpy(device_czi, czi, (*l)*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_ome, (*npg)*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMalloc(&device_etas, (*n)*3*sizeof(float));
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_cone, cone, 4*(*n)*sizeof(int), cudaMemcpyHostToDevice);
-	cuda_assert(error);
 
-	error = cudaMemcpy(device_cx, cx, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cy, cy, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_cz, cz, (*np)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cxm, cxm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_cym, cym, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
-	error = cudaMemcpy(device_czm, czm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_ome, ome, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-
-	error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_assert(error);
-	
 	cudaDeviceSynchronize();
-
 
 	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
 						device_cone,
 						device_cx,
 						device_cy,
 						device_cz,
-						device_cxm,
-						device_cym,
-						device_czm,
+						device_cxi,
+						device_cyi,
+						device_czi,
 						device_zh,
 						device_zg,
 						(float (*)[3]) device_etas,
@@ -388,8 +143,9 @@ void cuda_interec1_(int* nbe,
 						*c3,
 						*c4,
 						*npg,
-						*n,
 						*nbe,
+						*l,
+                        1,
 						device_return_status
 						);
 	cudaDeviceSynchronize();
@@ -402,47 +158,31 @@ void cuda_interec1_(int* nbe,
 		fputs("Matriz Singular\n", stderr);
 	}
 
-	error = cudaMemcpy(zhp_, device_zh, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zhp_, device_zh, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-	
-	for (i = 0; i < *nbe; ++i)
+/*
+	for (int j = 0; j < 3*(*nbe); ++j)
 	{
-		ii = 3*i;
-		for (int jjj = 0; jjj < 3; ++jjj)
-		{   for (int iii = 0; iii < 3; ++iii)
-			{
-				zgp[jjj+ii][iii+ii] += zgest[jjj+ii][iii+ii];
-				zhp[jjj+ii][iii+ii] += zhest[jjj+ii][iii+ii];
-			}
+		for (int i = 0; i < 3*(*l); ++i)
+		{
+			printf("%d %d %f %f\n", i, j, zgp[j][i].real(), zgp[j][i].imag());
 		}
 	}
-	
-    error = cudaFree(device_cone);
-	cuda_assert(error);
+*/
 	error = cudaFree(device_zh);
 	cuda_assert(error);
 	error = cudaFree(device_zg);
-	cuda_assert(error);
-	error = cudaFree(device_gi);
-	cuda_assert(error);
-	error = cudaFree(device_ome);
-	cuda_assert(error);
-	error = cudaFree(device_etas);
-	cuda_assert(error);
-	error = cudaFree(device_cx);
-	cuda_assert(error);
-	error = cudaFree(device_cy);
-	cuda_assert(error);
-	error = cudaFree(device_cz);
-	cuda_assert(error);
-	error = cudaFree(device_cxm);
-	cuda_assert(error);
-	error = cudaFree(device_cym);
-	cuda_assert(error);
-	error = cudaFree(device_czm);
-	cuda_assert(error);
 	*status = return_status;
+	error = cudaFree(device_return_status);
+	cuda_assert(error);
+
+	error = cudaFree(device_cxi);
+	cuda_assert(error);
+	error = cudaFree(device_cyi);
+	cuda_assert(error);
+	error = cudaFree(device_czi);
+	cuda_assert(error);
 }
 }
