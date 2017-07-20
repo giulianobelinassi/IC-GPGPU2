@@ -154,14 +154,6 @@ C            ETAS(3)=C/R
      $          NPG,
      $          N,
      $          NP,
-     $          CONE,
-     $          CX,
-     $          CY,
-     $          CZ,
-     $          CXM,
-     $          CYM,
-     $          CZM,
-     $          ETAS,
      $          C1,
      $          C2,
      $          C3,
@@ -169,8 +161,6 @@ C            ETAS(3)=C/R
      $          FR,
      $          HEST,
      $          GEST,
-     $          OME,
-     $          GI,
      $          STATS1
      $          )
 

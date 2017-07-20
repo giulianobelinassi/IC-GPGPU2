@@ -6,14 +6,7 @@
 
 extern "C"{
 
-void cuda_assert(cudaError_t error)
-{
-	if (error != cudaSuccess)
-	{
-		fputs(cudaGetErrorString(cudaGetLastError()), stderr);
-		exit(1);
-	}
-}
+void cuda_assert(cudaError_t error);
 
 __constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 

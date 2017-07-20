@@ -234,8 +234,8 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 
 ! Aciona a rotina que envia dados que são usados em diversas subrotinas
 ! para a GPU
-!        CALL send_shared_data_to_gpu(CX,CY,CZ,CXM,CYM,CZM,ETAS,GI,OME, 
-!     $      CONE,NP,NPG,N,NBE) 
+        CALL send_shared_data_to_gpu(CX,CY,CZ,CXM,CYM,CZM,ETAS,GI,OME, 
+     $      CONE,NP,NPG,N,NBE) 
 
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
