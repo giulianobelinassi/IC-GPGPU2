@@ -27,9 +27,13 @@
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER stats1, stats2
 
-        COMPLEX, DIMENSION(3*L, 3*NBE) :: ZG, ZH
         COMPLEX, DIMENSION(3*L) :: ZDSOLP
 
+!        ZG = 0
+!        ZH = 0
+!        ZHP = 0
+!        ZGP = 0
+!        ZDSOLP = 0
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
 *
@@ -59,9 +63,9 @@
         ZDSOL = 0
         ZSSOL = 0
 
-!$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
-!$OMP& REDUCTION(+:ZDSOL)
+!C$OMP  PARALLEL DO DEFAULT(SHARED)
+!C$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
+!C$OMP& REDUCTION(+:ZDSOL)
         DO J=1,NBE
 *
             N1=CONE(J,1)
@@ -106,9 +110,10 @@ C            ETA(3)=C/R
 
             ENDDO
         ENDDO
-!$OMP END PARALLEL DO
+!C$OMP END PARALLEL DO
 
             CALL cuda_interec1(
+     $          N,
      $          NBE,
      $          NPG,
      $          L,
@@ -124,18 +129,16 @@ C            ETA(3)=C/R
      $          0.,
      $          0.,
      $          FR,
-     $          ZG,
-     $          ZH,
      $          ZDFI,
      $          ZFI,
      $          STATS1
      $        )
 
-            ZDSOLP = MATMUL(ZG, ZDFI) - MATMUL(ZH, ZFI)
+!            ZDSOLP = MATMUL(ZG, ZDFI) - MATMUL(ZH, ZFI)
 
-            DO j = 1, 3*L
-                PRINT*, ZDSOLP(j), ZDSOL(j)
-            ENDDO
+!            DO j = 1, 3*L
+!                PRINT*, ABS(ZDSOLP(j) - ZDSOL(j))
+!            ENDDO
 
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ

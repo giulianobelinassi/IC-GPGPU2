@@ -33,6 +33,7 @@ __global__ void ghmatecd_kernel(
                            int n,
                            int nbe,
                            int interec,
+                           int dim_cone,
                            int* ret
                            )
 {
@@ -86,9 +87,9 @@ __global__ void ghmatecd_kernel(
 	
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
-		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
-		co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
-		co[2][threadIdx.x] = cz[cone[n*threadIdx.x + jj] - 1];
+		co[0][threadIdx.x] = cx[cone[dim_cone*threadIdx.x + jj] - 1];
+		co[1][threadIdx.x] = cy[cone[dim_cone*threadIdx.x + jj] - 1];
+		co[2][threadIdx.x] = cz[cone[dim_cone*threadIdx.x + jj] - 1];
 		//Note que a dimensão coluna de rn é 3, mas estamos acessando o elemento
 		//na posição 4. Isto pode levar a um segfault, entretanto consegue-se
 		//uma melhora de ~100ms no kernel se fizermos esta alteração.
@@ -314,6 +315,7 @@ void cuda_ghmatecd_(int* nbe,
 						*n,
 						*nbe,
                         0,
+                        *n,
 						device_return_status
 						);
 	cudaDeviceSynchronize();
