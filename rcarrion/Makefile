@@ -1,11 +1,11 @@
 CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp # -Wall -Wno-unused-dummy-argument -Ofast -march=native -funroll-loops -flto
+FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -Ofast -march=native -funroll-loops -flto
 PARALLEL= -fopenmp
 CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -Wall -march=native
-NVFLAGS = $(EXTRA) -g -G#-use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
-FLFLAGS = libopenblas.a -fopenmp -lcudart -lstdc++ -L/usr/local/cuda-8.0/lib64
+NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
+FLFLAGS = libopenblas.a -fopenmp -lcudart -lcublas -lstdc++ -L/usr/local/cuda-8.0/lib64
 RM      = rm -f
 
 all: main
@@ -44,7 +44,7 @@ Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
 	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECD_USE_CPU -c $<
 
 Interec.o: Interec.for Sigmaec.o Nonsingd.o Interec1_cu.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) -DINTEREC1_USE_CPU -c $<
 
 Outputec.o: Outputec.for
 	$(FC) $(FCFLAGS) -c $<

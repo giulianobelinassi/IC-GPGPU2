@@ -10,6 +10,8 @@
      $  NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,NBE,RHO,
      $  ETAS,GI,OME,NP)
 *
+        USE omp_lib
+
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
@@ -27,13 +29,17 @@
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER stats1, stats2
 
-        COMPLEX, DIMENSION(3*L) :: ZDSOLP
+        DOUBLE PRECISION :: t1, t2
 
-!        ZG = 0
-!        ZH = 0
-!        ZHP = 0
-!        ZGP = 0
-!        ZDSOLP = 0
+#ifdef TEST_INTEREC1_CUDA
+#undef INTEREC1_USE_CPU
+#undef INTEREC1_USE_GPU
+#define INTEREC1_USE_CPU
+#define INTEREC1_USE_GPU
+        COMPLEX, DIMENSION(3*L) :: ZDSOLP
+#endif
+
+
 *
 * REARRANJA OS VETORES ZFI AND ZDFI PARA ARMAZENAR TODOS OS VALORES DOS
 *
@@ -60,12 +66,15 @@
             STOP
         ENDIF
 
+#ifdef INTEREC1_USE_CPU
         ZDSOL = 0
         ZSSOL = 0
 
-!C$OMP  PARALLEL DO DEFAULT(SHARED)
-!C$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
-!C$OMP& REDUCTION(+:ZDSOL)
+        t1 = OMP_GET_WTIME()
+
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,JJ,K,KK,CO,ZHELEM,ZGELEM)
+!$OMP& REDUCTION(+:ZDSOL)
         DO J=1,NBE
 *
             N1=CONE(J,1)
@@ -110,7 +119,18 @@ C            ETA(3)=C/R
 
             ENDDO
         ENDDO
-!C$OMP END PARALLEL DO
+!$OMP END PARALLEL DO
+
+            t2 = OMP_GET_WTIME()
+            PRINT *, "INTEREC1: Tempo na CPU: ", (t2-t1)
+#endif
+
+#ifdef TEST_INTEREC1_CUDA
+            ZDSOLP = ZDSOL
+#endif
+
+#ifdef INTEREC1_USE_GPU
+            t1 = OMP_GET_WTIME()
 
             CALL cuda_interec1(
      $          N,
@@ -131,15 +151,18 @@ C            ETA(3)=C/R
      $          FR,
      $          ZDFI,
      $          ZFI,
+     $          ZDSOL,
      $          STATS1
      $        )
 
-!            ZDSOLP = MATMUL(ZG, ZDFI) - MATMUL(ZH, ZFI)
+            t2 = OMP_GET_WTIME()
 
-!            DO j = 1, 3*L
-!                PRINT*, ABS(ZDSOLP(j) - ZDSOL(j))
-!            ENDDO
+            PRINT *, "INTEREC1: Tempo na GPU: ", (t2-t1)
+#endif
 
+#ifdef TEST_INTEREC1_CUDA
+            CALL ASSERT_ZDSOL(ZDSOL, ZDSOLP, L)
+#endif
 *
 * ACRESCENTADO POSTERIORMANTE (APÓS O PROGRAMA ESTAR RODANDO ATÉ
 * O CÁLCULO PARA OS DESLOCAMENTOS EM PONTOS INTERNOS).
@@ -244,3 +267,31 @@ C                ETA(3)=C/R
 *
         RETURN
       END
+
+      SUBROUTINE ASSERT_ZDSOL(ZDSOL, ZDSOLP, L)
+        IMPLICIT NONE
+        COMPLEX, DIMENSION(3*L), INTENT(IN) :: ZDSOL, ZDSOLP
+        INTEGER :: L, i
+        LOGICAL :: asserted = .TRUE. 
+        REAL, PARAMETER :: eps = 1.0E-6
+        REAL :: maxentry = 0
+
+        DO i = 1, 3*L
+            maxentry = MAX(maxentry, ABS(ZDSOL(i) - ZDSOLP(i)))
+        ENDDO
+
+        IF (maxentry > eps) THEN
+            asserted = .FALSE.
+            PRINT*, "||ZDSOL||_inf = ", maxentry
+        ENDIF
+
+ 200    FORMAT (A,ES7.1)     
+        WRITE(0,"(A)") "O vetor ZDSOL calculado em Interec1_cu é igual "
+        WRITE(0,200) "calculado em Interec.for com um erro de ", eps
+        IF (asserted .EQV. .TRUE.) THEN
+            WRITE(0,"(A)")"[OK]"
+        ELSE
+            WRITE(0,"(A)")"[FALHOU]"
+        ENDIF
+        WRITE(0,"(A)") ""
+      END SUBROUTINE ASSERT_ZDSOL

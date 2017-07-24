@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <cmath>
 #include <thrust/complex.h>
-#include <thrust/reduce.h>
-#include <thrust/execution_policy.h>
+#include <cuda_runtime.h>
+#include "cublas_v2.h"
 
 extern "C"{
 
@@ -57,6 +57,7 @@ void cuda_interec1_(int* n,
                     float* fr,
                     thrust::complex<float> zdfi[],
 					thrust::complex<float> zfi[],
+                    thrust::complex<float> zdsol[],
                     int* status
                    )
 {
@@ -72,6 +73,7 @@ void cuda_interec1_(int* n,
 	thrust::complex<float>* device_zg;
     thrust::complex<float>* device_zdfi;
     thrust::complex<float>* device_zfi;
+    thrust::complex<float>* device_zdsol;
 
 	float* device_cxi;
 	float* device_cyi;
@@ -81,10 +83,12 @@ void cuda_interec1_(int* n,
 	int return_status;
 
     thrust::complex<float> one(1., 0.);
+    thrust::complex<float> zero(0., 0.);
+    thrust::complex<float> minus_one(-1., 0.);
 
 	int i, ii;
 
-//    cublasHandle_t handle;
+    cublasHandle_t handle;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
@@ -154,7 +158,10 @@ void cuda_interec1_(int* n,
 						device_return_status
 						);
     
-	error = cudaMalloc(&device_zdfi, 3*(*nbe)*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zdsol, 3*(*l)*sizeof(thrust::complex<float>));
+	cuda_assert(error);
+
+    error = cudaMalloc(&device_zdfi, 3*(*nbe)*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 	
 	error = cudaMalloc(&device_zfi, 3*(*nbe)*sizeof(thrust::complex<float>));
@@ -181,10 +188,16 @@ void cuda_interec1_(int* n,
 //	cuda_assert(error);
 
     
-//    cublasCreate(&handle);
-//    cublasCgemv(handle, 0, 3*(*l), 3*(*nbe), one, zh, (3*nbe))
+    cublasCreate(&handle);
+    cublasCgemv(handle,	CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &one, (cuComplex*) device_zg, 3*(*l), (cuComplex*) device_zdfi, 1, (cuComplex*) &zero, (cuComplex*) device_zdsol, 1);
+    cudaDeviceSynchronize();
+    cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &(minus_one), (cuComplex*) device_zh, 3*(*l), (cuComplex*) device_zfi, 1, (cuComplex*) &one, (cuComplex*) device_zdsol, 1);
+    cudaDeviceSynchronize(); 
 
-	error = cudaFree(device_zh);
+	error = cudaMemcpy(zdsol, device_zdsol, 3*(*l)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	cuda_assert(error);
+
+    error = cudaFree(device_zh);
 	cuda_assert(error);
 	error = cudaFree(device_zg);
 	*status = return_status;
@@ -200,6 +213,9 @@ void cuda_interec1_(int* n,
 	error = cudaFree(device_zfi);
 	cuda_assert(error);
 	error = cudaFree(device_zdfi);
+	cuda_assert(error);
+
+	error = cudaFree(device_zdsol);
 	cuda_assert(error);
 }
 }
