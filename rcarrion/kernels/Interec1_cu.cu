@@ -87,6 +87,7 @@ void cuda_interec1_(int* n,
     thrust::complex<float> minus_one(-1., 0.);
 
     cublasHandle_t handle;
+	cublasStatus_t stats;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
@@ -186,11 +187,16 @@ void cuda_interec1_(int* n,
 //	cuda_assert(error);
 
     
-    cublasCreate(&handle);
-    cublasCgemv(handle,	CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &one, (cuComplex*) device_zg, 3*(*l), (cuComplex*) device_zdfi, 1, (cuComplex*) &zero, (cuComplex*) device_zdsol, 1);
-    cudaDeviceSynchronize();
-    cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &(minus_one), (cuComplex*) device_zh, 3*(*l), (cuComplex*) device_zfi, 1, (cuComplex*) &one, (cuComplex*) device_zdsol, 1);
-    cudaDeviceSynchronize(); 
+    stats = cublasCreate(&handle);
+	cublas_assert(stats);
+    
+	stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &one, (cuComplex*) device_zg, 3*(*l), (cuComplex*) device_zdfi, 1, (cuComplex*) &zero, (cuComplex*) device_zdsol, 1);
+    cublas_assert(stats);
+	cudaDeviceSynchronize();
+    
+	stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &(minus_one), (cuComplex*) device_zh, 3*(*l), (cuComplex*) device_zfi, 1, (cuComplex*) &one, (cuComplex*) device_zdsol, 1);
+    cublas_assert(stats);
+	cudaDeviceSynchronize(); 
 
 	error = cudaMemcpy(zdsol, device_zdsol, 3*(*l)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);

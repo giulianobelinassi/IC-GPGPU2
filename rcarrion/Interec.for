@@ -31,11 +31,17 @@
 
         DOUBLE PRECISION :: t1, t2
 
-#ifdef TEST_INTEREC1_CUDA
-#undef INTEREC1_USE_CPU
-#undef INTEREC1_USE_GPU
-#define INTEREC1_USE_CPU
-#define INTEREC1_USE_GPU
+#define USE_CPU
+
+#ifdef USE_GPU
+#undef USE_CPU
+#endif
+
+#ifdef TEST_CUDA
+#undef USE_CPU
+#undef USE_GPU
+#define USE_CPU
+#define USE_GPU
         COMPLEX, DIMENSION(3*L) :: ZDSOLP
 #endif
 
@@ -66,7 +72,7 @@
             STOP
         ENDIF
 
-#ifdef INTEREC1_USE_CPU
+#ifdef USE_CPU
         ZDSOL = 0
         ZSSOL = 0
 
@@ -125,11 +131,11 @@ C            ETA(3)=C/R
             PRINT *, "INTEREC1: Tempo na CPU: ", (t2-t1)
 #endif
 
-#ifdef TEST_INTEREC1_CUDA
+#ifdef TEST_CUDA
             ZDSOLP = ZDSOL
 #endif
 
-#ifdef INTEREC1_USE_GPU
+#ifdef USE_GPU
             t1 = OMP_GET_WTIME()
 
             CALL cuda_interec1(
@@ -160,7 +166,7 @@ C            ETA(3)=C/R
             PRINT *, "INTEREC1: Tempo na GPU: ", (t2-t1)
 #endif
 
-#ifdef TEST_INTEREC1_CUDA
+#ifdef TEST_CUDA
             CALL ASSERT_ZDSOL(ZDSOL, ZDSOLP, L)
 #endif
 *

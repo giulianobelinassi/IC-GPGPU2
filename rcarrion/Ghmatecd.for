@@ -38,19 +38,25 @@
         DOUBLE PRECISION :: t1, t2
         INTEGER NN,I,J, stats1, stats2
 
-#ifdef TEST_GHMATECD_CUDA
-#undef  GHMATECD_USE_CPU
-#undef  GHMATECD_USE_GPU
-#define GHMATECD_USE_CPU
-#define GHMATECD_USE_GPU
+#define USE_CPU
+
+#ifdef USE_GPU
+#undef USE_CPU
+#endif
+
+#ifdef TEST_CUDA
+#undef  USE_CPU
+#undef  USE_GPU
+#define USE_CPU
+#define USE_GPU
         COMPLEX, ALLOCATABLE :: ZHP(:,:), ZGP(:,:)
 #endif
 
-#ifdef GHMATECD_USE_CPU
+#ifdef  USE_CPU
         INTEGER N1,N2,N3,N4,II,JJ
         REAL :: CO(4,3)
 #endif
-#ifdef GHMATECD_USE_GPU
+#ifdef USE_GPU
         INTEGER RET
 #endif
 
@@ -84,7 +90,7 @@
 
         t1 = OMP_GET_WTIME()
 
-#ifdef GHMATECD_USE_CPU
+#ifdef USE_CPU
 * ZERANDO AS MATRIZES H E G
 *
         ZH = 0
@@ -148,7 +154,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
 
-#ifdef TEST_GHMATECD_CUDA
+#ifdef TEST_CUDA
 !FAÇA UMA CÓPIA DAS MATRIZES ZG E ZH PARA COMPARAÇÃO COM O RESULTADO DA GPU.
         ALLOCATE(ZHP(3*NBE, 3*N))
         ALLOCATE(ZGP(3*NBE, 3*N))
@@ -156,7 +162,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         ZHP = ZH
 #endif
 
-#ifdef GHMATECD_USE_GPU
+#ifdef USE_GPU
         t1 = OMP_GET_WTIME()
 
         CALL cuda_ghmatecd(
@@ -188,7 +194,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         PRINT *, "GHMATECD: Tempo na GPU: ", (t2 - t1)
 #endif
         
-#ifdef TEST_GHMATECD_CUDA
+#ifdef TEST_CUDA
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
         DEALLOCATE(ZHP)
         DEALLOCATE(ZGP)
@@ -212,8 +218,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
         
-        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
-!        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
+!        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
+        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
 
 C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)

@@ -1,20 +1,25 @@
-CC      = gcc-5
 FC      = gfortran-5
 NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -Ofast -march=native -funroll-loops -flto
 PARALLEL= -fopenmp
-CFLAGS  = $(EXTRA) -g -funroll-loops -flto -Ofast -Wall -march=native
 NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
-FLFLAGS = libopenblas.a -fopenmp -lcudart -lcublas -lstdc++ -L/usr/local/cuda-8.0/lib64
+FLFLAGS = libopenblas.a -fopenmp
 RM      = rm -f
 
 all: main
 
-main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o Ghmatecd_cu.o Ghmatece_cu.o Interec1_cu.o shared.o
+cpu: main
+
+gpu: MODE = -DUSE_GPU
+gpu: FLFLAGS += -lcudart -lcublas -lstdc++ -L/usr/local/cuda/lib64
+gpu: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o Ghmatecd_cu.o Ghmatece_cu.o Interec1_cu.o shared.o
+	$(FC) $(PARALLEL) $(FCFLAGS) -o main $^ $(FLFLAGS)
+
+main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Main.o 
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
 Main.o: Main.for Inputece.for Ghmatecd.for Ghmatece.for
-	$(FC) $(FCFLAGS) -c $<
+	$(FC) $(FCFLAGS) $(MODE) -c $<
 
 Ghmatecd_cu.o: kernels/Ghmatecd_cu.cu Sing_de.for Nonsingd.for
 	$(NVCC) $(NVFLAGS) -c $<
@@ -38,13 +43,13 @@ Inputecd.o: Inputecd.for
 	$(FC) $(FCFLAGS) -c $<
 
 Ghmatece.o: Ghmatece.for Singge.o Nonsinge.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECE_USE_CPU -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) $(MODE) -c $<
 
 Ghmatecd.o: Ghmatecd.for Sing_de.o Nonsingd.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -DGHMATECD_USE_CPU -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) $(MODE) -c $<
 
-Interec.o: Interec.for Sigmaec.o Nonsingd.o Interec1_cu.o
-	$(FC) $(PARALLEL) $(FCFLAGS) -DINTEREC1_USE_CPU -c $<
+Interec.o: Interec.for Sigmaec.o Nonsingd.o
+	$(FC) $(PARALLEL) $(FCFLAGS) $(MODE) -c $<
 
 Outputec.o: Outputec.for
 	$(FC) $(FCFLAGS) -c $<

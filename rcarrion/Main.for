@@ -234,8 +234,13 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
 
 ! Aciona a rotina que envia dados que são usados em diversas subrotinas
 ! para a GPU
+#ifdef TEST_CUDA
+#define USE_GPU
+#endif
+#ifdef USE_GPU
         CALL send_shared_data_to_gpu(CX,CY,CZ,CXM,CYM,CZM,ETAS,GI,OME, 
      $      CONE,NP,NPG,N,NBE) 
+#endif
 
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
@@ -335,8 +340,9 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
             DEALLOCATE(GEST)
     
             DEALLOCATE(DFI)
-
+#ifdef USE_GPU
             CALL deallocate_shared_gpu_data() 
+#endif
 
             CLOSE (INP)          
             CLOSE (INQ)

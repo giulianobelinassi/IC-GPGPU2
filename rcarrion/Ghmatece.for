@@ -28,11 +28,17 @@
 
         DOUBLE PRECISION :: t1, t2
 
-#ifdef TEST_GHMATECE_CUDA
-#undef  GHMATECE_USE_CPU
-#undef  GHMATECE_USE_GPU
-#define GHMATECE_USE_CPU
-#define GHMATECE_USE_GPU
+#define USE_CPU
+
+#ifdef USE_GPU
+#undef USE_CPU
+#endif
+
+#ifdef  TEST_CUDA
+#undef  USE_GPU
+#undef  USE_CPU
+#define USE_GPU
+#define USE_CPU
         REAL, ALLOCATABLE, DIMENSION(:,:) :: HP, GP
 #endif
 
@@ -69,7 +75,7 @@
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 
-#ifdef GHMATECE_USE_CPU
+#ifdef USE_CPU
         t1 = OMP_GET_WTIME() 
         GEST = 0
         HEST = 0
@@ -139,14 +145,14 @@ C            ETAS(3)=C/R
         PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
 #endif
 
-#ifdef TEST_GHMATECE_CUDA
+#ifdef TEST_CUDA
         ALLOCATE(HP(3*NBE, 3*N))
         ALLOCATE(GP(3*NBE, 3*N))
         GP = GEST
         HP = HEST
 #endif
 
-#ifdef GHMATECE_USE_GPU
+#ifdef USE_GPU
         t1 = OMP_GET_WTIME()
        
         CALL cuda_ghmatece(
@@ -196,7 +202,7 @@ C            ETAS(3)=C/R
 #endif
 
 
-#ifdef TEST_GHMATECE_CUDA
+#ifdef TEST_CUDA
         CALL ASSERT_GHMATECE_H_G(HEST, HP, GEST, GP, NBE, N)
         DEALLOCATE(HP)
         DEALLOCATE(GP)
