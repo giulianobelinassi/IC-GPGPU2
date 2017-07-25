@@ -1,5 +1,8 @@
-#ifndef SHARED_H     
-#define SHARED_H     
+#ifndef SHARED_H
+#define SHARED_H
+
+#include "cublas_v2.h"
+
 extern "C"{            
 
 __constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
@@ -16,6 +19,8 @@ extern float* device_ome;
 extern int*   device_cone;        
  
 void cuda_assert(cudaError_t error);
+
+void cublas_assert(cublasStatus_t error);
 
 }
 #endif

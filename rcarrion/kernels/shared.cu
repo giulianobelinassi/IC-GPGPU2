@@ -24,6 +24,47 @@ void cuda_assert(cudaError_t error)
     }   
 }
 
+/*https://stackoverflow.com/questions/13041399/equivalent-of-cudageterrorstring-for-cublas*/
+void cublas_assert(cublasStatus_t error)
+{
+	switch (error)
+    {
+        case CUBLAS_STATUS_NOT_INITIALIZED:
+            fputs("CUBLAS_STATUS_NOT_INITIALIZED\n", stderr);
+			exit(1);
+
+        case CUBLAS_STATUS_ALLOC_FAILED:
+            fputs("CUBLAS_STATUS_ALLOC_FAILED\n", stderr);
+			exit(1);
+        
+		case CUBLAS_STATUS_INVALID_VALUE:
+            fputs("CUBLAS_STATUS_INVALID_VALUE\n", stderr);
+			exit(1);
+
+        case CUBLAS_STATUS_ARCH_MISMATCH:
+            fputs("CUBLAS_STATUS_ARCH_MISMATCH\n", stderr);
+			exit(1);
+
+        case CUBLAS_STATUS_MAPPING_ERROR:
+            fputs("CUBLAS_STATUS_MAPPING_ERROR\n", stderr);
+			exit(1);
+
+        case CUBLAS_STATUS_EXECUTION_FAILED:
+            fputs("CUBLAS_STATUS_EXECUTION_FAILED\n", stderr);
+			exit(1);
+
+        case CUBLAS_STATUS_INTERNAL_ERROR:
+            fputs("CUBLAS_STATUS_INTERNAL_ERROR\n", stderr);
+			exit(1);
+		
+		case CUBLAS_STATUS_SUCCESS:
+			return;
+    }
+	fputs("CUBLAS: Erro desconhecido.\n", stderr);
+	exit(1);
+
+}
+
 void send_shared_data_to_gpu_(
         float cx[],
         float cy[],

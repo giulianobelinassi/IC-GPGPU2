@@ -4,7 +4,7 @@
 #include <cmath>
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
-#include "cublas_v2.h"
+//#include "cublas_v2.h"
 
 extern "C"{
 
@@ -85,8 +85,6 @@ void cuda_interec1_(int* n,
     thrust::complex<float> one(1., 0.);
     thrust::complex<float> zero(0., 0.);
     thrust::complex<float> minus_one(-1., 0.);
-
-	int i, ii;
 
     cublasHandle_t handle;
 
