@@ -2,7 +2,7 @@ FC      = gfortran-5
 NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -Ofast -funroll-loops -flto
 PARALLEL= -fopenmp
-NVFLAGS = $(EXTRA) -g -G -arch=compute_30 # -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
+NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp
 RM      = rm -f
 

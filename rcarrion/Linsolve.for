@@ -1,9 +1,11 @@
       SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
+        USE omp_lib
+    
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(IN) :: ZH(NN, 3*N)
+        COMPLEX, INTENT(INOUT) :: ZH(NN, 3*N)
         COMPLEX, INTENT(INOUT) :: ZFI(NN)
-        
+        DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 
 #ifdef USE_GPU
@@ -15,13 +17,21 @@
 #undef  USE_GPU
 #define USE_CPU
 #define USE_GPU
-        COMPLEX :: ZFIP(NN)
+        COMPLEX :: ZFI_ORIG(NN), ZFIP(NN)
+        COMPLEX, ALLOCATABLE :: ZH_ORIG(:,:), ZHP(:,:)
 #endif
 
 #ifdef USE_CPU
         INTEGER :: stats
         INTEGER, ALLOCATABLE :: PIV(:)
 
+#ifdef TEST_CUDA
+        ALLOCATE(ZH_ORIG(NN, 3*N))
+        ALLOCATE(ZHP(NN, 3*N))
+        ZH_ORIG = ZH
+        ZFI_ORIG = ZFI
+#endif
+        t1 = OMP_GET_WTIME()
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE"
@@ -35,18 +45,29 @@
             PRINT *, "Matriz Singular :-|"
         ENDIF
         DEALLOCATE(PIV)
+        t2 = OMP_GET_WTIME()
+        PRINT*, "LINSOLVE: Tempo na CPU: ", (t2-t1)
 #endif
 
 #ifdef  TEST_CUDA
+        
         ZFIP = ZFI
+        ZH = ZHP
+        ZFI = ZFI_ORIG
+        ZH = ZH_ORIG
 #endif
 
 #ifdef USE_GPU
-        CALL cuda_linsolve(NN, N, ZH, ZFI) 
+        t1 = OMP_GET_WTIME()  
+        CALL cuda_linsolve(NN, N, ZH, ZFI)
+        t2 = OMP_GET_WTIME()
+        PRINT*, "LINSOLVE: Tempo na GPU: ", (t2-t1)
 #endif
 
 #ifdef  TEST_CUDA
-        CALL ASSERT_ZFI(ZFI, ZFIP, NN) 
+        CALL ASSERT_ZFI(ZFI, ZFIP, NN)
+        DEALLOCATE(ZHP)
+        DEALLOCATE(ZH_ORIG)
 #endif
 
       END SUBROUTINE

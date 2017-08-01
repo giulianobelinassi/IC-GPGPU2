@@ -15,8 +15,6 @@ void lu_assert(int status)
     }
 }
 
-void cgetrf_(int* m, int* n, thrust::complex<float> A[], int* lda, int piv[], int* info);
-
 void cuda_linsolve_(
 			int* nn,
 			int* n,
@@ -38,9 +36,6 @@ void cuda_linsolve_(
 
     thrust::complex<float> one(1.0f, 0.0f);
 
-	thrust::complex<float> zhp[(*nn)*(*n)*3];
-	int piv[(*nn)*(*n)*3];
-
 	error = cudaMalloc(&device_zh, (*nn)*(3*(*n))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
@@ -49,10 +44,7 @@ void cuda_linsolve_(
 
     error = cudaMalloc(&device_piv, (*nn)*sizeof(int));
     cuda_assert(error);
-
-//    error = cudaMemset(device_piv, 0, (*nn)*sizeof(int));
-//    cuda_assert(error);
-
+	
 	error = cudaMalloc(&device_matrix_pointer, sizeof(cuComplex*));
 	cuda_assert(error);
 
@@ -75,24 +67,19 @@ void cuda_linsolve_(
     cudaDeviceSynchronize();
     cublas_assert(stats);
 
-	error = cudaMemcpy(zhp, device_zh, (*nn)*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
-	cuda_assert(error);
-
-//	cgetrf_(nn, nn, zh, nn, piv, &status);
-
     error = cudaMemcpy(&status, device_status, sizeof(int), cudaMemcpyDeviceToHost);
     cuda_assert(error);
     lu_assert(status);
     
-    stats = cublasCtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, CUBLAS_DIAG_UNIT, *nn, *nn, (cuComplex*) &one, (cuComplex*) device_zh, *nn, (cuComplex*) device_zfi, *nn);
+    stats = cublasCtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_LOWER, CUBLAS_OP_N, CUBLAS_DIAG_UNIT, *nn, 1, (cuComplex*) &one, (cuComplex*) device_zh, *nn, (cuComplex*) device_zfi, *nn);
     cudaDeviceSynchronize();
     cublas_assert(stats);
 
-    stats = cublasCtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, *nn, *nn, (cuComplex*) &one, (cuComplex*) device_zh, *nn, (cuComplex*) device_zfi, *nn);
+    stats = cublasCtrsm(handle, CUBLAS_SIDE_LEFT, CUBLAS_FILL_MODE_UPPER, CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, *nn, 1, (cuComplex*) &one, (cuComplex*) device_zh, *nn, (cuComplex*) device_zfi, *nn);
     cudaDeviceSynchronize();
     cublas_assert(stats);
 
-    error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
     cuda_assert(error);
 
     error = cudaFree(device_zh);
