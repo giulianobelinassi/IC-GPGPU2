@@ -137,6 +137,15 @@
           END
         END INTERFACE
 
+        INTERFACE
+          SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
+            IMPLICIT NONE
+            INTEGER, INTENT(IN) :: NN, N
+            COMPLEX, INTENT(IN) :: ZH(NN, N)
+            COMPLEX, INTENT(INOUT) :: ZFI(NN)
+          END 
+        END INTERFACE
+
 C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         PARAMETER (NE=2200,NX=3*NE,NCOX=2200,NPIX=10,NFRX=7)
         COMMON INP,INQ,IPR,IPS,IPT
@@ -152,9 +161,8 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 
 
         DIMENSION DELTA(3,3)
-        INTEGER, DIMENSION(:), ALLOCATABLE :: PIV
         REAL, DIMENSION(:,:), ALLOCATABLE :: ETAS
-        INTEGER stats1, i
+        INTEGER i
         CHARACTER(len=100) :: input_e, input_d, output_e, output_d
 
 ! Contorne um problema com o OpenBLAS. A primeira execução do programa
@@ -275,23 +283,11 @@ C       OPEN(UNIT=IPT,FILE='GSOLO240_a5b5.DAT',STATUS='UNKNOWN')
      $          RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME
      $      )
 *
-* ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES (LAPACK)
+* ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES
 *
             DEALLOCATE(ZG)
             
-            ALLOCATE(PIV(NN), STAT = stats1)
-            IF (stats1 /= 0) THEN
-                PRINT*, "MEMORIA INSUFICIENTE"
-                STOP
-            ENDIF
-
-            CALL CGESV(NN,1,ZH,NN,PIV,ZFI,NN,ITER)
-            IF (ITER < 0) THEN
-                PRINT *, "Erro em ZGESV :-("
-            ELSE IF (ITER > 0) THEN
-                PRINT *, "Matriz Singular :-|"
-            ENDIF
-            DEALLOCATE(PIV)
+            CALL LINSOLVE(NN, N, ZH, ZFI)
 *
 * ACIONA ROTINA QUE CALCULA OS DESLOCAMENTOS EM PONTOS INTERNOS
 *

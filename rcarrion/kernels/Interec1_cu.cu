@@ -221,5 +221,7 @@ void cuda_interec1_(int* n,
 
 	error = cudaFree(device_zdsol);
 	cuda_assert(error);
+
+	cublasDestroy(handle);
 }
 }
