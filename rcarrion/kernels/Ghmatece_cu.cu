@@ -38,6 +38,9 @@ __global__ void ghmatece_kernel(
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x;
 
+	const int zgelem_pad = 3*3*npg*npg;
+	extern __shared__ float s_[];
+	
 	int i, j;
 	
 	float p[4][2], f[4];
@@ -50,29 +53,33 @@ __global__ void ghmatece_kernel(
 	float r1, r2, r3, r, drn, rd[3];
 	float hei, gei;
 
-	__shared__ float helem[3][3][64], gelem[3][3][64];
+//Manage the shared memory manually since apparently there is no other way
+//to allocate two cubes in dynamic allocated shared memory.
+//see https://devblogs.nvidia.com/parallelforall/using-shared-memory-cuda-cc/
+#define helem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
+#define gelem(i, j, k) (s_ + zgelem_pad)[3*npg*npg*(i) + npg*npg*(j) + (k)]
 
 	int iii, jjj;
 
-	gelem[0][0][npg*ig + jg] = 0;
-	gelem[0][1][npg*ig + jg] = 0;
-	gelem[0][2][npg*ig + jg] = 0;
-	gelem[1][0][npg*ig + jg] = 0;
-	gelem[1][1][npg*ig + jg] = 0;
-	gelem[1][2][npg*ig + jg] = 0;
-	gelem[2][0][npg*ig + jg] = 0;
-	gelem[2][1][npg*ig + jg] = 0;
-	gelem[2][2][npg*ig + jg] = 0;
+	gelem(0, 0, npg*ig + jg) = 0;
+	gelem(0, 1, npg*ig + jg) = 0;
+	gelem(0, 2, npg*ig + jg) = 0;
+	gelem(1, 0, npg*ig + jg) = 0;
+	gelem(1, 1, npg*ig + jg) = 0;
+	gelem(1, 2, npg*ig + jg) = 0;
+	gelem(2, 0, npg*ig + jg) = 0;
+	gelem(2, 1, npg*ig + jg) = 0;
+	gelem(2, 2, npg*ig + jg) = 0;
 
-	helem[0][0][npg*ig + jg] = 0;
-	helem[0][1][npg*ig + jg] = 0;
-	helem[0][2][npg*ig + jg] = 0;
-	helem[1][0][npg*ig + jg] = 0;
-	helem[1][1][npg*ig + jg] = 0;
-	helem[1][2][npg*ig + jg] = 0;
-	helem[2][0][npg*ig + jg] = 0;
-	helem[2][1][npg*ig + jg] = 0;
-	helem[2][2][npg*ig + jg] = 0;
+	helem(0, 0, npg*ig + jg) = 0;
+	helem(0, 1, npg*ig + jg) = 0;
+	helem(0, 2, npg*ig + jg) = 0;
+	helem(1, 0, npg*ig + jg) = 0;
+	helem(1, 1, npg*ig + jg) = 0;
+	helem(1, 2, npg*ig + jg) = 0;
+	helem(2, 0, npg*ig + jg) = 0;
+	helem(2, 1, npg*ig + jg) = 0;
+	helem(2, 2, npg*ig + jg) = 0;
 	
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
@@ -167,8 +174,8 @@ __global__ void ghmatece_kernel(
 			gei = gei*p12;
 			hei = hei*p12;
 
-			gelem[j][i][jg*npg + ig] = gei;
-			helem[j][i][jg*npg + ig] = hei;
+			gelem(j, i, jg*npg + ig) = gei;
+			helem(j, i, jg*npg + ig) = hei;
 		}
 	}
 	__syncthreads();
@@ -177,8 +184,8 @@ __global__ void ghmatece_kernel(
 	{
 		int index = 3*ii + (3*nbe)*3*jj + ig + (3*nbe)*jg;
 		
-		gest[index] = thrust::reduce(thrust::seq, &gelem[jg][ig][0], &gelem[jg][ig][npg*npg]);
-		hest[index] = thrust::reduce(thrust::seq, &helem[jg][ig][0], &helem[jg][ig][npg*npg]);
+		gest[index] = thrust::reduce(thrust::seq, &gelem(jg, ig, 0), &gelem(jg, ig, npg*npg));
+		hest[index] = thrust::reduce(thrust::seq, &helem(jg, ig, 0), &helem(jg, ig, npg*npg));
 	}
 }
 
@@ -198,6 +205,7 @@ void cuda_ghmatece_(int* nbe,
 {
 	dim3 threadsPerBlock(*npg,*npg);
 	dim3 numBlocks(*n, *nbe);
+	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(float);
 	cudaError_t error;
     
 	float* device_h;
@@ -225,7 +233,7 @@ void cuda_ghmatece_(int* nbe,
 	cuda_assert(error);
 
 	cudaDeviceSynchronize();
-	ghmatece_kernel<<<numBlocks, threadsPerBlock>>>(
+	ghmatece_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
 						device_cone,
 						device_cx,
 						device_cy,

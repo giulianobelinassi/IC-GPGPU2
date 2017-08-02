@@ -43,6 +43,9 @@ __global__ void ghmatecd_kernel(
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x;
 
+	const int gelem_pad = 3*3*npg*npg;
+	extern __shared__ thrust::complex<float> s_[];
+	
 	int i, j;
 	
 	const float pi  = 3.141592654;
@@ -59,31 +62,30 @@ __global__ void ghmatecd_kernel(
 
 	thrust::complex<float> zhi, zgi;
 
-	__shared__ thrust::complex<float> zhelem[3][3][64], zgelem[3][3][64];
-
-	//const float pi  = 3.141592654;
-	
 	int iii, jjj;
 
-	zgelem[0][0][npg*ig + jg] = 0;
-	zgelem[0][1][npg*ig + jg] = 0;
-	zgelem[0][2][npg*ig + jg] = 0;
-	zgelem[1][0][npg*ig + jg] = 0;
-	zgelem[1][1][npg*ig + jg] = 0;
-	zgelem[1][2][npg*ig + jg] = 0;
-	zgelem[2][0][npg*ig + jg] = 0;
-	zgelem[2][1][npg*ig + jg] = 0;
-	zgelem[2][2][npg*ig + jg] = 0;
+#define zhelem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
+#define zgelem(i, j, k) (s_ + gelem_pad)[3*npg*npg*(i) + npg*npg*(j) + (k)]
 
-	zhelem[0][0][npg*ig + jg] = 0;
-	zhelem[0][1][npg*ig + jg] = 0;
-	zhelem[0][2][npg*ig + jg] = 0;
-	zhelem[1][0][npg*ig + jg] = 0;
-	zhelem[1][1][npg*ig + jg] = 0;
-	zhelem[1][2][npg*ig + jg] = 0;
-	zhelem[2][0][npg*ig + jg] = 0;
-	zhelem[2][1][npg*ig + jg] = 0;
-	zhelem[2][2][npg*ig + jg] = 0;
+	zgelem(0, 0, npg*ig + jg) = 0;
+	zgelem(0, 1, npg*ig + jg) = 0;
+	zgelem(0, 2, npg*ig + jg) = 0;
+	zgelem(1, 0, npg*ig + jg) = 0;
+	zgelem(1, 1, npg*ig + jg) = 0;
+	zgelem(1, 2, npg*ig + jg) = 0;
+	zgelem(2, 0, npg*ig + jg) = 0;
+	zgelem(2, 1, npg*ig + jg) = 0;
+	zgelem(2, 2, npg*ig + jg) = 0;
+
+	zhelem(0, 0, npg*ig + jg) = 0;
+	zhelem(0, 1, npg*ig + jg) = 0;
+	zhelem(0, 2, npg*ig + jg) = 0;
+	zhelem(1, 0, npg*ig + jg) = 0;
+	zhelem(1, 1, npg*ig + jg) = 0;
+	zhelem(1, 2, npg*ig + jg) = 0;
+	zhelem(2, 0, npg*ig + jg) = 0;
+	zhelem(2, 1, npg*ig + jg) = 0;
+	zhelem(2, 2, npg*ig + jg) = 0;
 	
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
@@ -215,8 +217,8 @@ __global__ void ghmatecd_kernel(
 			zgi = zgi*p12;
 			zhi = zhi*p12;
 
-			zgelem[j][i][ig*npg + jg] = zgi;
-			zhelem[j][i][ig*npg + jg] = zhi;
+			zgelem(j, i, jg*npg + ig) = zgi;
+			zhelem(j, i, jg*npg + ig) = zhi;
 		}
 	}
 
@@ -226,8 +228,8 @@ __global__ void ghmatecd_kernel(
 	{
 		int index = 3*ii + (3*nbe)*3*jj + ig + (3*nbe)*jg;
 
-		zg[index] = thrust::reduce(thrust::seq, &zgelem[jg][ig][0], &zgelem[jg][ig][npg*npg]);
-		zh[index] = thrust::reduce(thrust::seq, &zhelem[jg][ig][0], &zhelem[jg][ig][npg*npg]);
+		zg[index] = thrust::reduce(thrust::seq, &zgelem(jg, ig, 0), &zgelem(jg, ig, npg*npg));
+		zh[index] = thrust::reduce(thrust::seq, &zhelem(jg, ig, 0), &zhelem(jg, ig, npg*npg));
 	}
 }
 
@@ -252,6 +254,7 @@ void cuda_ghmatecd_(int* nbe,
 {
 	dim3 threadsPerBlock(*npg,*npg);
 	dim3 numBlocks(*n, *nbe);
+	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(thrust::complex<float>);
 	cudaError_t error;
     
 	thrust::complex<float> zhelem[3][3];
@@ -290,7 +293,7 @@ void cuda_ghmatecd_(int* nbe,
 	cuda_assert(error);
 
 	cudaDeviceSynchronize();
-	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
+	ghmatecd_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
 						device_cone,
 						device_cx,
 						device_cy,

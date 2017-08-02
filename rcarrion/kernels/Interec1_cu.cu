@@ -64,6 +64,7 @@ void cuda_interec1_(int* n,
 	
 	dim3 threadsPerBlock(*npg,*npg);
 	dim3 numBlocks(*nbe, *l);
+	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(thrust::complex<float>);
 	cudaError_t error;
     
 	thrust::complex<float> zhelem[3][3];
@@ -128,7 +129,7 @@ void cuda_interec1_(int* n,
 
 	cudaDeviceSynchronize();
 
-	ghmatecd_kernel<<<numBlocks, threadsPerBlock>>>(
+	ghmatecd_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
 						device_cone,
 						device_cx,
 						device_cy,
@@ -181,12 +182,6 @@ void cuda_interec1_(int* n,
 		fputs("Matriz Singular\n", stderr);
 	}
 
-//	error = cudaMemcpy(zhp_, device_zh, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
-//	cuda_assert(error);
-//	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*l))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
-//	cuda_assert(error);
-
-    
     stats = cublasCreate(&handle);
 	cublas_assert(stats);
     
