@@ -204,6 +204,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 *
 * CONDIÇÕES DE CONTORNO E FORMA A MATRIZ A QUE É ARMAZENADA EM G
 *
+        t1 = OMP_GET_WTIME()
         DO  J=1,NN
             IF (KODE(J) == 0) THEN
                 DO I=1,NN
@@ -219,7 +220,11 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 *
         
 !        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
-        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, 0, ZFI, 1)
+!        PRINT*, NN, 3*N
+        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, (0,0), ZFI, 1)
+        t2 = OMP_GET_WTIME()
+        PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
+
 
 C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)

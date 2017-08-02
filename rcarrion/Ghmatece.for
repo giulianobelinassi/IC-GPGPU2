@@ -20,12 +20,9 @@
         REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
         REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
 
-        DIMENSION HELEM(3,3),GELEM(3,3)
-        DIMENSION DELTA(3,3)
-        DIMENSION CO(4,3)
         REAL, INTENT(IN) :: ETAS(3,n)
         INTEGER stats1, stats2
-
+        DIMENSION DELTA(3,3)
         DOUBLE PRECISION :: t1, t2
 
 #define USE_CPU
@@ -33,6 +30,7 @@
 #ifdef USE_GPU
 #undef USE_CPU
 #endif
+
 
 #ifdef  TEST_CUDA
 #undef  USE_GPU
@@ -42,6 +40,10 @@
         REAL, ALLOCATABLE, DIMENSION(:,:) :: HP, GP
 #endif
 
+#ifdef USE_CPU
+        DIMENSION HELEM(3,3),GELEM(3,3)
+        DIMENSION CO(4,3)
+#endif
         PI=4.0*ATAN(1.0)
 
 

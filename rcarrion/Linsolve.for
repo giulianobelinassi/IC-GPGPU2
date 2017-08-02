@@ -78,7 +78,7 @@
         COMPLEX, DIMENSION(NN), INTENT(IN) :: ZFI, ZFIP
         INTEGER :: NN, i
         LOGICAL :: asserted = .TRUE. 
-        REAL, PARAMETER :: eps = 1.0E-6
+        REAL, PARAMETER :: eps = 1.2E-6
         REAL :: maxentry = 0
 
         DO i = 1, NN
