@@ -625,5 +625,14 @@ Quinta-Feira, 13 de Julho de 2017
 	há erros em zcappadr. O Artigo aqui discute sobre erros de FP
 	em CUDA: https://developer.nvidia.com/sites/default/files/akamai/cuda/files/NVIDIA-CUDA-Floating-Point.pdf
 
+Quarta-Feira, 2 de Agosta de 2017
+	Agora a parte onde é resolvido o sistema linear está paralelizado.
+	Houve ganhos (basta executar os testes). A biblioteca utilizada
+	foi a MAGMA.
+	Ao resolver o problema na qual a memória compartilhada era alocada
+	estaticamente na GPU (limitando o número de pontos de Gauss para 8)
+	notou-se uma melhora significativa na performance do kernel
+	ghmatecd_kernel. (antes era 0.64, agora 0.29 p/ 2160)
 
+	Também foi adicionado interfaces na chamada Fortran->CUDA.
 
