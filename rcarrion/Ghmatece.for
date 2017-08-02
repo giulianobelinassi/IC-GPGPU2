@@ -91,6 +91,8 @@
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
+! Código abaixo é desnecessário, pois a função Normvec
+! realiza estes calculos apenas uma vez.
 C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
 C     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
 C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) -
@@ -253,7 +255,8 @@ C            ETAS(3)=C/R
       END
 
 !     Note que há cálculos muito diferentes dos demais no problema
-!     singular, e portanto decidi tratá-lo de maneira diferenciada.
+!     singular, e portanto decidi (Giuliano) tratá-lo de maneira 
+!     diferenciada.
       SUBROUTINE GHMATECE_SINGULAR(HEST, GEST, CXM, CYM, CZM, ETAS,
      $      CX, CY, CZ, NCOX, N, NP, NPG, GE, RNU, RMU, 
      $      C1, C2, C3, C4, DELTA, GI, OME, CONE, NBE)

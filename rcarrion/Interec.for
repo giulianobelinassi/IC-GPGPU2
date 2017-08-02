@@ -89,6 +89,8 @@
             N2=CONE(J,2)
             N3=CONE(J,3)
             N4=CONE(J,4)
+! Código abaixo é desnecessário, pois a função Normvec
+! realiza estes calculos apenas uma vez.
 C            A=(CY(N2)-CY(N1))*(CZ(N3)-CZ(N1)) - 
 C     $          (CZ(N2)-CZ(N1))*(CY(N3)-CY(N1))
 C            B=(CZ(N2)-CZ(N1))*(CX(N3)-CX(N1)) - 
