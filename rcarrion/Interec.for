@@ -14,6 +14,9 @@
 
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
+#ifdef USE_GPU
+        INCLUDE 'kernels/Interec1_cu.fd'
+#endif
         COMMON INP,INQ,IPR,IPS,IPT
         
         REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ

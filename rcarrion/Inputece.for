@@ -4,7 +4,6 @@
 *                                                                      *
 ************************************************************************
 
-
       SUBROUTINE ALLOCATE_ASSERT(stats)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: stats

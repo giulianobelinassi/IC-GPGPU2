@@ -28,123 +28,19 @@
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
-        INTERFACE 
-          SUBROUTINE INPUTECE(CX,CY,CZ,NE,NCOX,CONE,CXM,CYM,CZM,
-     $        N,NBE,NP,NPG,GE,RNU,RMU)
-            IMPLICIT REAL(A-H, O-Y)
-            IMPLICIT COMPLEX(Z)
-            REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CX, CY, CZ
-            REAL, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: CXM,CYM, CZM
-            INTEGER, DIMENSION(:,:), INTENT(OUT), ALLOCATABLE :: CONE
-          END
-        END INTERFACE 
+        
+        INCLUDE 'Inputece.fd'
+        INCLUDE 'Normvec.fd'
+        INCLUDE 'Ghmatece.fd'
+        INCLUDE 'Inputecd.fd'
+        INCLUDE 'Ghmatecd.fd'
+        INCLUDE 'Interec.fd'
+        INCLUDE 'Outputec.fd'
+        INCLUDE 'Linsolve.fd'
 
-        INTERFACE
-          FUNCTION NORMVEC(cone, cx, cy, cz, n, np) RESULT(ETAS)
-            IMPLICIT NONE
-            INTEGER, DIMENSION(n,4), INTENT(IN) :: CONE
-            REAL, DIMENSION(np), INTENT(IN) :: CX, CY, CZ
-            INTEGER, INTENT(IN) :: n, np
-            REAL, DIMENSION(:,:), ALLOCATABLE:: ETAS
-          END
-        END INTERFACE 
-
-        INTERFACE
-          SUBROUTINE GHMATECE(CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
-     $        CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,
-     $        OME)
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
-            COMMON INP,INQ,IPR,IPS,IPT
-            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
-            INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-            REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
-            REAL :: DELTA(3,3), ETAS(3, n)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
-          END
-        END INTERFACE
-
-        INTERFACE
-          SUBROUTINE INPUTECD (CX,CY,CZ,CXI,CYI,CZI,KODE,BC,NFR,AFR,NE,
-     $      NX,NCOX,NPIX,NFRX,CONE,CXM,CYM,CZM,N,NBE,NP,NPG,GE,RNU,RMU,
-     $      L,FR,DAM,RHO,ZGE,ZCS,ZCP)
-              
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
-            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
-            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CXI, CYI
-            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: CZI, BC
-            REAL, DIMENSION(:) , INTENT(OUT), ALLOCATABLE:: AFR
-            INTEGER, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: KODE
-            INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-          END
-        END INTERFACE
-
-        INTERFACE
-          SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,
-     $      DFI,ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,
-     $      RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
-          
-            IMPLICIT NONE
-            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
-            REAL, DIMENSION(3*NBE, 3*N), INTENT(IN) :: HEST, GEST
-
-            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH
-            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZG
-            COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
-            REAL, INTENT(IN) :: DFI(3*NBE)
-            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
-            INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
-            REAL, INTENT(IN) :: DELTA(3,3),PI
-            INTEGER, INTENT(IN) :: N,NBE,NP,NPG, L
-            REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
-            COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
-            REAL, INTENT(IN) :: C1,C2,C3,C4
-            REAL, INTENT(IN) :: ETAS(3,N)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
-          END
-        END INTERFACE
-
-        INTERFACE
-          SUBROUTINE INTEREC(ZFI,ZDFI,KODE,CX,CY,CZ,CXI,CYI,CZI,ZDSOL,
-     $      ZSSOL,NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,
-     $      NBE,RHO,ETAS,GI,OME,NP)
-            
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
-            REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
-            COMPLEX, DIMENSION(3,3) :: ZHELEM, ZGELEM 
-            REAL, INTENT(IN) :: DELTA(3,3)
-            COMPLEX, DIMENSION(3*NBE), INTENT(INOUT) :: ZDFI, ZFI
-            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDSOL(:), ZSSOL(:)
-            INTEGER, INTENT(IN) ::  CONE(N,4),KODE(3*NBE)
-            DIMENSION ZD(3,3,3),ZS(3,3,3)
-            REAL, INTENT(IN) :: ETAS(3,NX)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
-          END 
-        END INTERFACE
-       
-        INTERFACE
-          SUBROUTINE OUTPUTEC(ZFI,ZDFI,ZDSOL,ZSSOL,NPIX,NX,N,NBE,L,FR)
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
-            COMMON INP,INQ,IPR,IPS,IPT
-            DIMENSION ZFI(3*NBE),ZDFI(3*NBE),ZDSOL(3*L),ZSSOL(9*L)
-          END
-        END INTERFACE
-
-        INTERFACE
-          SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
-            IMPLICIT NONE
-            INTEGER, INTENT(IN) :: NN, N
-            COMPLEX, INTENT(IN) :: ZH(NN, N)
-            COMPLEX, INTENT(INOUT) :: ZFI(NN)
-          END 
-        END INTERFACE
+#ifdef USE_GPU
+        INCLUDE 'kernels/shared.fd'
+#endif
 
 ! Talvez estes parâmetros sejam desnecessários uma vez que nesta versão
 ! todas as matrizes são alocadas dinamicamente de acordo com a entrada

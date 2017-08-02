@@ -6,13 +6,21 @@
 *                                                                      *
 ************************************************************************
 
+
+
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
      $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
         
         USE omp_lib
 
+
         IMPLICIT NONE
+       
+#ifdef USE_GPU
+        INCLUDE 'kernels/Ghmatecd_cu.fd'
+#endif
+        
         INTEGER INP,INQ,IPR,IPS,IPT
         COMMON  INP,INQ,IPR,IPS,IPT
         

@@ -13,6 +13,11 @@
 
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
+
+#ifdef USE_GPU
+        INCLUDE 'kernels/Ghmatece_cu.fd'
+#endif
+
         COMMON INP,INQ,IPR,IPS,IPT
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
