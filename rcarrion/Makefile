@@ -3,7 +3,7 @@ NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -Ofast -funroll-loops -flto
 PARALLEL= -fopenmp
 NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
-FLFLAGS = libopenblas.a -fopenmp
+FLFLAGS = libopenblas.a -fopenmp 
 RM      = rm -f
 
 all: main
@@ -11,7 +11,7 @@ all: main
 cpu: main
 
 gpu: MODE = -DUSE_GPU
-gpu: FLFLAGS += -lcudart -lcublas -lstdc++ -L/usr/local/cuda/lib64
+gpu: FLFLAGS += libmagma.a -lcudart -lcublas -lcusparse -lstdc++ -L/usr/local/cuda/lib64
 gpu: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o Solfune.o Solfund.o Inputece.o Inputecd.o Ghmatece.o Ghmatecd.o Interec.o Outputec.o Normvec.o Linsolve.o Main.o Ghmatecd_cu.o Ghmatece_cu.o Interec1_cu.o Linsolve_cu.o shared.o 
 	$(FC) $(PARALLEL) $(FCFLAGS) -o main $^ $(FLFLAGS)
 
