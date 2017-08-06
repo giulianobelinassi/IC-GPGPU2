@@ -19,7 +19,7 @@ main: Nonsingd.o Nonsinge.o Sigmaec.o Gauleg.o Sing_de.o Singge.o Solfundif.o So
 	$(FC) $(PARALLEL) $(FCFLAGS) -o $@ $^ $(FLFLAGS)
 
 Main.o: Main.for Inputece.for Ghmatecd.for Ghmatece.for
-	$(FC) $(FCFLAGS) $(MODE) -c $<
+	$(FC) $(FCFLAGS) $(PARALLEL) $(MODE) -c $<
 
 Linsolve_cu.o: kernels/Linsolve_cu.cu Linsolve.for
 	$(NVCC) $(NVFLAGS) -c $<

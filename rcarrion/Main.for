@@ -26,6 +26,8 @@
 *
       PROGRAM MAIN
 *
+        USE omp_lib
+
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
         
@@ -63,7 +65,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         REAL, DIMENSION(:,:), ALLOCATABLE :: ETAS
         INTEGER i
         CHARACTER(len=100) :: input_e, input_d, output_e, output_d
-
+        DOUBLE PRECISION :: t1, t2
 
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
@@ -122,8 +124,14 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 #define USE_GPU
 #endif
 #ifdef USE_GPU
+        t1 = OMP_GET_WTIME()
+
         CALL send_shared_data_to_gpu(CX,CY,CZ,CXM,CYM,CZM,ETAS,GI,OME, 
      $      CONE,NP,NPG,N,NBE) 
+
+        t2 = OMP_GET_WTIME()
+
+      PRINT*, "Tempo gasto alocando os vetores compartilhados: ",(t2-t1)
 #endif
 
 *
@@ -149,7 +157,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         
         DO 12 I=1,NFR
             FR=AFR(I)
-            PRINT *, 'rodando para frequencia ', i
+!            PRINT *, 'rodando para frequencia ', i
 
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO

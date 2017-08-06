@@ -207,7 +207,6 @@ __global__ void ghmatecd_kernel(
 								rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
 						rd[i]*rn_cached[j]*zcc);
 		
-            
 			if (ii == jj && !interec)
 			{
 				zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
