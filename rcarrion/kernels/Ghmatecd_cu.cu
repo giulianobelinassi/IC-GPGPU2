@@ -196,31 +196,32 @@ __global__ void ghmatecd_kernel(
 
 	p12 = p1*p2*det;
 	
+    if (ii != jj)
+    {
+        for (j = 0; j < 3; ++j)
+        {	for (i = 0; i < 3; ++i)
+            {
+                zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
+                
 
-	for (j = 0; j < 3; ++j)
-	{	for (i = 0; i < 3; ++i)
-		{
-			zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
-			
+                zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
+                                    rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
+                            rd[i]*rn_cached[j]*zcc);
+            
+                if (ii == jj && !interec)
+                {
+                    zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
+                    zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
+                }
+                
+                zgi = zgi*p12;
+                zhi = zhi*p12;
 
-			zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
-								rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
-						rd[i]*rn_cached[j]*zcc);
-		
-			if (ii == jj && !interec)
-			{
-				zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
-				zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
-			}
-			
-			zgi = zgi*p12;
-			zhi = zhi*p12;
-
-			zgelem(j, i, jg*npg + ig) = zgi;
-			zhelem(j, i, jg*npg + ig) = zhi;
-		}
-	}
-
+                zgelem(j, i, jg*npg + ig) = zgi;
+                zhelem(j, i, jg*npg + ig) = zhi;
+            }
+        }
+    }
 	__syncthreads();
 	
 	if (jg < 3 && ig < 3)
@@ -334,7 +335,7 @@ void cuda_ghmatecd_(int* nbe,
 	cuda_assert(error);
 	error = cudaMemcpy(zgp_, device_zg, (3*(*nbe))*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-	
+/*	
 	for (i = 0; i < *nbe; ++i)
 	{
 		ii = 3*i;
@@ -346,7 +347,7 @@ void cuda_ghmatecd_(int* nbe,
 			}
 		}
 	}
-	
+*/	
 	error = cudaFree(device_zh);
 	cuda_assert(error);
 	error = cudaFree(device_zg);
