@@ -37,7 +37,7 @@
         REAL, INTENT(IN) :: DELTA(3,3),PI
         INTEGER, INTENT(IN) :: L,N,NBE,NP,NPG
         REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
-        COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
+        COMPLEX, INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,N)
 
@@ -191,48 +191,9 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      RET
      $                      )
 
-        
-!$OMP  PARALLEL DO DEFAULT(SHARED)
-!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
-        DO J=1,NBE
-            N1=CONE(J,1)
-            N2=CONE(J,2)
-            N3=CONE(J,3)
-            N4=CONE(J,4)
-*
-* ARMAZENA AS COORDENADAS DOS PONTOS EXTREMOS DO ELEMENTO NO VETOR CO
-*
-            CO(1,1)=CX(N1)
-            CO(1,2)=CY(N1)
-            CO(1,3)=CZ(N1)
-            CO(2,1)=CX(N2)
-            CO(2,2)=CY(N2)
-            CO(2,3)=CZ(N2)
-            CO(3,1)=CX(N3)
-            CO(3,2)=CY(N3)
-            CO(3,3)=CZ(N3)
-            CO(4,1)=CX(N4)
-            CO(4,2)=CY(N4)
-            CO(4,3)=CZ(N4)
-            JJ=3*(J-1) + 1
-            I = J
-            II=3*(I-1) + 1
-
-
-            CALL SING_DE (ZH(II:II+2, JJ:JJ+2),
-     $          ZG(II:II+2, JJ:JJ+2),
-     $          CO,CXM(I),CYM(I),CZM(I),
-     $          ETAS(1:3,J),
-     $          ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,GI,OME,NPG)
-
-
-            ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
-     $          GEST(II:II+2, JJ:JJ+2)
-            ZH(II:II+2, JJ:JJ+2) = ZH(II:II+2, JJ:JJ+2) + 
-     $          HEST(II:II+2, JJ:JJ+2)
-
-        ENDDO
-!$OMP END PARALLEL DO
+        CALL GHMATECD_SINGULAR(ZH, ZG, CX, CY, CZ, ZGE, ZCS, ZCP, C1,
+     $      C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, ETAS, 
+     $      CXM, CYM, CZM, PI, GEST, HEST, CONE)
 
         IF (RET /= 0) THEN
             PRINT*, "GHMATECD: Erro: Matriz Singular."
@@ -279,6 +240,71 @@ C        t1 = OMP_GET_WTIME()
 C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
+
+      SUBROUTINE GHMATECD_SINGULAR(ZH, ZG, CX, CY, CZ, ZGE, ZCS, ZCP,
+     $   C1, C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, ETAS, 
+     $   CXM, CYM, CZM, PI, GEST, HEST, CONE)
+        
+        IMPLICIT NONE 
+
+        COMPLEX, DIMENSION(3*NBE,3*N), INTENT(OUT) :: ZH, ZG
+        REAL, DIMENSION(3*NBE,3*N), INTENT(IN) :: HEST, GEST
+        
+        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
+        REAL, INTENT(IN) :: C1,C2,C3,C4,FR,PI
+        REAL, INTENT(IN) :: DELTA(3,3)
+        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
+        INTEGER, INTENT(IN) :: N,NBE,NP,NPG
+        REAL, INTENT(IN) :: ETAS(3,N)
+        REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+        INTEGER, DIMENSION(N, 4) :: CONE
+
+        INTEGER :: N1, N2, N3, N4, I, J, II, JJ
+        REAL :: CO(4,3)
+
+!$OMP  PARALLEL DO DEFAULT(SHARED)
+!$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
+        DO J=1,NBE
+            N1=CONE(J,1)
+            N2=CONE(J,2)
+            N3=CONE(J,3)
+            N4=CONE(J,4)
+*
+* ARMAZENA AS COORDENADAS DOS PONTOS EXTREMOS DO ELEMENTO NO VETOR CO
+*
+            CO(1,1)=CX(N1)
+            CO(1,2)=CY(N1)
+            CO(1,3)=CZ(N1)
+            CO(2,1)=CX(N2)
+            CO(2,2)=CY(N2)
+            CO(2,3)=CZ(N2)
+            CO(3,1)=CX(N3)
+            CO(3,2)=CY(N3)
+            CO(3,3)=CZ(N3)
+            CO(4,1)=CX(N4)
+            CO(4,2)=CY(N4)
+            CO(4,3)=CZ(N4)
+            JJ=3*(J-1) + 1
+            I = J
+            II=3*(I-1) + 1
+
+
+            CALL SING_DE (ZH(II:II+2, JJ:JJ+2),
+     $          ZG(II:II+2, JJ:JJ+2),
+     $          CO,CXM(I),CYM(I),CZM(I),
+     $          ETAS(1:3,J),
+     $          ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,GI,OME,NPG)
+
+
+            ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
+     $          GEST(II:II+2, JJ:JJ+2)
+            ZH(II:II+2, JJ:JJ+2) = ZH(II:II+2, JJ:JJ+2) + 
+     $          HEST(II:II+2, JJ:JJ+2)
+
+        ENDDO
+!$OMP END PARALLEL DO
+      END SUBROUTINE GHMATECD_SINGULAR
 
 
       SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)

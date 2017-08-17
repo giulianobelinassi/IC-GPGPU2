@@ -31,7 +31,7 @@ rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.
 
 echo -e "Dado a execução do programa 'main' com 240 pontos"
 
-./main #ESOLO240E_-5+5.DAT ESOLO240D_-5+5.DAT SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT
+optirun ./main #ESOLO240E_-5+5.DAT ESOLO240D_-5+5.DAT SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT
 
 sleep 0.2s
 
@@ -52,7 +52,7 @@ fi
 
 echo -e "Dado a execução do programa 'main' com 2160 pontos"
 
-./main ESOLO2160E_-5+5.DAT ESOLO2160D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
+optirun ./main ESOLO2160E_-5+5.DAT ESOLO2160D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
 
 echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
 if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then

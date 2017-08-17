@@ -12,6 +12,10 @@
 *
         USE omp_lib
 
+!Disabilite a GPU.
+#undef TEST_CUDA
+#undef USE_GPU
+
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
 #ifdef USE_GPU

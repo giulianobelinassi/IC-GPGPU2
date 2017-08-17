@@ -1,6 +1,6 @@
 FC      = gfortran-5
 NVCC    = nvcc
-FCFLAGS = $(EXTRA) -g -cpp -Wall -Wno-unused-dummy-argument -Ofast -funroll-loops -flto
+FCFLAGS = $(EXTRA) -g -cpp -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast -funroll-loops
 PARALLEL= -fopenmp
 NVFLAGS = $(EXTRA) -use_fast_math  -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp 
