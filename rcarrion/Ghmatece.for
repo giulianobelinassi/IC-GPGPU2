@@ -23,6 +23,7 @@
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
         REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
+        REAL, DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag, GESTdiag
         REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
 
         REAL, INTENT(IN) :: ETAS(3,n)
@@ -163,8 +164,10 @@ C            ETAS(3)=C/R
 
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()
-       
-        CALL cuda_ghmatece(
+!$OMP PARALLEL NUM_THREADS(2)
+
+        IF (OMP_GET_THREAD_NUM() == 0) THEN
+            CALL cuda_ghmatece(
      $          NBE,
      $          NPG,
      $          N,
@@ -178,10 +181,14 @@ C            ETAS(3)=C/R
      $          GEST,
      $          STATS1
      $          )
+        ELSE
 
-        CALL GHMATECE_SINGULAR(
-     $          HEST,
-     $          GEST,
+            ALLOCATE(HESTdiag(3,3,NBE))
+            ALLOCATE(GESTdiag(3,3,NBE))
+
+            CALL GHMATECE_SINGULAR(
+     $          HESTdiag,
+     $          GESTdiag,
      $          CXM,
      $          CYM, 
      $          CZM,
@@ -206,6 +213,18 @@ C            ETAS(3)=C/R
      $          CONE,
      $          NBE
      $          )
+
+        ENDIF
+!$OMP END PARALLEL
+        DO J = 1, NBE
+            JJ = 3*(J-1)+1
+            HEST(JJ:JJ+2, JJ:JJ+2) = HESTdiag(1:3, 1:3, J)
+            GEST(JJ:JJ+2, JJ:JJ+2) = GESTdiag(1:3, 1:3, J)
+        ENDDO
+ 
+        DEALLOCATE(HESTdiag)
+        DEALLOCATE(GESTdiag)
+
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECE: Tempo na GPU: ", (t2-t1)
 #endif
@@ -262,7 +281,8 @@ C            ETAS(3)=C/R
 !     Note que há cálculos muito diferentes dos demais no problema
 !     singular, e portanto decidi (Giuliano) tratá-lo de maneira 
 !     diferenciada.
-      SUBROUTINE GHMATECE_SINGULAR(HEST, GEST, CXM, CYM, CZM, ETAS,
+      SUBROUTINE GHMATECE_SINGULAR(HESTdiag, GESTdiag, CXM, CYM, CZM, 
+     $         ETAS,
      $      CX, CY, CZ, NCOX, N, NP, NPG, GE, RNU, RMU, 
      $      C1, C2, C3, C4, DELTA, GI, OME, CONE, NBE)
        
@@ -270,7 +290,7 @@ C            ETAS(3)=C/R
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        REAL, DIMENSION(3*NBE, 3*N), INTENT(OUT) :: HEST, GEST
+        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: HESTdiag, GESTdiag
         REAL, DIMENSION(NPG) :: GI, OME
         REAL, INTENT(IN) :: ETAS(3,n)
         INTEGER, INTENT(IN) :: NBE, N, NP, NPG, NCOX
@@ -279,9 +299,8 @@ C            ETAS(3)=C/R
         INTEGER :: J, JJ, N1, N2, N3, N4
 
         DO J=1, NBE  
-            JJ = 3*(J-1) + 1
-            HEST(JJ:JJ+2, JJ:JJ+2) = 0
-            GEST(JJ:JJ+2, JJ:JJ+2) = 0
+            HESTdiag(1:3, 1:3, J) = 0
+            GESTdiag(1:3, 1:3, J) = 0
         ENDDO
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
@@ -293,7 +312,8 @@ C            ETAS(3)=C/R
             N4=CONE(J,4)
             
             JJ=3*(J-1) + 1
-            CALL SINGGE(HEST(JJ:JJ+2, JJ:JJ+2),GEST(JJ:JJ+2, JJ:JJ+2),
+            CALL SINGGE(HESTdiag(1:3,1:3,J),
+     $                  GESTdiag(1:3,1:3,J),
      $                  CXM(J),CYM(J),CZM(J),
      $                  ETAS(1:3,J),CX,
      $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,
