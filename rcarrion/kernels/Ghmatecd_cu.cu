@@ -208,13 +208,13 @@ __global__ void ghmatecd_kernel(
                 zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
                                     rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
                             rd[i]*rn_cached[j]*zcc);
-            
+/*            
                 if (ii == jj && !interec)
                 {
                     zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
                     zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
                 }
-                
+*/              
                 zgi = zgi*p12;
                 zhi = zhi*p12;
 

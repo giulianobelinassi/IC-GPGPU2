@@ -164,19 +164,22 @@ __global__ void ghmatece_kernel(
 	
 	p12 = p1*p2*det;
 
-	for (j = 0; j < 3; ++j)
-	{	for (i = 0; i < 3; ++i)
-		{
-			
-			gei = (c1/r)*(c2*delta[i][j]+rd[i]*rd[j]);
-			hei = (c3/(r*r))*(drn*(c4*delta[i][j]+3.0f*rd[i]*rd[j]) +
-				c4*(rd[j]*rn_cached[i]-rd[i]*rn_cached[j]));
+	if (ii != jj)
+	{
+		for (j = 0; j < 3; ++j)
+		{	for (i = 0; i < 3; ++i)
+			{
+				
+				gei = (c1/r)*(c2*delta[i][j]+rd[i]*rd[j]);
+				hei = (c3/(r*r))*(drn*(c4*delta[i][j]+3.0f*rd[i]*rd[j]) +
+					c4*(rd[j]*rn_cached[i]-rd[i]*rn_cached[j]));
 
-			gei = gei*p12;
-			hei = hei*p12;
+				gei = gei*p12;
+				hei = hei*p12;
 
-			gelem(j, i, jg*npg + ig) = gei;
-			helem(j, i, jg*npg + ig) = hei;
+				gelem(j, i, jg*npg + ig) = gei;
+				helem(j, i, jg*npg + ig) = hei;
+			}
 		}
 	}
 	__syncthreads();
