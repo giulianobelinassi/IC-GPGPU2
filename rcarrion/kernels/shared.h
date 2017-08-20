@@ -22,6 +22,7 @@ void cuda_assert(cudaError_t error);
 
 void cublas_assert(cublasStatus_t error);
 
+int largest_possible_width(size_t sizeof_column_mem, int columns, int* iterations);
 }
 #endif
 

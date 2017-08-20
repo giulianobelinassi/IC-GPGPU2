@@ -29,6 +29,7 @@ __global__ void ghmatece_kernel(
                            int npg,
                            int n,
                            int nbe,
+						   int column_pad,
                            int* ret
                            )
 {
@@ -36,7 +37,7 @@ __global__ void ghmatece_kernel(
 	const int ig = threadIdx.y;
 	const int jg = threadIdx.x;
 	const int ii = blockIdx.y;
-	const int jj = blockIdx.x;
+	const int jj = blockIdx.x + column_pad;
 
 	const int zgelem_pad = 3*3*npg*npg;
 	extern __shared__ float s_[];
@@ -182,7 +183,8 @@ __global__ void ghmatece_kernel(
     
 	if (jg < 3 && ig < 3)
 	{
-		int index = 3*ii + (3*nbe)*3*jj + ig + (3*nbe)*jg;
+
+		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
 		
 		gest[index] = thrust::reduce(thrust::seq, &gelem(jg, ig, 0), &gelem(jg, ig, npg*npg));
 		hest[index] = thrust::reduce(thrust::seq, &helem(jg, ig, 0), &helem(jg, ig, npg*npg));
@@ -204,74 +206,89 @@ void cuda_ghmatece_(int* nbe,
                    )
 {
 	dim3 threadsPerBlock(*npg,*npg);
-	dim3 numBlocks(*n, *nbe);
 	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(float);
+	size_t column_size = 2*(3*(*nbe))*sizeof(float);
+	
 	cudaError_t error;
-    
+   
+	float (*hest)[3*(*nbe)] = (float (*)[3*(*nbe)]) hest_;
+	float (*gest)[3*(*nbe)] = (float (*)[3*(*nbe)]) gest_;
+
 	float* device_h;
 	float* device_g;
 
 	int* device_return_status;
 	int return_status;
+	int width, iterations, i;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_h, (3*(*nbe))*(3*(*n))*sizeof(float));
+	width = largest_possible_width(column_size, *n, &iterations);
+
+
+	error = cudaMalloc(&device_h, (3*(*nbe))*(3*(width))*sizeof(float));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_g, (3*(*nbe))*(3*(*n))*sizeof(float));
+	error = cudaMalloc(&device_g, (3*(*nbe))*(3*(width))*sizeof(float));
 	cuda_assert(error);
 
 	error = cudaMemset(device_return_status, 0, sizeof(int));
 	cuda_assert(error);
 
-	error = cudaMemset(device_h, 0, (3*(*nbe))*(3*(*n))*sizeof(float));
-	cuda_assert(error);
-
-	error = cudaMemset(device_g, 0, (3*(*nbe))*(3*(*n))*sizeof(float));
-	cuda_assert(error);
-
-	cudaDeviceSynchronize();
-	ghmatece_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
-						device_cone,
-						device_cx,
-						device_cy,
-						device_cz,
-						device_cxm,
-						device_cym,
-						device_czm,
-						device_h,
-						device_g,
-						(float (*)[3]) device_etas,
-						*fr,
-						device_gi,
-						device_ome,
-						*c1,
-						*c2,
-						*c3,
-						*c4,
-						*npg,
-						*n,
-						*nbe,
-						device_return_status
-						);
-
-	cudaDeviceSynchronize();
-
-	error = cudaMemcpy(&return_status, device_return_status, sizeof(int), cudaMemcpyDeviceToHost);
-	cuda_assert(error);
-
-	if (return_status != 0)
+	for (i = 0; i < iterations; ++i)
 	{
-		fputs("Matriz Singular\n", stderr);
+		int starting_column = width*i;
+		if (starting_column + width > *n)
+			width = *n - starting_column;
+		dim3 numBlocks(width, *nbe);
+
+		error = cudaMemset(device_h, 0, (3*(*nbe))*(3*(width))*sizeof(float));
+		cuda_assert(error);
+
+		error = cudaMemset(device_g, 0, (3*(*nbe))*(3*(width))*sizeof(float));
+		cuda_assert(error);
+
+		cudaDeviceSynchronize();
+		ghmatece_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
+							device_cone,
+							device_cx,
+							device_cy,
+							device_cz,
+							device_cxm,
+							device_cym,
+							device_czm,
+							device_h,
+							device_g,
+							(float (*)[3]) device_etas,
+							*fr,
+							device_gi,
+							device_ome,
+							*c1,
+							*c2,
+							*c3,
+							*c4,
+							*npg,
+							*n,
+							*nbe,
+							starting_column,
+							device_return_status
+							);
+		cudaDeviceSynchronize();
+
+		error = cudaMemcpy(&return_status, device_return_status, sizeof(int), cudaMemcpyDeviceToHost);
+		cuda_assert(error);
+
+		if (return_status != 0)
+		{
+			fputs("Matriz Singular\n", stderr);
+		}
+
+		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(float), cudaMemcpyDeviceToHost);
+		cuda_assert(error);
+		error = cudaMemcpy(&gest[3*starting_column], device_g, (3*(*nbe))*(3*(width))*sizeof(float), cudaMemcpyDeviceToHost);
+		cuda_assert(error);
 	}
-
-	error = cudaMemcpy(hest_, device_h, (3*(*nbe))*(3*(*n))*sizeof(float), cudaMemcpyDeviceToHost);
-	cuda_assert(error);
-	error = cudaMemcpy(gest_, device_g, (3*(*nbe))*(3*(*n))*sizeof(float), cudaMemcpyDeviceToHost);
-	cuda_assert(error);
-
 
 	error = cudaFree(device_h);
 	cuda_assert(error);

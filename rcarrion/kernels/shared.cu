@@ -172,4 +172,24 @@ void deallocate_shared_gpu_data_()
     cuda_assert(error);
 }
 
+int largest_possible_width(size_t sizeof_column_mem, int columns, int* iterations)
+{
+	size_t available_mem;
+	size_t total_mem;
+	int possible_width;
+
+	cuda_assert(cudaMemGetInfo(&available_mem, &total_mem));
+//	available_mem = 8*1024*1024; //Simulate a GPU with 8Mb of video memory
+
+	if (columns*sizeof_column_mem < available_mem)
+	{	*iterations = 1;
+		return columns;
+	}
+	possible_width = available_mem/sizeof_column_mem;
+
+	*iterations = (columns + possible_width - 1)/possible_width;
+
+	return possible_width;
+}
+
 }

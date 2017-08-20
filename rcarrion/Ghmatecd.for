@@ -66,6 +66,7 @@
 #endif
 #ifdef USE_GPU
         INTEGER RET
+        COMPLEX, DIMENSION(:,:,:), ALLOCATABLE :: ZHdiag, ZGdiag
 #endif
 
 *
@@ -171,6 +172,10 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()
 
+!$OMP PARALLEL NUM_THREADS(2)
+        
+        IF (OMP_GET_THREAD_NUM() == 0) THEN
+
         CALL cuda_ghmatecd(
      $                      NBE,
      $                      NPG,
@@ -191,10 +196,25 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      RET
      $                      )
 
-        CALL GHMATECD_SINGULAR(ZH, ZG, CX, CY, CZ, ZGE, ZCS, ZCP, C1,
-     $      C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, ETAS, 
-     $      CXM, CYM, CZM, PI, GEST, HEST, CONE)
+        ELSE
 
+            ALLOCATE(ZHdiag(3,3,NBE))
+            ALLOCATE(ZGdiag(3,3,NBE))
+            CALL GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, ZCS,
+     $         ZCP,C1, C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, 
+     $         ETAS,CXM, CYM, CZM, PI, GEST, HEST, CONE)
+        ENDIF
+!$OMP END PARALLEL
+
+        DO J = 1, NBE
+            JJ = 3*(J-1)+1
+            ZH(JJ:JJ+2, JJ:JJ+2) = ZHdiag(1:3, 1:3, J)
+            ZG(JJ:JJ+2, JJ:JJ+2) = ZGdiag(1:3, 1:3, J)
+        ENDDO
+
+        DEALLOCATE(ZHdiag)
+        DEALLOCATE(ZGdiag)
+        
         IF (RET /= 0) THEN
             PRINT*, "GHMATECD: Erro: Matriz Singular."
         ENDIF
@@ -241,13 +261,14 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
 
-      SUBROUTINE GHMATECD_SINGULAR(ZH, ZG, CX, CY, CZ, ZGE, ZCS, ZCP,
+      SUBROUTINE GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, ZCS,
+     $         ZCP,
      $   C1, C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, ETAS, 
      $   CXM, CYM, CZM, PI, GEST, HEST, CONE)
         
         IMPLICIT NONE 
 
-        COMPLEX, DIMENSION(3*NBE,3*N), INTENT(OUT) :: ZH, ZG
+        COMPLEX, DIMENSION(3,3,NBE),INTENT(OUT) :: ZHdiag, ZGdiag
         REAL, DIMENSION(3*NBE,3*N), INTENT(IN) :: HEST, GEST
         
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
@@ -262,6 +283,9 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
 
         INTEGER :: N1, N2, N3, N4, I, J, II, JJ
         REAL :: CO(4,3)
+
+        ZGdiag = 0
+        ZHdiag = 0
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -290,17 +314,17 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             II=3*(I-1) + 1
 
 
-            CALL SING_DE (ZH(II:II+2, JJ:JJ+2),
-     $          ZG(II:II+2, JJ:JJ+2),
+            CALL SING_DE (ZHdiag(1:3, 1:3, J),
+     $          ZGdiag(1:3, 1:3, J),
      $          CO,CXM(I),CYM(I),CZM(I),
      $          ETAS(1:3,J),
      $          ZGE,ZCS,ZCP,C1,C2,C3,C4,DELTA,PI,FR,GI,OME,NPG)
 
 
-            ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
-     $          GEST(II:II+2, JJ:JJ+2)
-            ZH(II:II+2, JJ:JJ+2) = ZH(II:II+2, JJ:JJ+2) + 
-     $          HEST(II:II+2, JJ:JJ+2)
+            ZGdiag(1:3, 1:3, J) = ZGdiag(1:3, 1:3, J) +
+     $          GEST(JJ:JJ+2, JJ:JJ+2)
+            ZHdiag(1:3, 1:3, J) = ZHdiag(1:3, 1:3, J) + 
+     $          HEST(JJ:JJ+2, JJ:JJ+2)
 
         ENDDO
 !$OMP END PARALLEL DO
