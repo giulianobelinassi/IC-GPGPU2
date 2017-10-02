@@ -44,7 +44,7 @@
         COMPLEX ZCH
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-        INTEGER NN,I,J, stats1, stats2
+        INTEGER NN,I,J,JJ, stats1, stats2
 
 #define USE_CPU
 
@@ -61,7 +61,7 @@
 #endif
 
 #ifdef  USE_CPU
-        INTEGER N1,N2,N3,N4,II,JJ
+        INTEGER N1,N2,N3,N4,II
         REAL :: CO(4,3)
 #endif
 #ifdef USE_GPU

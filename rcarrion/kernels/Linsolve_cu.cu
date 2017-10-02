@@ -1,5 +1,6 @@
 #include "shared.h"
-#include "../include/magma.h"
+//#include "../include/magma.h"
+#include <magma.h>
 
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
