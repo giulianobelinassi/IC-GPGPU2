@@ -66,6 +66,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         INTEGER i
         CHARACTER(len=100) :: input_e, input_d, output_e, output_d
         DOUBLE PRECISION :: t1, t2
+        LOGICAL :: FAST_DYNAMIC_SING = .FALSE.
 
 *
 * NE = NÚMERO MÁXIMO DE ELEMENTOS DA MALHA (CONTORNO + ENCLOSING)
@@ -81,7 +82,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         IPS=103
         IPT=104
 *
-        IF (iargc() == 4) THEN
+        IF (iargc() >= 4) THEN
             CALL getarg(1, input_e)
             CALL getarg(2, input_d)
             CALL getarg(3, output_e)
@@ -93,6 +94,11 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
             output_e = 'SSOLO240E_-5+5.DAT'
             output_d = 'SSOLO240D_-5+5.DAT'
         ENDIF
+        
+        IF (iargc() == 5) THEN
+            FAST_DYNAMIC_SING = .TRUE.
+        ENDIF
+
 
         OPEN(UNIT=INP,FILE=input_e,STATUS='OLD')
         OPEN(UNIT=INQ,FILE=input_d,STATUS='OLD')
@@ -164,7 +170,8 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 *
             CALL GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $          ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,
-     $          RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME
+     $          RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,
+     $          FAST_DYNAMIC_SING
      $      )
 *
 * ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES

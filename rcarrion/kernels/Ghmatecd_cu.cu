@@ -35,6 +35,7 @@ __global__ void ghmatecd_kernel(
                            int interec,
                            int dim_cone,
 						   int column_pad,
+                           int fast_singular,
                            int* ret
                            )
 {
@@ -197,30 +198,27 @@ __global__ void ghmatecd_kernel(
 
 	p12 = p1*p2*det;
 	
-    if (ii != jj)
-    {
-        for (j = 0; j < 3; ++j)
-        {	for (i = 0; i < 3; ++i)
+    for (j = 0; j < 3; ++j)
+    {	for (i = 0; i < 3; ++i)
+        {
+            zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
+            
+
+            zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
+                                rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
+                        rd[i]*rn_cached[j]*zcc);
+        
+            if (ii == jj && fast_singular)
             {
-                zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
-                
-
-                zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
-                                    rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
-                            rd[i]*rn_cached[j]*zcc);
-/*            
-                if (ii == jj && !interec)
-                {
-                    zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
-                    zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
-                }
-*/              
-                zgi = zgi*p12;
-                zhi = zhi*p12;
-
-                zgelem(j, i, jg*npg + ig) = zgi;
-                zhelem(j, i, jg*npg + ig) = zhi;
+                zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
+                zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
             }
+          
+            zgi = zgi*p12;
+            zhi = zhi*p12;
+
+            zgelem(j, i, jg*npg + ig) = zgi;
+            zhelem(j, i, jg*npg + ig) = zhi;
         }
     }
 	__syncthreads();
@@ -251,6 +249,7 @@ void cuda_ghmatecd_(int* nbe,
                     float* zgest_,
                     thrust::complex<float>* zgp_,
                     thrust::complex<float>* zhp_,
+                    int* fast_singular,
                     int* status
                    )
 {
@@ -267,12 +266,12 @@ void cuda_ghmatecd_(int* nbe,
 	int return_status;
 
 	/*Cast os parâmetros de volta para o tipo original*/
-	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
-	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
+//	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
+//	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
 	thrust::complex<float> (*zgp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zgp_;
 	thrust::complex<float> (*zhp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zhp_;
 
-	int i, ii, iterations, width;
+	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
@@ -331,6 +330,7 @@ void cuda_ghmatecd_(int* nbe,
 							0,
 							*n,
 							starting_column,
+                            *fast_singular,
 							device_return_status
 							);
 		cudaDeviceSynchronize();

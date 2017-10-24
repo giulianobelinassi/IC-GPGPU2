@@ -1,11 +1,11 @@
     
         INTERFACE
           SUBROUTINE CUDA_GHMATECD (nbe,npg,n,np,zge,zcs,zcp,
-     $      c1,c2,c3,c4,fr,zhest,zgest,zgp,zhp,status)
+     $      c1,c2,c3,c4,fr,zhest,zgest,zgp,zhp,fast_singular,status)
           
             IMPLICIT NONE
 
-            INTEGER, INTENT(IN) :: nbe,npg,n,np
+            INTEGER, INTENT(IN) :: nbe,npg,n,np,fast_singular
             REAL, DIMENSION(3*NBE, 3*N), INTENT(IN) :: zhest, zgest
 
             COMPLEX, DIMENSION(3*NBE, 3*N), INTENT(OUT) :: zgp, zhp

@@ -1,7 +1,8 @@
         INTERFACE
           SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,
      $      DFI,ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,
-     $      RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
+     $      RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,
+     $      FAST_SING)
           
             IMPLICIT NONE
             REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
@@ -21,6 +22,7 @@
             REAL, INTENT(IN) :: C1,C2,C3,C4
             REAL, INTENT(IN) :: ETAS(3,N)
             REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
+            LOGICAL, INTENT(IN) :: FAST_SING
           END
         END INTERFACE
 

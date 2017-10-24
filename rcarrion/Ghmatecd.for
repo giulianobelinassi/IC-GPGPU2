@@ -10,7 +10,7 @@
 
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
-     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
+     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,FAST_SING)
         
         USE omp_lib
 
@@ -40,6 +40,8 @@
         COMPLEX, INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,N)
+        LOGICAL, INTENT(IN) :: FAST_SING
+
 
         COMPLEX ZCH
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
@@ -172,11 +174,40 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()
 
-!$OMP PARALLEL NUM_THREADS(2)
-        
-        IF (OMP_GET_THREAD_NUM() == 0) THEN
+        IF (FAST_SING .EQV. .TRUE.) THEN
+            CALL cuda_ghmatecd(
+     $                        NBE,
+     $                        NPG,
+     $                        N,
+     $                        NP,
+     $                        ZGE,
+     $                        ZCS,
+     $                        ZCP,
+     $                        C1,
+     $                        C2,
+     $                        C3,
+     $                        C4,
+     $                        FR,
+     $                        HEST,
+     $                        GEST,
+     $                        ZG,
+     $                        ZH,
+     $                        1,
+     $                        RET
+     $                        )
+            DO i = 1, NBE
+                II=3*(I-1) + 1
+                ZG(II:II+2, II:II+2) = ZG(II:II+2, II:II+2) +
+     $              GEST(II:II+2, II:II+2)
+                ZH(II:II+2, II:II+2) = ZH(II:II+2, II:II+2) + 
+     $              HEST(II:II+2, II:II+2)
+            ENDDO
+        ELSE
 
-        CALL cuda_ghmatecd(
+!$OMP PARALLEL NUM_THREADS(2)
+            IF (OMP_GET_THREAD_NUM() == 0) THEN
+
+                CALL cuda_ghmatecd(
      $                      NBE,
      $                      NPG,
      $                      N,
@@ -193,27 +224,32 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      GEST,
      $                      ZG,
      $                      ZH,
+     $                      0,
      $                      RET
      $                      )
 
-        ELSE
+            ELSE
 
-            ALLOCATE(ZHdiag(3,3,NBE))
-            ALLOCATE(ZGdiag(3,3,NBE))
-            CALL GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, ZCS,
-     $         ZCP,C1, C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, 
-     $         ETAS,CXM, CYM, CZM, PI, GEST, HEST, CONE)
-        ENDIF
+                ALLOCATE(ZHdiag(3,3,NBE))
+                ALLOCATE(ZGdiag(3,3,NBE))
+                CALL GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, 
+     $                 ZCS, ZCP,C1, C2, C3, C4, DELTA, FR, GI, OME, NPG,
+     $                 N, NBE, NP,
+     $                 ETAS,CXM, CYM, CZM, PI, GEST, HEST, CONE)
+            ENDIF
 !$OMP END PARALLEL
+        ENDIF
 
-        DO J = 1, NBE
-            JJ = 3*(J-1)+1
-            ZH(JJ:JJ+2, JJ:JJ+2) = ZHdiag(1:3, 1:3, J)
-            ZG(JJ:JJ+2, JJ:JJ+2) = ZGdiag(1:3, 1:3, J)
-        ENDDO
-
-        DEALLOCATE(ZHdiag)
-        DEALLOCATE(ZGdiag)
+        IF (FAST_SING .EQV. .FALSE.) THEN
+            DO J = 1, NBE
+                JJ = 3*(J-1)+1
+                ZH(JJ:JJ+2, JJ:JJ+2) = ZHdiag(1:3, 1:3, J)
+                ZG(JJ:JJ+2, JJ:JJ+2) = ZGdiag(1:3, 1:3, J)
+            ENDDO
+            DEALLOCATE(ZHdiag)
+            DEALLOCATE(ZGdiag)
+        ENDIF
+ 
         
         IF (RET /= 0) THEN
             PRINT*, "GHMATECD: Erro: Matriz Singular."
