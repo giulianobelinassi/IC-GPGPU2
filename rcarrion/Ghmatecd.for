@@ -46,7 +46,7 @@
         COMPLEX ZCH
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-        INTEGER NN,I,J, stats1, stats2
+        INTEGER NN,I,J, stats1, stats2, II, JJ
 
 #define USE_CPU
 
@@ -63,13 +63,15 @@
 #endif
 
 #ifdef  USE_CPU
-        INTEGER N1,N2,N3,N4,II,JJ
+        INTEGER N1,N2,N3,N4
         REAL :: CO(4,3)
 #endif
 #ifdef USE_GPU
         INTEGER RET
         COMPLEX, DIMENSION(:,:,:), ALLOCATABLE :: ZHdiag, ZGdiag
 #endif
+
+        PRINT*, "Em GHMATECD."
 
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
@@ -82,11 +84,13 @@
             PRINT*, "MEMÓRIA INSUFICIENTE"
         ENDIF
 
+!$OMP PARALLEL DO PRIVATE(I)
         DO I=1,NBE
             ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
             ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
             ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
         ENDDO
+!$OMP END PARALLEL DO
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *

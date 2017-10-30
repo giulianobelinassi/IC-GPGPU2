@@ -1,4 +1,4 @@
-FC      = gfortran-5
+FC      = gfortran-4.9
 NVCC    = nvcc
 FCFLAGS = $(EXTRA) -g -cpp -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast -funroll-loops
 PARALLEL= -fopenmp

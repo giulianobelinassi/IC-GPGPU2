@@ -128,7 +128,7 @@ C            ETAS(3)=C/R
             
             JJ=3*(J-1) + 1
             DO I=1,NBE
-*	 
+*    
                 IF (I == J) THEN
 !                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE G SINGULAR
                     CALL SINGGE(HELEM,GELEM,CXM(I),CYM(I),CZM(I),
@@ -240,40 +240,29 @@ C            ETAS(3)=C/R
 * ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
 * DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
 *
-        DO 224 MA=1,NBE
-            HEST(3*MA-2,3*MA-2)=0.0
-            HEST(3*MA-2,3*MA-1)=0.0
-            HEST(3*MA-2,3*MA)  =0.0
-            HEST(3*MA-1,3*MA-2)=0.0
-            HEST(3*MA-1,3*MA-1)=0.0
-            HEST(3*MA-1,3*MA)  =0.0
-            HEST(3*MA,3*MA-2)  =0.0
-            HEST(3*MA,3*MA-1)  =0.0
-            HEST(3*MA,3*MA)    =0.0
-            DO 227 MB=1, N
+        PRINT*, "Computando movimento do corpo rigido..."
+        
+        DO MA=1, NBE
+            II = 3*(MA-1)+1
+            HEST(II:II+2, II:II+2) = 0
+        ENDDO
+
+        t1 = OMP_GET_WTIME()
+!$OMP PARALLEL DO PRIVATE(MA, MB, II, JJ)
+        DO MA=1,NBE
+            II = 3*(MA-1)+1
+        	DO MB=1, N
                 IF (MA /= MB) THEN
-                    HEST(3*MA-2,3*MA-2)=HEST(3*MA-2,3*MA-2) - 
-     $                  HEST(3*MA-2,3*MB-2)
-                    HEST(3*MA-2,3*MA-1)=HEST(3*MA-2,3*MA-1) - 
-     $                  HEST(3*MA-2,3*MB-1)
-                    HEST(3*MA-2,3*MA)  =HEST(3*MA-2,3*MA) - 
-     $                  HEST(3*MA-2,3*MB)
-                    HEST(3*MA-1,3*MA-2)=HEST(3*MA-1,3*MA-2) - 
-     $                  HEST(3*MA-1,3*MB-2)
-                    HEST(3*MA-1,3*MA-1)=HEST(3*MA-1,3*MA-1) - 
-     $                  HEST(3*MA-1,3*MB-1)
-                    HEST(3*MA-1,3*MA)  =HEST(3*MA-1,3*MA) - 
-     $                  HEST(3*MA-1,3*MB)
-                    HEST(3*MA,3*MA-2)  =HEST(3*MA,3*MA-2) - 
-     $                  HEST(3*MA,3*MB-2)
-                    HEST(3*MA,3*MA-1)  =HEST(3*MA,3*MA-1) - 
-     $                  HEST(3*MA,3*MB-1)
-                    HEST(3*MA,3*MA)    =HEST(3*MA,3*MA) - 
-     $                  HEST(3*MA,3*MB)
+                    JJ = 3*(MB-1)+1
+                    HEST(II:II+2, II:II+2) = HEST(II:II+2, II:II+2) -
+     $                  HEST(II:II+2, JJ:JJ+2) 
+
                 ENDIF
-            
- 227        CONTINUE
- 224    CONTINUE
+            ENDDO
+        ENDDO
+!$OMP END PARALLEL DO
+        t2 = OMP_GET_WTIME()
+        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
 *
         RETURN
       END
