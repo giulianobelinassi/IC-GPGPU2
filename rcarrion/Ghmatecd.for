@@ -411,8 +411,9 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
 
         IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "||ZH||_inf = ", max_local_sum
         ENDIF
+
+        PRINT*, "||ZH||_inf = ", max_local_sum
 
         sum_norms = 0.0
         max_local_sum = 0
@@ -426,9 +427,10 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
             max_local_sum = MAX(local_sum, max_local_sum)
         ENDDO
 
+        PRINT*, "||ZG||_inf = ", max_local_sum
+
         IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "||ZG||_inf = ", max_local_sum
         ENDIF
 
  200    FORMAT (A,ES7.1)     

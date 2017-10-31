@@ -240,18 +240,30 @@ C            ETAS(3)=C/R
 * ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
 * DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
 *
-        PRINT*, "Computando movimento do corpo rigido..."
-        
+        t1 = OMP_GET_WTIME()
+        CALL RIGID_BODY(NBE, N, HEST)
+        t2 = OMP_GET_WTIME()
+        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
+        RETURN
+      END SUBROUTINE GHMATECE
+
+      SUBROUTINE RIGID_BODY(NBE, N, HEST)
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: NBE, N
+        REAL, DIMENSION(3*NBE, 3*N), INTENT(INOUT) :: HEST
+        INTEGER :: MA, MB, II, JJ
+
+!$OMP PARALLEL DO PRIVATE(MA, II)
         DO MA=1, NBE
             II = 3*(MA-1)+1
             HEST(II:II+2, II:II+2) = 0
         ENDDO
+!$OMP END PARALLEL DO
 
-        t1 = OMP_GET_WTIME()
 !$OMP PARALLEL DO PRIVATE(MA, MB, II, JJ)
         DO MA=1,NBE
             II = 3*(MA-1)+1
-        	DO MB=1, N
+            DO MB=1, N
                 IF (MA /= MB) THEN
                     JJ = 3*(MB-1)+1
                     HEST(II:II+2, II:II+2) = HEST(II:II+2, II:II+2) -
@@ -261,11 +273,9 @@ C            ETAS(3)=C/R
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
-        t2 = OMP_GET_WTIME()
-        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
-*
-        RETURN
+
       END
+
 
 !     Note que há cálculos muito diferentes dos demais no problema
 !     singular, e portanto decidi (Giuliano) tratá-lo de maneira 
@@ -341,9 +351,10 @@ C            ETAS(3)=C/R
 
         IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "||H||_inf = ", max_local_sum
         ENDIF
 
+        PRINT*, "||H||_inf = ", max_local_sum
+        
         sum_norms = 0.0
         max_local_sum = 0
         
@@ -356,9 +367,11 @@ C            ETAS(3)=C/R
             max_local_sum = MAX(local_sum, max_local_sum)
         ENDDO
 
+
+        PRINT*, "||G||_inf = ", max_local_sum
+
         IF (max_local_sum > eps) THEN
             ghmatecd_asserted = .FALSE.
-            PRINT*, "||G||_inf = ", max_local_sum
         ENDIF
 
  200    FORMAT (A,ES7.1)     

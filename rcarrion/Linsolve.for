@@ -88,8 +88,10 @@
 
         IF (maxentry > eps) THEN
             asserted = .FALSE.
-            PRINT*, "||ZFI||_inf = ", maxentry
         ENDIF
+
+        PRINT*, "||ZFI||_inf = ", maxentry
+
 
  200    FORMAT (A,ES7.1)     
         WRITE(0,"(A)") "O vetor ZFI calculado em Interec1_cu e igual ao"
