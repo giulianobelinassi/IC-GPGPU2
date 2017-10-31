@@ -62,26 +62,13 @@ __global__ void ghmatece_kernel(
 
 	int iii, jjj;
 
-	gelem(0, 0, npg*ig + jg) = 0;
-	gelem(0, 1, npg*ig + jg) = 0;
-	gelem(0, 2, npg*ig + jg) = 0;
-	gelem(1, 0, npg*ig + jg) = 0;
-	gelem(1, 1, npg*ig + jg) = 0;
-	gelem(1, 2, npg*ig + jg) = 0;
-	gelem(2, 0, npg*ig + jg) = 0;
-	gelem(2, 1, npg*ig + jg) = 0;
-	gelem(2, 2, npg*ig + jg) = 0;
+	for (iii = 0; iii < 3; ++iii)
+		for (jjj = 0; jjj < 3; ++jjj)
+			gelem(iii, jjj, npg*ig + jg) = 0;
+	for (iii = 0; iii < 3; ++iii)
+		for (jjj = 0; jjj < 3; ++jjj)
+			helem(iii, jjj, npg*ig + jg) = 0;
 
-	helem(0, 0, npg*ig + jg) = 0;
-	helem(0, 1, npg*ig + jg) = 0;
-	helem(0, 2, npg*ig + jg) = 0;
-	helem(1, 0, npg*ig + jg) = 0;
-	helem(1, 1, npg*ig + jg) = 0;
-	helem(1, 2, npg*ig + jg) = 0;
-	helem(2, 0, npg*ig + jg) = 0;
-	helem(2, 1, npg*ig + jg) = 0;
-	helem(2, 2, npg*ig + jg) = 0;
-	
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
 		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];

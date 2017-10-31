@@ -179,14 +179,14 @@ int largest_possible_width(size_t sizeof_column_mem, int columns, int* iteration
 	int possible_width;
 
 	cuda_assert(cudaMemGetInfo(&available_mem, &total_mem));
-	available_mem = available_mem/4;
+	available_mem = available_mem;
 //	available_mem = 8*1024*1024; //Simulate a GPU with 8Mb of video memory
 
-	if (columns*sizeof_column_mem < available_mem)
+	if ((3*columns)*sizeof_column_mem < available_mem)
 	{	*iterations = 1;
 		return columns;
 	}
-	possible_width = available_mem/sizeof_column_mem;
+	possible_width = available_mem/(3*sizeof_column_mem);
 
 	*iterations = (columns + possible_width - 1)/possible_width;
 
