@@ -37,7 +37,7 @@ shared.o: kernels/shared.cu kernels/shared.h
 	$(NVCC) $(NVFLAGS) -c $<
 
 Linsolve.o: Linsolve.for
-	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
+	$(FC) $(PARALLEL) $(FCFLAGS) $(MODE) -c $<
 
 Normvec.o: Normvec.for
 	$(FC) $(PARALLEL) $(FCFLAGS) -c $<
