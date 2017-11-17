@@ -32,7 +32,7 @@ ggsave(paste("~/Giuliano-plots.pdf",sep=""), Graph,  height=10, width=15, units=
 float_regex = "([-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?)"
 keys  = ("SHARED", "GHMATECE", "RIGID", "GHMATECD", "LINSOLVE", "INTEREC1")
 mesh_numbers = (240, 960, 2160, 4000, 14400)
-modes = ("cpu", "gpu", "gpu_sing")
+modes = ("cpu", "gpu") #, "gpu_sing")
 threads = (1, 8, 24, 48)
 executions = 30
 
@@ -88,7 +88,7 @@ def generate_r_data(values, subroutine_name):
 
     for mode in modes:
         if (mode == "cpu"):
-            threads=(1, 48)
+            threads=(1, 24, 48)
         if (mode == "gpu"):
             threads=[8]
         if (mode == "gpu_sing"):
@@ -106,7 +106,7 @@ def generate_r_data(values, subroutine_name):
     string = ""
     for mode in modes:
         if (mode == "cpu"):
-            threads=(1, 48)
+            threads=(1, 24, 48)
         if (mode == "gpu"):
             threads=[8]
         if (mode == "gpu_sing"):
@@ -122,7 +122,7 @@ def generate_r_data(values, subroutine_name):
     string = ""
     for mode in modes:
         if (mode == "cpu"):
-            threads=(1, 48)
+            threads=(1, 24, 48)
         if (mode == "gpu"):
             threads=[8]
         if (mode == "gpu_sing"):
@@ -152,13 +152,16 @@ def main():
                         continue
                     m  = mean(t[key])
                     sd = stdev(t[key])
-                    
+                   
+                    if (mode != "cpu" and (key == "GHMATECD" or key == "GHMATECE")):
+                        m = m + mean(t["SHARED"])
+
                     statistical_values[mode][thread][mesh][key] = {}
                     statistical_values[mode][thread][mesh][key]["MEAN"] = m
                     statistical_values[mode][thread][mesh][key]["STDEV"] = sd
 
 
-    header = generate_r_data(statistical_values, "GHMATECD")
+    header = generate_r_data(statistical_values, "GHMATECE")
     temp_file = open("temp.r", "w")
     temp_file.write(header + Rcode)
     temp_file.close()
