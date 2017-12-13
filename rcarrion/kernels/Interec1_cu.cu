@@ -34,8 +34,8 @@ __global__ void ghmatecd_kernel(
                            int npg,
                            int n,
                            int nbe,
-                           int interec,
                            int dim_cone,
+						   int fast_singular,
                            int* ret
                            );
 
@@ -153,8 +153,8 @@ void cuda_interec1_(int* n,
 						*npg,
 						*nbe,
 						*l,
-                        1,
                         *n,
+						0,
 						device_return_status
 						);
     

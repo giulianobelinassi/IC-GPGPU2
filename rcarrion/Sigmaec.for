@@ -180,21 +180,21 @@ C       DIMENSION ETA(3)
                         DO 40 J=1,3
                             ZDP(K,I,J)=(1.0/(4.0*PI))*
      $                      (
-     $                        (ZCTE1-ZCTE2)*DELTA(I,J)*RD(K)-
-     $                        ZCTE3*(DELTA(I,K)*RD(J)+DELTA(J,K)*RD(I))+
-     $                        ZCTE4*RD(I)*RD(J)*RD(K)
+     $                        (ZCTE1-ZCTE2)*DELTA(J,I)*RD(K)-
+     $                        ZCTE3*(DELTA(J,K)*RD(I)+DELTA(I,K)*RD(J))+
+     $                        ZCTE4*RD(J)*RD(I)*RD(K)
      $                      )
 *
-                ZSP(K,I,J)=(ZMU/(4.0*PI))*
-     $          (
-     $              (ZCTE5*RD(I)*RD(J)*RD(K)-
-     $                  ZCTE6*(DELTA(I,K)*RD(J)+DELTA(J,K)*RD(I))+
-     $                  ZCTE9*DELTA(I,J)*RD(K))*DRN+
-     $                  ZCTE9*RD(I)*RD(J)*RN(K)-
-     $                  ZCTE6*(RD(J)*RN(I)+RD(I)*RN(J))*RD(K)+
-     $                  (ZCTE10+ZCTE11)*DELTA(I,J)*RN(K)-
-     $                  ZCTE12*(DELTA(J,K)*RN(I)+DELTA(I,K)*RN(J))
-     $          )
+                            ZSP(K,I,J)=(ZMU/(4.0*PI))*
+     $                      (
+     $                          (ZCTE5*RD(J)*RD(I)*RD(K)-
+     $                        ZCTE6*(DELTA(J,K)*RD(I)+DELTA(I,K)*RD(J))+
+     $                          ZCTE9*DELTA(J,I)*RD(K))*DRN+
+     $                          ZCTE9*RD(J)*RD(I)*RN(K)-
+     $                          ZCTE6*(RD(I)*RN(J)+RD(J)*RN(I))*RD(K)+
+     $                          (ZCTE10+ZCTE11)*DELTA(J,I)*RN(K)-
+     $                        ZCTE12*(DELTA(I,K)*RN(J)+DELTA(J,K)*RN(I))
+     $                     )
  40             CONTINUE
 *
                 P12=P1*P2*DET

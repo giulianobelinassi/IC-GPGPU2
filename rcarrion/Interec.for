@@ -12,10 +12,6 @@
 *
         USE omp_lib
 
-!Disabilite a GPU.
-#undef TEST_CUDA
-#undef USE_GPU
-
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
 #ifdef USE_GPU
@@ -224,54 +220,56 @@ C                ETA(3)=C/R
                 CALL SIGMAEC(CO,CXI(K),CYI(K),CZI(K),ETAS(1:3,J),DELTA,
      $              PI,FR,ZGE,RHO,ZCS,ZCP,NPG,ZD,ZS,GI,OME)
 *
+
+
                 ZSSOL(9*K-8)=ZSSOL(9*K-8)+ZDFI(3*J-2)*ZD(1,1,1)+
      $                                    ZDFI(3*J-1)*ZD(2,1,1)+
      $                                    ZDFI(3*J)  *ZD(3,1,1)-
      $                                    ZFI (3*J-2)*ZS(1,1,1)-
      $                                    ZFI (3*J-1)*ZS(2,1,1)-
      $                                    ZFI (3*J)  *ZS(3,1,1)
-                ZSSOL(9*K-7)=ZSSOL(9*K-7)+ZDFI(3*J-2)*ZD(1,1,2)+
-     $                                    ZDFI(3*J-1)*ZD(2,1,2)+
-     $                                    ZDFI(3*J)  *ZD(3,1,2)-
-     $                                    ZFI (3*J-2)*ZS(1,1,2)-
-     $                                    ZFI (3*J-1)*ZS(2,1,2)-
-     $                                    ZFI (3*J)  *ZS(3,1,2)
-                ZSSOL(9*K-6)=ZSSOL(9*K-6)+ZDFI(3*J-2)*ZD(1,1,3)+
-     $                                    ZDFI(3*J-1)*ZD(2,1,3)+
-     $                                    ZDFI(3*J)  *ZD(3,1,3)-
-     $                                    ZFI (3*J-2)*ZS(1,1,3)-
-     $                                    ZFI (3*J-1)*ZS(2,1,3)-
-     $                                    ZFI (3*J)  *ZS(3,1,3)
-                ZSSOL(9*K-5)=ZSSOL(9*K-5)+ZDFI(3*J-2)*ZD(1,2,1)+
+                ZSSOL(9*K-7)=ZSSOL(9*K-7)+ZDFI(3*J-2)*ZD(1,2,1)+
      $                                    ZDFI(3*J-1)*ZD(2,2,1)+
      $                                    ZDFI(3*J)  *ZD(3,2,1)-
      $                                    ZFI (3*J-2)*ZS(1,2,1)-
      $                                    ZFI (3*J-1)*ZS(2,2,1)-
      $                                    ZFI (3*J)  *ZS(3,2,1)
+                ZSSOL(9*K-6)=ZSSOL(9*K-6)+ZDFI(3*J-2)*ZD(1,3,1)+
+     $                                    ZDFI(3*J-1)*ZD(2,3,1)+
+     $                                    ZDFI(3*J)  *ZD(3,3,1)-
+     $                                    ZFI (3*J-2)*ZS(1,3,1)-
+     $                                    ZFI (3*J-1)*ZS(2,3,1)-
+     $                                    ZFI (3*J)  *ZS(3,3,1)
+                ZSSOL(9*K-5)=ZSSOL(9*K-5)+ZDFI(3*J-2)*ZD(1,1,2)+
+     $                                    ZDFI(3*J-1)*ZD(2,1,2)+
+     $                                    ZDFI(3*J)  *ZD(3,1,2)-
+     $                                    ZFI (3*J-2)*ZS(1,1,2)-
+     $                                    ZFI (3*J-1)*ZS(2,1,2)-
+     $                                    ZFI (3*J)  *ZS(3,1,2)
                 ZSSOL(9*K-4)=ZSSOL(9*K-4)+ZDFI(3*J-2)*ZD(1,2,2)+
      $                                    ZDFI(3*J-1)*ZD(2,2,2)+
      $                                    ZDFI(3*J)  *ZD(3,2,2)-
      $                                    ZFI (3*J-2)*ZS(1,2,2)-
      $                                    ZFI (3*J-1)*ZS(2,2,2)-
      $                                    ZFI (3*J)  *ZS(3,2,2)
-                ZSSOL(9*K-3)=ZSSOL(9*K-3)+ZDFI(3*J-2)*ZD(1,2,3)+
-     $                                    ZDFI(3*J-1)*ZD(2,2,3)+
-     $                                    ZDFI(3*J)  *ZD(3,2,3)-
-     $                                    ZFI (3*J-2)*ZS(1,2,3)-
-     $                                    ZFI (3*J-1)*ZS(2,2,3)-
-     $                                    ZFI (3*J)  *ZS(3,2,3)
-                ZSSOL(9*K-2)=ZSSOL(9*K-2)+ZDFI(3*J-2)*ZD(1,3,1)+
-     $                                    ZDFI(3*J-1)*ZD(2,3,1)+
-     $                                    ZDFI(3*J)  *ZD(3,3,1)-
-     $                                    ZFI (3*J-2)*ZS(1,3,1)-
-     $                                    ZFI (3*J-1)*ZS(2,3,1)-
-     $                                    ZFI (3*J)  *ZS(3,3,1)
-                ZSSOL(9*K-1)=ZSSOL(9*K-1)+ZDFI(3*J-2)*ZD(1,3,2)+
+                ZSSOL(9*K-3)=ZSSOL(9*K-3)+ZDFI(3*J-2)*ZD(1,3,2)+
      $                                    ZDFI(3*J-1)*ZD(2,3,2)+
      $                                    ZDFI(3*J)  *ZD(3,3,2)-
      $                                    ZFI (3*J-2)*ZS(1,3,2)-
      $                                    ZFI (3*J-1)*ZS(2,3,2)-
      $                                    ZFI (3*J)  *ZS(3,3,2)
+                ZSSOL(9*K-2)=ZSSOL(9*K-2)+ZDFI(3*J-2)*ZD(1,1,3)+
+     $                                    ZDFI(3*J-1)*ZD(2,1,3)+
+     $                                    ZDFI(3*J)  *ZD(3,1,3)-
+     $                                    ZFI (3*J-2)*ZS(1,1,3)-
+     $                                    ZFI (3*J-1)*ZS(2,1,3)-
+     $                                    ZFI (3*J)  *ZS(3,1,3)
+                ZSSOL(9*K-1)=ZSSOL(9*K-1)+ZDFI(3*J-2)*ZD(1,2,3)+
+     $                                    ZDFI(3*J-1)*ZD(2,2,3)+
+     $                                    ZDFI(3*J)  *ZD(3,2,3)-
+     $                                    ZFI (3*J-2)*ZS(1,2,3)-
+     $                                    ZFI (3*J-1)*ZS(2,2,3)-
+     $                                    ZFI (3*J)  *ZS(3,2,3)
                 ZSSOL(9*K)=  ZSSOL(9*K)  +ZDFI(3*J-2)*ZD(1,3,3)+
      $                                    ZDFI(3*J-1)*ZD(2,3,3)+
      $                                    ZDFI(3*J)  *ZD(3,3,3)-
