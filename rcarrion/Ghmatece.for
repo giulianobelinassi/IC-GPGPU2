@@ -131,12 +131,13 @@ C            ETAS(3)=C/R
 *    
                 IF (I == J) THEN
 !                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE G SINGULAR
-                    CALL SINGGE(GELEM,CXM(I),CYM(I),CZM(I),
-     $                      ETAS(1:3,J),CX,
-     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
-     $                  C2,DELTA,GI,OME)
-                    GEST(JJ:JJ+2, JJ:JJ+2) = GELEM
-                
+!                    CALL SINGGE(GELEM,CXM(I),CYM(I),CZM(I),
+!     $                      ETAS(1:3,J),CX,
+!     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
+!     $                  C2,DELTA,GI,OME)
+!                    GEST(JJ:JJ+2, JJ:JJ+2) = GELEM
+                    HEST(JJ:JJ+2, JJ:JJ+2) = 0
+
                 ELSE
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
                     
@@ -152,6 +153,41 @@ C            ETAS(3)=C/R
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+
+     
+        ALLOCATE(GESTdiag(3,3,NBE))
+        GESTdiag = 0
+
+            CALL GHMATECE_SINGULAR(
+     $          GESTdiag,
+     $          CXM,
+     $          CYM, 
+     $          CZM,
+     $          ETAS,
+     $          CX,
+     $          CY,
+     $          CZ,
+     $          NCOX,
+     $          N,
+     $          NP,
+     $          NPG,
+     $          C1,
+     $          C2,
+     $          DELTA,
+     $          GI,
+     $          OME,
+     $          CONE,
+     $          NBE
+     $          )
+
+        DO J = 1, NBE
+            JJ = 3*(J-1)+1
+            GEST(JJ:JJ+2, JJ:JJ+2) = GESTdiag(1:3, 1:3, J)
+        ENDDO
+ 
+        DEALLOCATE(GESTdiag)
+
+
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
 #endif
@@ -281,25 +317,23 @@ C            ETAS(3)=C/R
 !     Note que há cálculos muito diferentes dos demais no problema
 !     singular, e portanto decidi (Giuliano) tratá-lo de maneira 
 !     diferenciada.
-      SUBROUTINE GHMATECE_SINGULAR(HESTdiag, GESTdiag, CXM, CYM, CZM, 
-     $         ETAS,
-     $      CX, CY, CZ, NCOX, N, NP, NPG, GE, RNU, RMU, 
-     $      C1, C2, C3, C4, DELTA, GI, OME, CONE, NBE)
+      SUBROUTINE GHMATECE_SINGULAR(GESTdiag, CXM, CYM, CZM, ETAS,
+     $      CX, CY, CZ, NCOX, N, NP, NPG,
+     $      C1, C2, DELTA, GI, OME, CONE, NBE)
        
         IMPLICIT NONE
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: HESTdiag, GESTdiag
+        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: GESTdiag
         REAL, DIMENSION(NPG) :: GI, OME
         REAL, INTENT(IN) :: ETAS(3,n)
         INTEGER, INTENT(IN) :: NBE, N, NP, NPG, NCOX
-        REAL, INTENT(IN) :: GE, RNU, RMU, C1,C2,C3,C4
+        REAL, INTENT(IN) :: C1,C2
         REAL, INTENT(IN) :: DELTA(3,3)
         INTEGER :: J, JJ, N1, N2, N3, N4
 
         DO J=1, NBE  
-            HESTdiag(1:3, 1:3, J) = 0
             GESTdiag(1:3, 1:3, J) = 0
         ENDDO
 
