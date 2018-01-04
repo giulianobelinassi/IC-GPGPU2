@@ -135,18 +135,19 @@ C            ETAS(3)=C/R
      $                      ETAS(1:3,J),CX,
      $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
      $                  C2,DELTA,GI,OME)
+                    GEST(JJ:JJ+2, JJ:JJ+2) = GELEM
+                
                 ELSE
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
                     
-                    CALL NONSINGE(HELEM,GELEM,CO,CXM(I),CYM(I),CZM(I),
-     $                  ETAS(1:3,J),N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,
+                    CALL NONSINGE(HELEM,CO,CXM(I),CYM(I),CZM(I),
+     $                  ETAS(1:3,J),N,NP,NPG,RNU,RMU,C3,C4,
      $                  DELTA,GI,OME)
 
+                    II=3*(I-1) + 1
+                    HEST(II:II+2, JJ:JJ+2) = HELEM
                 ENDIF
 
-                II=3*(I-1) + 1
-                GEST(II:II+2, JJ:JJ+2) = GELEM
-                HEST(II:II+2, JJ:JJ+2) = HELEM
 *
             ENDDO
         ENDDO

@@ -8,23 +8,38 @@
 *                                                                      *
 ************************************************************************
 *
-      SUBROUTINE NONSINGE(HELEM,GELEM,CO,CXP,CYP,CZP,ETA,
-     $N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA, GI, OME)
+
+      SUBROUTINE NONSINGE(HELEM,CO,CXP,CYP,CZP,ETA,
+     $  N,NP,NPG,RNU,RMU,C3,C4,DELTA, GI, OME)
 *
         IMPLICIT REAL (A-H,O-Y)
         IMPLICIT COMPLEX (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION DELTA(3,3)
-        DIMENSION HELEM(3,3),GELEM(3,3),U(3,3),T(3,3)
+        DIMENSION HELEM(3,3),T(3,3)
         DIMENSION GI(NPG),OME(NPG)
         DIMENSION CO(4,3),ETA(3),P(2,4),XJ(2,3),F(4)
-!        CHARACTER(len=50) ::format_str="(I2, I2, I2, I2, F10.6, F10.6)"
+
+        INTERFACE
+            SUBROUTINE SOLFUNE(T,CXP,CYP,CZP,CXG,CYG,CZG,ETA,
+     $          N,NP,NPG,RNU,RMU,C3,C4,DELTA)
+                IMPLICIT REAL (A-H,O-Y)
+                IMPLICIT COMPLEX (Z)
+                COMMON INP,INQ,IPR,IPS,IPT
+                DIMENSION T(3,3)
+                DIMENSION RD(3)
+                DIMENSION ETA(3)
+                DIMENSION DELTA(3,3)
+            END SUBROUTINE SOLFUNE
+        END INTERFACE
+
+
+
 
 *
 * ZERA AS MATRIZES ELEMENTARES HELEM E GELEM
 *
         HELEM = 0.0
-        GELEM = 0.0
 *
 *
         DO 400 JG=1,NPG
@@ -92,14 +107,12 @@
 *
 * ACIONA ROTINA QUE CALCULA A SOLUÇÃO FUNDAMENTAL ESTÁTICA 3D
 *
-                CALL SOLFUNE (U,T,CXP,CYP,CZP,CXG,CYG,CZG,ETA,
-     $              N,NP,NPG,GE,RNU,RMU,C1,C2,C3,C4,DELTA)
+                CALL SOLFUNE (T,CXP,CYP,CZP,CXG,CYG,CZG,ETA,
+     $              N,NP,NPG,RNU,RMU,C3,C4,DELTA)
 *
                 P12=P1*P2*DET
 
                 HELEM = HELEM + T*P12
-                GELEM = GELEM + U*P12
-                
 *
  300        CONTINUE
  400    CONTINUE
