@@ -6,7 +6,8 @@
 *                                                                      *
 ************************************************************************
 *
-      SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,
+      SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,NE,NX,
+     $         NCOX,
      $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,OME)
 *
         USE omp_lib        
@@ -22,8 +23,9 @@
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        REAL, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: HEST, GEST
-        REAL, DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag, GESTdiag
+        REAL, DIMENSION(:,:), ALLOCATABLE :: HEST
+        REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: HESTdiag
+        REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: GESTdiag
         REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
 
         REAL, INTENT(IN) :: ETAS(3,n)
@@ -72,7 +74,6 @@
 * ZERANDO AS MATRIZES H E G
 *
         ALLOCATE(HEST(3*NBE, 3*N), STAT = stats1)        
-        ALLOCATE(GEST(3*NBE, 3*N), STAT = stats2)
         
         IF (stats1 /= 0 .or. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE!"
@@ -85,7 +86,6 @@
 
 #ifdef USE_CPU
         t1 = OMP_GET_WTIME() 
-        GEST = 0
         HEST = 0
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,HELEM,GELEM)
@@ -173,13 +173,6 @@ C            ETAS(3)=C/R
      $          NBE
      $          )
 
-        DO J = 1, NBE
-            JJ = 3*(J-1)+1
-            GEST(JJ:JJ+2, JJ:JJ+2) = GESTdiag(1:3, 1:3, J)
-        ENDDO
- 
-        DEALLOCATE(GESTdiag)
-
 
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
@@ -239,13 +232,7 @@ C            ETAS(3)=C/R
 
         ENDIF
 !$OMP END PARALLEL
-        DO J = 1, NBE
-            JJ = 3*(J-1)+1
-            GEST(JJ:JJ+2, JJ:JJ+2) = GESTdiag(1:3, 1:3, J)
-        ENDDO
- 
-        DEALLOCATE(GESTdiag)
-
+        
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECE: Tempo na GPU: ", (t2-t1)
 #endif
@@ -266,8 +253,9 @@ C            ETAS(3)=C/R
         ALLOCATE(HESTdiag(3,3,NBE))
         CALL RIGID_BODY(NBE, N, HEST, HESTdiag)
         t2 = OMP_GET_WTIME()
-        DEALLOCATE(HESTdiag)
         PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
+        
+        DEALLOCATE(HEST)
         RETURN
       END SUBROUTINE GHMATECE
 

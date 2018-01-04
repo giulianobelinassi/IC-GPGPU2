@@ -20,7 +20,7 @@
 ** DATA: 18/07/01                                                     **
 **                                                                    **
 ** MODIFICADO POR: GIULIANO AUGUSTO FAULIN BELINASSI                  ** 
-** DATA: 12/2016                                                      **
+** DATA: 12/2016 - 01/2018                                            **
 ************************************************************************
 ************************************************************************
 *
@@ -54,7 +54,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         INTEGER, ALLOCATABLE :: CONE(:,:), KODE(:)
         REAL, DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
         REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
-        REAL, DIMENSION(:,:), ALLOCATABLE :: HEST, GEST
+        REAL, DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag, GESTdiag
         COMPLEX, DIMENSION(:,:), ALLOCATABLE :: ZH, ZG
         COMPLEX, DIMENSION(:), ALLOCATABLE :: ZDFI, ZFI, ZDSOL, ZSSOL
     
@@ -143,7 +143,8 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
 *
-        CALL GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,NE,NX,NCOX,CONE,
+        CALL GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,NE,NX,
+     $           NCOX,CONE,
      $      N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,OME)
 *
 * ACIONA ROTINA QUE LÊ OS DADOS DE ENTRADA PARA O PROBLEMA DINÂMICO
@@ -168,7 +169,8 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 *
 * ACIONA ROTINA QUE CALCULA AS MATRIZES [H] E [G] DO PROBLEMA ESTÁTICO
 *
-            CALL GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
+            CALL GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,ZG,
+     $               ZFI,DFI,
      $          ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,
      $          RMU,L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,
      $          FAST_DYNAMIC_SING
@@ -223,8 +225,8 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
             
             DEALLOCATE(ETAS)
 
-            DEALLOCATE(HEST)
-            DEALLOCATE(GEST)
+            DEALLOCATE(HESTdiag)
+            DEALLOCATE(GESTdiag)
     
             DEALLOCATE(DFI)
 #ifdef USE_GPU

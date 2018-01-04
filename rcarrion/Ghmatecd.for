@@ -8,7 +8,8 @@
 
 
 
-      SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HEST,GEST,ZH,ZG,ZFI,DFI,
+      SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,ZG,
+     $         ZFI,DFI,
      $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
      $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,FAST_SING)
         
@@ -27,7 +28,7 @@
 
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
-        REAL, DIMENSION(3*NBE, 3*N), INTENT(IN) :: HEST, GEST
+        REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
 
         COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
         COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
@@ -147,9 +148,9 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 
 
                     ZG(II:II+2, JJ:JJ+2) = ZG(II:II+2, JJ:JJ+2) +
-     $                  GEST(II:II+2, JJ:JJ+2)
+     $                  GESTdiag(1:3, 1:3, I)
                     ZH(II:II+2, JJ:JJ+2) = ZH(II:II+2, JJ:JJ+2) + 
-     $                  HEST(II:II+2, JJ:JJ+2)
+     $                  HESTdiag(1:3, 1:3, I)
 
                 ELSE
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
@@ -192,8 +193,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                        C3,
      $                        C4,
      $                        FR,
-     $                        HEST,
-     $                        GEST,
+     $                        HESTdiag,
+     $                        GESTdiag,
      $                        ZG,
      $                        ZH,
      $                        1,
@@ -202,9 +203,9 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
             DO i = 1, NBE
                 II=3*(I-1) + 1
                 ZG(II:II+2, II:II+2) = ZG(II:II+2, II:II+2) +
-     $              GEST(II:II+2, II:II+2)
+     $              GESTdiag(1:3, 1:3, i)
                 ZH(II:II+2, II:II+2) = ZH(II:II+2, II:II+2) + 
-     $              HEST(II:II+2, II:II+2)
+     $              HESTdiag(1:3, 1:3, i)
             ENDDO
         ELSE
 
@@ -224,8 +225,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                      C3,
      $                      C4,
      $                      FR,
-     $                      HEST,
-     $                      GEST,
+     $                      HESTdiag,
+     $                      GESTdiag,
      $                      ZG,
      $                      ZH,
      $                      0,
@@ -239,7 +240,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
                 CALL GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, 
      $                 ZCS, ZCP,C1, C2, C3, C4, DELTA, FR, GI, OME, NPG,
      $                 N, NBE, NP,
-     $                 ETAS,CXM, CYM, CZM, PI, GEST, HEST, CONE)
+     $                 ETAS,CXM, CYM, CZM, PI, GESTdiag, HESTdiag, CONE)
             ENDIF
 !$OMP END PARALLEL
         ENDIF
@@ -304,12 +305,12 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
       SUBROUTINE GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, ZCS,
      $         ZCP,
      $   C1, C2, C3, C4, DELTA, FR, GI, OME, NPG, N, NBE, NP, ETAS, 
-     $   CXM, CYM, CZM, PI, GEST, HEST, CONE)
+     $   CXM, CYM, CZM, PI, GESTdiag, HESTdiag, CONE)
         
         IMPLICIT NONE 
 
         COMPLEX, DIMENSION(3,3,NBE),INTENT(OUT) :: ZHdiag, ZGdiag
-        REAL, DIMENSION(3*NBE,3*N), INTENT(IN) :: HEST, GEST
+        REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
         
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
@@ -362,9 +363,9 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
 
 
             ZGdiag(1:3, 1:3, J) = ZGdiag(1:3, 1:3, J) +
-     $          GEST(JJ:JJ+2, JJ:JJ+2)
+     $          GESTdiag(1:3, 1:3, J)
             ZHdiag(1:3, 1:3, J) = ZHdiag(1:3, 1:3, J) + 
-     $          HEST(JJ:JJ+2, JJ:JJ+2)
+     $          HESTdiag(1:3, 1:3, J)
 
         ENDDO
 !$OMP END PARALLEL DO
