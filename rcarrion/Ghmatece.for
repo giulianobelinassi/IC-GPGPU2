@@ -131,10 +131,10 @@ C            ETAS(3)=C/R
 *    
                 IF (I == J) THEN
 !                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE G SINGULAR
-                    CALL SINGGE(HELEM,GELEM,CXM(I),CYM(I),CZM(I),
+                    CALL SINGGE(GELEM,CXM(I),CYM(I),CZM(I),
      $                      ETAS(1:3,J),CX,
-     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,
-     $                  C2,C3,C4,DELTA,GI,OME)
+     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
+     $                  C2,DELTA,GI,OME)
                 ELSE
 *                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
                     
@@ -311,12 +311,11 @@ C            ETAS(3)=C/R
             N4=CONE(J,4)
             
             JJ=3*(J-1) + 1
-            CALL SINGGE(HESTdiag(1:3,1:3,J),
-     $                  GESTdiag(1:3,1:3,J),
+            CALL SINGGE(GESTdiag(1:3,1:3,J),
      $                  CXM(J),CYM(J),CZM(J),
      $                  ETAS(1:3,J),CX,
-     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,GE,RNU,RMU,C1,
-     $                  C2,C3,C4,DELTA,GI,OME)
+     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
+     $                  C2,DELTA,GI,OME)
         ENDDO
 !$OMP END PARALLEL DO
 
