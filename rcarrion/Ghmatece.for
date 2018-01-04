@@ -269,7 +269,7 @@ C            ETAS(3)=C/R
 !$OMP PARALLEL DO PRIVATE(MA, II)
         DO MA=1, NBE
             II = 3*(MA-1)+1
-            HEST(II:II+2, II:II+2) = 0
+            HESTdiag(1:3, 1:3, MA) = 0
         ENDDO
 !$OMP END PARALLEL DO
 
@@ -277,21 +277,12 @@ C            ETAS(3)=C/R
         DO MA=1,NBE
             II = 3*(MA-1)+1
             DO MB=1, N
-                IF (MA /= MB) THEN
-                    JJ = 3*(MB-1)+1
-                    HEST(II:II+2, II:II+2) = HEST(II:II+2, II:II+2) -
-     $                  HEST(II:II+2, JJ:JJ+2) 
-
-                ENDIF
+                JJ = 3*(MB-1)+1
+                HESTdiag(1:3, 1:3, MA) = HESTdiag(1:3, 1:3, MA) -
+     $              HEST(II:II+2, JJ:JJ+2) 
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
-        DO MA=1,NBE
-            II = 3*(MA-1)+1
-            HESTdiag(1:3, 1:3, MA) = HEST(II:II+2, II:II+2)
-        ENDDO
-
-
       END
 
 
