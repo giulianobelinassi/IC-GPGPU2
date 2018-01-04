@@ -130,16 +130,9 @@ C            ETAS(3)=C/R
             DO I=1,NBE
 *    
                 IF (I == J) THEN
-!                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE G SINGULAR
-!                    CALL SINGGE(GELEM,CXM(I),CYM(I),CZM(I),
-!     $                      ETAS(1:3,J),CX,
-!     $                  CY,CZ,N1,N2,N3,N4,NCOX,N,NP,NPG,C1,
-!     $                  C2,DELTA,GI,OME)
-!                    GEST(JJ:JJ+2, JJ:JJ+2) = GELEM
                     HEST(JJ:JJ+2, JJ:JJ+2) = 0
-
                 ELSE
-*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H E G NÃO SINGULAR
+*                   ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H NÃO SINGULAR
                     
                     CALL NONSINGE(HELEM,CO,CXM(I),CYM(I),CZM(I),
      $                  ETAS(1:3,J),N,NP,NPG,RNU,RMU,C3,C4,
@@ -154,11 +147,11 @@ C            ETAS(3)=C/R
         ENDDO
 !$OMP END PARALLEL DO
 
-     
+!Calcula Gest singular 
         ALLOCATE(GESTdiag(3,3,NBE))
         GESTdiag = 0
 
-            CALL GHMATECE_SINGULAR(
+            CALL GEST_SINGULAR(
      $          GESTdiag,
      $          CXM,
      $          CYM, 
@@ -220,11 +213,9 @@ C            ETAS(3)=C/R
      $          )
         ELSE
 
-            ALLOCATE(HESTdiag(3,3,NBE))
             ALLOCATE(GESTdiag(3,3,NBE))
 
-            CALL GHMATECE_SINGULAR(
-     $          HESTdiag,
+            CALL GEST_SINGULAR(
      $          GESTdiag,
      $          CXM,
      $          CYM, 
@@ -237,13 +228,8 @@ C            ETAS(3)=C/R
      $          N,
      $          NP,
      $          NPG,
-     $          GE,
-     $          RNU,
-     $          RMU,
      $          C1,
      $          C2,
-     $          C3,
-     $          C4,
      $          DELTA,
      $          GI,
      $          OME,
@@ -255,11 +241,9 @@ C            ETAS(3)=C/R
 !$OMP END PARALLEL
         DO J = 1, NBE
             JJ = 3*(J-1)+1
-            HEST(JJ:JJ+2, JJ:JJ+2) = HESTdiag(1:3, 1:3, J)
             GEST(JJ:JJ+2, JJ:JJ+2) = GESTdiag(1:3, 1:3, J)
         ENDDO
  
-        DEALLOCATE(HESTdiag)
         DEALLOCATE(GESTdiag)
 
         t2 = OMP_GET_WTIME()
@@ -277,17 +261,21 @@ C            ETAS(3)=C/R
 * ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
 * DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
 *
+        
         t1 = OMP_GET_WTIME()
-        CALL RIGID_BODY(NBE, N, HEST)
+        ALLOCATE(HESTdiag(3,3,NBE))
+        CALL RIGID_BODY(NBE, N, HEST, HESTdiag)
         t2 = OMP_GET_WTIME()
+        DEALLOCATE(HESTdiag)
         PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
         RETURN
       END SUBROUTINE GHMATECE
 
-      SUBROUTINE RIGID_BODY(NBE, N, HEST)
+      SUBROUTINE RIGID_BODY(NBE, N, HEST, HESTdiag)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NBE, N
         REAL, DIMENSION(3*NBE, 3*N), INTENT(INOUT) :: HEST
+        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: HESTdiag
         INTEGER :: MA, MB, II, JJ
 
 !$OMP PARALLEL DO PRIVATE(MA, II)
@@ -310,6 +298,11 @@ C            ETAS(3)=C/R
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+        DO MA=1,NBE
+            II = 3*(MA-1)+1
+            HESTdiag(1:3, 1:3, MA) = HEST(II:II+2, II:II+2)
+        ENDDO
+
 
       END
 
@@ -317,7 +310,7 @@ C            ETAS(3)=C/R
 !     Note que há cálculos muito diferentes dos demais no problema
 !     singular, e portanto decidi (Giuliano) tratá-lo de maneira 
 !     diferenciada.
-      SUBROUTINE GHMATECE_SINGULAR(GESTdiag, CXM, CYM, CZM, ETAS,
+      SUBROUTINE GEST_SINGULAR(GESTdiag, CXM, CYM, CZM, ETAS,
      $      CX, CY, CZ, NCOX, N, NP, NPG,
      $      C1, C2, DELTA, GI, OME, CONE, NBE)
        
@@ -354,7 +347,7 @@ C            ETAS(3)=C/R
         ENDDO
 !$OMP END PARALLEL DO
 
-      END SUBROUTINE GHMATECE_SINGULAR
+      END SUBROUTINE GEST_SINGULAR
 
       SUBROUTINE ASSERT_GHMATECE_H_G(H, HP, G, GP, NBE, N)
         IMPLICIT NONE
