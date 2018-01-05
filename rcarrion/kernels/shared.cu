@@ -14,6 +14,12 @@ float* device_gi;
 float* device_ome;
 int*   device_cone;
 
+/*Disponivel apos a execucao de Ghmatece*/
+float* device_hestdiag;
+float* device_gestdiag;
+/**/
+
+
 void cuda_assert(cudaError_t error)
 {
     if (error != cudaSuccess)
@@ -169,6 +175,10 @@ void deallocate_shared_gpu_data_()
     error = cudaFree(device_cym);
     cuda_assert(error);
     error = cudaFree(device_czm);
+    cuda_assert(error);
+    error = cudaFree(device_hestdiag);
+    cuda_assert(error);
+    error = cudaFree(device_gestdiag);
     cuda_assert(error);
 }
 

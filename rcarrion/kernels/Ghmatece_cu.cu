@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cmath>
+#include <cublas_v2.h>
 #include <thrust/complex.h>
 #include <thrust/reduce.h>
 #include <thrust/execution_policy.h>
@@ -14,6 +15,33 @@ void rigid_body_(
             float hest_[],
             float hestdiag[][3][3]
         );
+
+void rigid_body_c_(int* nbe,
+		int* n,
+		float hest_[],
+		float hestdiag[][3][3])
+{
+	float (*hest)[3*(*nbe)] = (float (*)[3*(*nbe)]) hest_;
+	int ma, mb, i, j, ii, jj;
+
+	for (ma = 0; ma < *nbe; ++ma)
+	{
+		ii = 3*ma;
+		for (mb = 0; mb < *n; ++mb)
+		{
+			jj = 3*mb;
+			for (j = 0; j < 3; ++j)
+			{
+				for (i = 0; i < 3; ++i)
+				{
+					hestdiag[ma][j][i] -= hest[jj+j][ii+i];
+				}
+			}
+
+		}
+	}
+
+}
 
 
 __global__ void ghmatece_kernel(
@@ -178,6 +206,105 @@ __global__ void ghmatece_kernel(
 	}
 }
 
+
+
+/*
+__global__ void generate_identity(int m, float one_vec[][3])
+{
+	int i, j;
+	const int tid = 3*(blockDim.x*blockIdx.x + threadIdx.x);
+	const float const Id[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+
+	if (tid < m)
+	{
+		for (i = 0; i < 3; ++i)
+			for (j = 0; j < 3; ++j)
+				one_vec[tid + i][j] = Id[i][j];
+	}
+}
+
+float* cuda_rigid_body(int nbe, int n, float device_h[])
+{
+	cudaError_t error;
+	cublasStatus_t blaserror;
+	float* device_Ids;
+	float* device_hdiag;
+	const int threads = 32;
+	int blocks = (n+threads-1)/threads;
+	dim3 threadsPerBlock(32);
+	dim3 numBlocks(blocks);
+	float one = 1., zero = 0.;	
+
+	error = cudaMalloc(&device_Ids, 3*3*n*sizeof(float));
+	cuda_assert(error);
+	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(float));
+	cuda_assert(error);
+
+	generate_identity<<<numBlocks, threadsPerBlock>>>(n, (float (*)[3]) device_Ids);
+	cudaDeviceSynchronize();
+	
+	cublasHandle_t handle;
+	cublasCreate(&handle);
+
+	blaserror = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, nbe, 3, n, &one, device_h, nbe, device_Ids, n, 
+			&zero, device_hdiag, nbe);
+	cublas_assert(blaserror);
+
+	cudaFree(device_Ids);
+
+	return device_hdiag;
+}
+*/
+
+__global__ void rigid_body_kernel(int m, int n, float hest_[], float hdiag_[][3][3])
+{
+	int i, j, k;
+	const int tid = blockDim.x*blockIdx.x + threadIdx.x;
+	
+
+#define hest(i, j) hest_[(j)*(3*m) + (i)]
+#define hdiag(k, i, j) hdiag_[k][j][i]
+
+	if (tid < m)
+	{
+		for (k = 0; k < n; ++k)
+		{
+			for (j = 0; j < 3; ++j)
+			{
+				int jj = 3*k + j;
+				for (i = 0; i < 3; ++i)
+				{
+					int ii = 3*tid + i;
+					hdiag(tid, i, j) -= hest(ii, jj);
+				}
+			}
+		}
+	}
+#undef hest
+#undef hdiag
+}
+
+float* cuda_rigid_body(int nbe, int n, float device_h[])
+{
+	cudaError_t error;
+	float* device_hdiag;
+	const int threads = 128;
+	int blocks = (n+threads-1)/threads;
+	dim3 threadsPerBlock(threads);
+	dim3 numBlocks(blocks);
+
+	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(float));
+	cuda_assert(error);
+
+	error = cudaMemset(device_hdiag, 0, 3*3*nbe*sizeof(float));
+	cuda_assert(error);
+
+	rigid_body_kernel<<<numBlocks, threadsPerBlock>>>(nbe, n, device_h, (float (*)[3][3]) device_hdiag);
+
+	return device_hdiag;
+}
+
+
 void cuda_ghmatece_(int* nbe,
                     int* npg,
                     int* n,
@@ -191,7 +318,7 @@ void cuda_ghmatece_(int* nbe,
 {
 	dim3 threadsPerBlock(*npg,*npg);
 	int shared_mem_size = 3*3*(*npg)*(*npg)*sizeof(float);
-	size_t column_size = 2*(3*(*nbe))*sizeof(float);
+	size_t column_size = (3*(*nbe))*sizeof(float);
 	
 	cudaError_t error;
 
@@ -257,9 +384,11 @@ void cuda_ghmatece_(int* nbe,
 			fputs("Matriz Singular\n", stderr);
 		}
 
-		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(float), cudaMemcpyDeviceToHost);
-		cuda_assert(error);
+//		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(float), cudaMemcpyDeviceToHost);
+//		cuda_assert(error);
 	}
+
+	float* device_hdiag = cuda_rigid_body(*nbe, *n, device_h);
 
 	error = cudaFree(device_h);
 	cuda_assert(error);
@@ -267,7 +396,24 @@ void cuda_ghmatece_(int* nbe,
 	error = cudaFree(device_return_status);
 	cuda_assert(error);
 
-    rigid_body_(nbe, n, hest_, hestdiag);
+	/*Guarda em shared.cu*/
+	device_hestdiag = device_hdiag;
+
+#ifdef TEST_CUDA
+	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(float), cudaMemcpyDeviceToHost);
+	cuda_assert(error);
+#endif
+//    rigid_body_(nbe, n, hest_, hestdiag);
 
 }
+
+void cuda_send_gest_data_(int* nbe, float* gestdiag)
+{
+	cudaError_t error;
+	error = cudaMalloc(&device_gestdiag, (*nbe)*3*3*sizeof(float));
+	cuda_assert(error);
+	error = cudaMemcpy(device_gestdiag, gestdiag, (*nbe)*3*3*sizeof(float), cudaMemcpyHostToDevice);
+	cuda_assert(error);
+}
+
 }

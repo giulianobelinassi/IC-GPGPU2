@@ -174,26 +174,22 @@ C            ETAS(3)=C/R
      $          )
 
 
-        t2 = OMP_GET_WTIME()
-        PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
 
 *
 * ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
 * DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
 *
         
-        t1 = OMP_GET_WTIME()
         CALL RIGID_BODY(NBE, N, HEST, HESTdiag)
         t2 = OMP_GET_WTIME()
-        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
-        
+        PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
+
         DEALLOCATE(HEST)
 #endif
 
 #ifdef TEST_CUDA
         ALLOCATE(HdiagP(3,3,NBE))
         ALLOCATE(GdiagP(3,3,NBE))
-        PRINT*, "Copiando para vetor provisorio"
         HdiagP = HESTdiag
         GdiagP = GESTdiag
 
@@ -241,6 +237,7 @@ C            ETAS(3)=C/R
      $          NBE
      $          )
 
+            CALL CUDA_SEND_GEST_DATA(NBE, GESTdiag) 
         ENDIF
 !$OMP END PARALLEL
         
@@ -327,21 +324,18 @@ C            ETAS(3)=C/R
 
       SUBROUTINE ASSERT_GHMATECE_H_G(Hdiag, HdiagP, Gdiag, GdiagP,NBE,N)
         IMPLICIT NONE
+        REAL :: eps = 1.0E-5
         REAL, INTENT(IN), DIMENSION(3,3,NBE) ::Hdiag,HdiagP,Gdiag,Gdiagp
         INTEGER, INTENT(IN) :: NBE, N  
 
         INTEGER :: i, j, k
-        INTEGER :: N3, NBE3
         LOGICAL :: ghmatecd_asserted = .TRUE.
-        REAL :: sum_norms = 0, eps
-        REAL :: local_sum = 0, max_local_sum = 0
+        REAL :: sum_norms = 0, local_sum, max_local_sum
 
         eps = 1.0E-5
 
-        N3   = N*3
-        NBE3 = NBE*3 
-
         sum_norms = 0.0
+        max_local_sum = 0.0
 
         DO k = 1, NBE
             local_sum = 0
@@ -353,6 +347,10 @@ C            ETAS(3)=C/R
             ENDDO
             sum_norms = sum_norms + local_sum
             max_local_sum = MAX(local_sum, max_local_sum)
+            if (max_local_sum > 1.0E10) then
+                print*, "ERROU:", k
+            endif
+
         ENDDO
 
         IF (max_local_sum > eps) THEN
@@ -362,7 +360,7 @@ C            ETAS(3)=C/R
         PRINT*, "||[H]est|| = ", max_local_sum
         
         sum_norms = 0.0
-        max_local_sum = 0
+        max_local_sum = 0.
         
         DO k = 1, NBE
             local_sum = 0

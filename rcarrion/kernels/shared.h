@@ -16,6 +16,8 @@ extern float* device_czm;
 extern float* device_etas;
 extern float* device_gi;
 extern float* device_ome;
+extern float* device_hestdiag;
+extern float* device_gestdiag;
 extern int*   device_cone;        
  
 void cuda_assert(cudaError_t error);
