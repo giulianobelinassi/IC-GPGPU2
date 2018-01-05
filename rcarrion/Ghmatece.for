@@ -237,7 +237,7 @@ C            ETAS(3)=C/R
      $          NBE
      $          )
 
-            CALL CUDA_SEND_GEST_DATA(NBE, GESTdiag) 
+!            CALL CUDA_SEND_GEST_DATA(NBE, GESTdiag) 
         ENDIF
 !$OMP END PARALLEL
         

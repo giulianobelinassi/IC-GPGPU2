@@ -399,10 +399,10 @@ void cuda_ghmatece_(int* nbe,
 	/*Guarda em shared.cu*/
 	device_hestdiag = device_hdiag;
 
-#ifdef TEST_CUDA
+//#ifdef TEST_CUDA
 	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(float), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
-#endif
+//#endif
 //    rigid_body_(nbe, n, hest_, hestdiag);
 
 }
