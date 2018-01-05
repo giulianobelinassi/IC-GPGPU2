@@ -45,7 +45,7 @@
 #undef  USE_CPU
 #define USE_GPU
 #define USE_CPU
-        REAL, ALLOCATABLE, DIMENSION(:,:) :: HP, GP
+        REAL, ALLOCATABLE, DIMENSION(:,:,:) :: HdiagP, GdiagP
 #endif
 
 #ifdef USE_CPU
@@ -73,7 +73,8 @@
 *
 * ZERANDO AS MATRIZES H E G
 *
-        ALLOCATE(HEST(3*NBE, 3*N), STAT = stats1)        
+        ALLOCATE(GESTdiag(3,3,NBE), STAT = stats1)
+        ALLOCATE(HESTdiag(3,3,NBE), STAT = stats2)
         
         IF (stats1 /= 0 .or. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE!"
@@ -86,6 +87,7 @@
 
 #ifdef USE_CPU
         t1 = OMP_GET_WTIME() 
+        ALLOCATE(HEST(3*NBE, 3*N), STAT = stats1)        
         HEST = 0
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ,HELEM,GELEM)
@@ -148,8 +150,6 @@ C            ETAS(3)=C/R
 !$OMP END PARALLEL DO
 
 !Calcula Gest singular 
-        ALLOCATE(GESTdiag(3,3,NBE))
-        GESTdiag = 0
 
             CALL GEST_SINGULAR(
      $          GESTdiag,
@@ -176,16 +176,32 @@ C            ETAS(3)=C/R
 
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECE: Tempo na CPU: ", (t2-t1)
+
+*
+* ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
+* DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
+*
+        
+        t1 = OMP_GET_WTIME()
+        CALL RIGID_BODY(NBE, N, HEST, HESTdiag)
+        t2 = OMP_GET_WTIME()
+        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
+        
+        DEALLOCATE(HEST)
 #endif
 
 #ifdef TEST_CUDA
-        ALLOCATE(HP(3*NBE, 3*N))
-        ALLOCATE(GP(3*NBE, 3*N))
-        GP = GEST
-        HP = HEST
+        ALLOCATE(HdiagP(3,3,NBE))
+        ALLOCATE(GdiagP(3,3,NBE))
+        PRINT*, "Copiando para vetor provisorio"
+        HdiagP = HESTdiag
+        GdiagP = GESTdiag
+
 #endif
 
 #ifdef USE_GPU
+        HESTdiag = 0
+        GESTdiag = 0
         t1 = OMP_GET_WTIME()
 !$OMP PARALLEL NUM_THREADS(2)
 
@@ -195,18 +211,13 @@ C            ETAS(3)=C/R
      $          NPG,
      $          N,
      $          NP,
-     $          C1,
-     $          C2,
      $          C3,
      $          C4,
      $          FR,
-     $          HEST,
-     $          GEST,
+     $          HESTdiag,
      $          STATS1
      $          )
         ELSE
-
-            ALLOCATE(GESTdiag(3,3,NBE))
 
             CALL GEST_SINGULAR(
      $          GESTdiag,
@@ -239,23 +250,11 @@ C            ETAS(3)=C/R
 
 
 #ifdef TEST_CUDA
-        CALL ASSERT_GHMATECE_H_G(HEST, HP, GEST, GP, NBE, N)
-        DEALLOCATE(HP)
-        DEALLOCATE(GP)
+        CALL ASSERT_GHMATECE_H_G(HESTdiag, HdiagP,GESTdiag,GdiagP,NBE,N)
+        DEALLOCATE(HdiagP)
+        DEALLOCATE(GdiagP)
 #endif
 
-*
-* ACIONA ROTINA QUE CALCULA OS COEFICIENTES DE H SINGULAR ATRAVÉS
-* DA CONSIDERAÇÃO DO MOVIMENTO DO CORPO RÍGIDO
-*
-        
-        t1 = OMP_GET_WTIME()
-        ALLOCATE(HESTdiag(3,3,NBE))
-        CALL RIGID_BODY(NBE, N, HEST, HESTdiag)
-        t2 = OMP_GET_WTIME()
-        PRINT *, "GHMATECE: Corpo rigido: ", (t2-t1)
-        
-        DEALLOCATE(HEST)
         RETURN
       END SUBROUTINE GHMATECE
 
@@ -305,9 +304,7 @@ C            ETAS(3)=C/R
         REAL, INTENT(IN) :: DELTA(3,3)
         INTEGER :: J, JJ, N1, N2, N3, N4
 
-        DO J=1, NBE  
-            GESTdiag(1:3, 1:3, J) = 0
-        ENDDO
+        GESTdiag = 0
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,JJ)
@@ -328,12 +325,12 @@ C            ETAS(3)=C/R
 
       END SUBROUTINE GEST_SINGULAR
 
-      SUBROUTINE ASSERT_GHMATECE_H_G(H, HP, G, GP, NBE, N)
+      SUBROUTINE ASSERT_GHMATECE_H_G(Hdiag, HdiagP, Gdiag, GdiagP,NBE,N)
         IMPLICIT NONE
-        REAL, INTENT(IN), DIMENSION(3*NBE,3*N) :: H,HP,G,GP
+        REAL, INTENT(IN), DIMENSION(3,3,NBE) ::Hdiag,HdiagP,Gdiag,Gdiagp
         INTEGER, INTENT(IN) :: NBE, N  
 
-        INTEGER :: i, j
+        INTEGER :: i, j, k
         INTEGER :: N3, NBE3
         LOGICAL :: ghmatecd_asserted = .TRUE.
         REAL :: sum_norms = 0, eps
@@ -346,10 +343,13 @@ C            ETAS(3)=C/R
 
         sum_norms = 0.0
 
-        DO j = 1, N3
+        DO k = 1, NBE
             local_sum = 0
-            DO i = 1, NBE3
-                local_sum = local_sum + ABS(HP(i,j) - H(i,j))
+            DO j = 1, 3
+                DO i = 1, 3
+                    local_sum = local_sum + ABS(HdiagP(i, j, k) - 
+     $                       Hdiag(i, j, k))
+                ENDDO
             ENDDO
             sum_norms = sum_norms + local_sum
             max_local_sum = MAX(local_sum, max_local_sum)
@@ -359,20 +359,22 @@ C            ETAS(3)=C/R
             ghmatecd_asserted = .FALSE.
         ENDIF
 
-        PRINT*, "||H||_inf = ", max_local_sum
+        PRINT*, "||[H]est|| = ", max_local_sum
         
         sum_norms = 0.0
         max_local_sum = 0
         
-        DO j = 1, N3
+        DO k = 1, NBE
             local_sum = 0
-            DO i = 1, NBE3
-                local_sum=local_sum + ABS(GP(i,j) - G(i,j))
+            DO j = 1, 3
+                DO i = 1, 3
+                    local_sum = local_sum + ABS(GdiagP(i, j, k) - 
+     $                       Gdiag(i, j, k))
+                ENDDO
             ENDDO
             sum_norms = sum_norms + local_sum
             max_local_sum = MAX(local_sum, max_local_sum)
         ENDDO
-
 
         PRINT*, "||G||_inf = ", max_local_sum
 
