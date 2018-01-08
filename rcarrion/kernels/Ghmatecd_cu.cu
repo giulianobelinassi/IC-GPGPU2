@@ -213,10 +213,18 @@ __global__ void ghmatecd_kernel(
 	if (jg < 3 && ig < 3)
 	{
 		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
-
 		zg[index] = thrust::reduce(thrust::seq, &zgelem(jg, ig, 0), &zgelem(jg, ig, npg*npg));
-		zh[index] = thrust::reduce(thrust::seq, &zhelem(jg, ig, 0), &zhelem(jg, ig, npg*npg));
+	} else if ((npg-3) <= jg && jg < npg && (npg-3) <= ig && ig < npg) //Split the warps
+	{
+		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + (ig-(npg-3)) + (3*nbe)*(jg-(npg-3));
+		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-(npg-3)), (ig-(npg-3)), 0), &zhelem((jg-(npg-3)), (ig-(npg-3)), npg*npg));
 	}
+
+//	} else if (3 <= jg && jg  < 6 && 3 <= ig && ig < 6)
+//	{
+//		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + (ig-3) + (3*nbe)*(jg-3);
+//		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-3), (ig-3), 0), &zhelem((jg-3), (ig-3), npg*npg));
+//	}
 }
 
 
