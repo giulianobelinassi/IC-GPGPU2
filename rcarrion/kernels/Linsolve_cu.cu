@@ -40,13 +40,13 @@ void cuda_linsolve_(
 
 	magma_init();
 
-	error = cudaMalloc(&device_zh, (*nn)*(3*(*n))*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zh, (*nn)*(*nn)*sizeof(thrust::complex<float>));
 	cuda_assert(error);
 
     error = cudaMalloc(&device_zfi, (*nn)*sizeof(thrust::complex<float>));
     cuda_assert(error);
 
-	error = cudaMemcpy(device_zh, zh, (*nn)*(3*(*n))*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_zh, zh, (*nn)*(*nn)*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
 	error = cudaMemcpy(device_zfi, zfi, (*nn)*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice);

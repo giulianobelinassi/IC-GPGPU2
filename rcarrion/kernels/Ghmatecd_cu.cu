@@ -67,14 +67,14 @@ __global__ void ghmatecd_kernel(
 
 #define zhelem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
 #define zgelem(i, j, k) (s_ + gelem_pad)[3*npg*npg*(i) + npg*npg*(j) + (k)]
-
+/*
 	for (iii = 0; iii < 3; ++iii)
 		for (jjj = 0; jjj < 3; ++jjj)
 			zgelem(iii, jjj, npg*ig + jg) = 0;
 	for (iii = 0; iii < 3; ++iii)
 		for (jjj = 0; jjj < 3; ++jjj)
 			zhelem(iii, jjj, npg*ig + jg) = 0;
-
+*/
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
 		co[0][threadIdx.x] = cx[cone[dim_cone*threadIdx.x + jj] - 1];
@@ -272,7 +272,7 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
-	width = largest_possible_width(column_size, *n, &iterations);
+	width = largest_possible_width(column_size, *nbe, &iterations);
 
 	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>));
 	cuda_assert(error);
@@ -283,8 +283,10 @@ void cuda_ghmatecd_(int* nbe,
 	for (i = 0; i < iterations; ++i)
 	{
 		int starting_column = width*i;
-		if (starting_column + width > *n)
-			width = *n - starting_column;
+//		if (starting_column + width > *n)
+//			width = *n - starting_column;
+		if (starting_column + width > *nbe)
+			width = *nbe - starting_column;
 		dim3 numBlocks(width, *nbe);
 
 

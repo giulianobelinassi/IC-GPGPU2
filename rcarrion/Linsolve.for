@@ -3,7 +3,7 @@
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(INOUT) :: ZH(NN, 3*N)
+        COMPLEX, INTENT(INOUT) :: ZH(NN, NN)
         COMPLEX, INTENT(INOUT) :: ZFI(NN)
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
@@ -26,8 +26,8 @@
         INTEGER, ALLOCATABLE :: PIV(:)
 
 #ifdef TEST_CUDA
-        ALLOCATE(ZH_ORIG(NN, 3*N))
-        ALLOCATE(ZHP(NN, 3*N))
+        ALLOCATE(ZH_ORIG(NN, NN))
+        ALLOCATE(ZHP(NN, NN))
         ZH_ORIG = ZH
         ZFI_ORIG = ZFI
 #endif

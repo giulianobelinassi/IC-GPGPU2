@@ -195,8 +195,8 @@ __global__ void ghmatece_kernel(
                 helem(j, i, jg*npg + ig) = hei;
             }
         }
-        __syncthreads();
-    }    
+    } 
+    __syncthreads();
 	if (jg < 3 && ig < 3)
 	{
 

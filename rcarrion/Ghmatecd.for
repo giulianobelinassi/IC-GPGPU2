@@ -96,8 +96,8 @@
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 *
-        ALLOCATE(ZH(3*NBE, 3*N), STAT = stats1)
-        ALLOCATE(ZG(3*NBE, 3*N), STAT = stats2)
+        ALLOCATE(ZH(3*NBE, 3*NBE), STAT = stats1)
+        ALLOCATE(ZG(3*NBE, 3*NBE), STAT = stats2)
 
         IF (stats1 /= 0 .or. stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
@@ -112,7 +112,7 @@
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
-        DO J=1,N
+        DO J=1,NBE
             N1=CONE(J,1)
             N2=CONE(J,2)
             N3=CONE(J,3)
@@ -170,8 +170,8 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 
 #ifdef TEST_CUDA
 !FAÇA UMA CÓPIA DAS MATRIZES ZG E ZH PARA COMPARAÇÃO COM O RESULTADO DA GPU.
-        ALLOCATE(ZHP(3*NBE, 3*N))
-        ALLOCATE(ZGP(3*NBE, 3*N))
+        ALLOCATE(ZHP(3*NBE, 3*NBE))
+        ALLOCATE(ZGP(3*NBE, 3*NBE))
         ZGP = ZG
         ZHP = ZH
 #endif
@@ -266,7 +266,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #endif
         
 #ifdef TEST_CUDA
-        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
+        CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, NBE)
         DEALLOCATE(ZHP)
         DEALLOCATE(ZGP)
 #endif
