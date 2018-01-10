@@ -12,16 +12,16 @@ extern "C"{
 void rigid_body_(
             int* nbe,
             int* n,
-            float hest_[],
-            float hestdiag[][3][3]
+            FREAL hest_[],
+            FREAL hestdiag[][3][3]
         );
 
 void rigid_body_c_(int* nbe,
 		int* n,
-		float hest_[],
-		float hestdiag[][3][3])
+		FREAL hest_[],
+		FREAL hestdiag[][3][3])
 {
-	float (*hest)[3*(*nbe)] = (float (*)[3*(*nbe)]) hest_;
+	FREAL (*hest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) hest_;
 	int ma, mb, i, j, ii, jj;
 
 	for (ma = 0; ma < *nbe; ++ma)
@@ -46,19 +46,19 @@ void rigid_body_c_(int* nbe,
 
 __global__ void ghmatece_kernel(
                            int cone[],
-                           float cx[],
-                           float cy[],
-                           float cz[],
-                           float cxm[],
-                           float cym[],
-                           float czm[],
-                           float hest[],
-                           float rn[][3],
-                           float fr,
-                           float gi[],
-                           float ome[],
-                           float c3,
-                           float c4,
+                           FREAL cx[],
+                           FREAL cy[],
+                           FREAL cz[],
+                           FREAL cxm[],
+                           FREAL cym[],
+                           FREAL czm[],
+                           FREAL hest[],
+                           FREAL rn[][3],
+                           FREAL fr,
+                           FREAL gi[],
+                           FREAL ome[],
+                           FREAL c3,
+                           FREAL c4,
                            int npg,
                            int n,
                            int nbe,
@@ -73,19 +73,19 @@ __global__ void ghmatece_kernel(
 	const int jj = blockIdx.x + column_pad;
 
 	const int zgelem_pad = 3*3*npg*npg;
-	extern __shared__ float s_[];
+	extern __shared__ FREAL s_[];
 	
 	int i, j;
 	
-	float p[4][2], f[4];
-	float xj[3][2];
-	__shared__ float co[3][4];
-	__shared__ float rn_cached[4];
-	float p1, p2, p12, g1, g2, sp, sm, rp, rm, det;
-	float cxg, cyg, czg, cxp, cyp, czp;
-	float j1, j2, j3;
-	float r1, r2, r3, r, drn, rd[3];
-	float hei;
+	FREAL p[4][2], f[4];
+	FREAL xj[3][2];
+	__shared__ FREAL co[3][4];
+	__shared__ FREAL rn_cached[4];
+	FREAL p1, p2, p12, g1, g2, sp, sm, rp, rm, det;
+	FREAL cxg, cyg, czg, cxp, cyp, czp;
+	FREAL j1, j2, j3;
+	FREAL r1, r2, r3, r, drn, rd[3];
+	FREAL hei;
 
 //Manage the shared memory manually since apparently there is no other way
 //to allocate two cubes in dynamic allocated shared memory.
@@ -209,11 +209,11 @@ __global__ void ghmatece_kernel(
 
 
 /*
-__global__ void generate_identity(int m, float one_vec[][3])
+__global__ void generate_identity(int m, FREAL one_vec[][3])
 {
 	int i, j;
 	const int tid = 3*(blockDim.x*blockIdx.x + threadIdx.x);
-	const float const Id[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
+	const FREAL const Id[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
 
 	if (tid < m)
 	{
@@ -223,24 +223,24 @@ __global__ void generate_identity(int m, float one_vec[][3])
 	}
 }
 
-float* cuda_rigid_body(int nbe, int n, float device_h[])
+FREAL* cuda_rigid_body(int nbe, int n, FREAL device_h[])
 {
 	cudaError_t error;
 	cublasStatus_t blaserror;
-	float* device_Ids;
-	float* device_hdiag;
+	FREAL* device_Ids;
+	FREAL* device_hdiag;
 	const int threads = 32;
 	int blocks = (n+threads-1)/threads;
 	dim3 threadsPerBlock(32);
 	dim3 numBlocks(blocks);
-	float one = 1., zero = 0.;	
+	FREAL one = 1., zero = 0.;	
 
-	error = cudaMalloc(&device_Ids, 3*3*n*sizeof(float));
+	error = cudaMalloc(&device_Ids, 3*3*n*sizeof(FREAL));
 	cuda_assert(error);
-	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(float));
+	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(FREAL));
 	cuda_assert(error);
 
-	generate_identity<<<numBlocks, threadsPerBlock>>>(n, (float (*)[3]) device_Ids);
+	generate_identity<<<numBlocks, threadsPerBlock>>>(n, (FREAL (*)[3]) device_Ids);
 	cudaDeviceSynchronize();
 	
 	cublasHandle_t handle;
@@ -256,7 +256,7 @@ float* cuda_rigid_body(int nbe, int n, float device_h[])
 }
 */
 
-__global__ void rigid_body_kernel(int m, int n, float hest_[], float hdiag_[][3][3])
+__global__ void rigid_body_kernel(int m, int n, FREAL hest_[], FREAL hdiag_[][3][3])
 {
 	int i, j, k;
 	const int tid = blockDim.x*blockIdx.x + threadIdx.x;
@@ -284,22 +284,22 @@ __global__ void rigid_body_kernel(int m, int n, float hest_[], float hdiag_[][3]
 #undef hdiag
 }
 
-float* cuda_rigid_body(int nbe, int n, float device_h[])
+FREAL* cuda_rigid_body(int nbe, int n, FREAL device_h[])
 {
 	cudaError_t error;
-	float* device_hdiag;
+	FREAL* device_hdiag;
 	const int threads = 128;
 	int blocks = (n+threads-1)/threads;
 	dim3 threadsPerBlock(threads);
 	dim3 numBlocks(blocks);
 
-	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(float));
+	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(FREAL));
 	cuda_assert(error);
 
-	error = cudaMemset(device_hdiag, 0, 3*3*nbe*sizeof(float));
+	error = cudaMemset(device_hdiag, 0, 3*3*nbe*sizeof(FREAL));
 	cuda_assert(error);
 
-	rigid_body_kernel<<<numBlocks, threadsPerBlock>>>(nbe, n, device_h, (float (*)[3][3]) device_hdiag);
+	rigid_body_kernel<<<numBlocks, threadsPerBlock>>>(nbe, n, device_h, (FREAL (*)[3][3]) device_hdiag);
 
 	return device_hdiag;
 }
@@ -309,34 +309,34 @@ void cuda_ghmatece_(int* nbe,
                     int* npg,
                     int* n,
                     int* np,
-                    float* c3,
-                    float* c4,
-                    float* fr,
-                    float hestdiag[][3][3],
+                    FREAL* c3,
+                    FREAL* c4,
+                    FREAL* fr,
+                    FREAL hestdiag[][3][3],
                     int* status
                    )
 {
 	dim3 threadsPerBlock(*npg,*npg);
-	int shared_mem_size = 3*3*(*npg)*(*npg)*sizeof(float);
-	size_t column_size = (3*(*nbe))*sizeof(float);
+	int shared_mem_size = 3*3*(*npg)*(*npg)*sizeof(FREAL);
+	size_t column_size = (3*(*nbe))*sizeof(FREAL);
 	
 	cudaError_t error;
 
-	float* device_h;
+	FREAL* device_h;
 
 	int* device_return_status;
 	int return_status;
 	int width, iterations, i;
 
-    float* hest_ = (float*) malloc(3*(*n)*3*(*nbe)*sizeof(float));
-	float (*hest)[3*(*nbe)] = (float (*)[3*(*nbe)]) hest_;
+    FREAL* hest_ = (FREAL*) malloc(3*(*n)*3*(*nbe)*sizeof(FREAL));
+	FREAL (*hest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) hest_;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
 	width = largest_possible_width(column_size, *n, &iterations);
 
-	error = cudaMalloc(&device_h, (3*(*nbe))*(3*(width))*sizeof(float));
+	error = cudaMalloc(&device_h, (3*(*nbe))*(3*(width))*sizeof(FREAL));
 	cuda_assert(error);
 
 	error = cudaMemset(device_return_status, 0, sizeof(int));
@@ -349,7 +349,7 @@ void cuda_ghmatece_(int* nbe,
 			width = *n - starting_column;
 		dim3 numBlocks(width, *nbe);
 
-		error = cudaMemset(device_h, 0, (3*(*nbe))*(3*(width))*sizeof(float));
+		error = cudaMemset(device_h, 0, (3*(*nbe))*(3*(width))*sizeof(FREAL));
 		cuda_assert(error);
 
 		cudaDeviceSynchronize();
@@ -362,7 +362,7 @@ void cuda_ghmatece_(int* nbe,
 							device_cym,
 							device_czm,
 							device_h,
-							(float (*)[3]) device_etas,
+							(FREAL (*)[3]) device_etas,
 							*fr,
 							device_gi,
 							device_ome,
@@ -384,11 +384,11 @@ void cuda_ghmatece_(int* nbe,
 			fputs("Matriz Singular\n", stderr);
 		}
 
-//		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(float), cudaMemcpyDeviceToHost);
+//		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(FREAL), cudaMemcpyDeviceToHost);
 //		cuda_assert(error);
 	}
 
-	float* device_hdiag = cuda_rigid_body(*nbe, *n, device_h);
+	FREAL* device_hdiag = cuda_rigid_body(*nbe, *n, device_h);
 
 	error = cudaFree(device_h);
 	cuda_assert(error);
@@ -400,19 +400,19 @@ void cuda_ghmatece_(int* nbe,
 	device_hestdiag = device_hdiag;
 
 //#ifdef TEST_CUDA
-	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(float), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(FREAL), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
 //#endif
 //    rigid_body_(nbe, n, hest_, hestdiag);
 
 }
 
-void cuda_send_gest_data_(int* nbe, float* gestdiag)
+void cuda_send_gest_data_(int* nbe, FREAL* gestdiag)
 {
 	cudaError_t error;
-	error = cudaMalloc(&device_gestdiag, (*nbe)*3*3*sizeof(float));
+	error = cudaMalloc(&device_gestdiag, (*nbe)*3*3*sizeof(FREAL));
 	cuda_assert(error);
-	error = cudaMemcpy(device_gestdiag, gestdiag, (*nbe)*3*3*sizeof(float), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_gestdiag, gestdiag, (*nbe)*3*3*sizeof(FREAL), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 }
 

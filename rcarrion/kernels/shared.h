@@ -5,19 +5,19 @@
 
 extern "C"{            
 
-__constant__ float delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+__constant__ FREAL delta[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
                        
-extern float* device_cx;
-extern float* device_cy;                                                              
-extern float* device_cz;
-extern float* device_cxm;
-extern float* device_cym;                                                               
-extern float* device_czm;
-extern float* device_etas;
-extern float* device_gi;
-extern float* device_ome;
-extern float* device_hestdiag;
-extern float* device_gestdiag;
+extern FREAL* device_cx;
+extern FREAL* device_cy;                                                              
+extern FREAL* device_cz;
+extern FREAL* device_cxm;
+extern FREAL* device_cym;                                                               
+extern FREAL* device_czm;
+extern FREAL* device_etas;
+extern FREAL* device_gi;
+extern FREAL* device_ome;
+extern FREAL* device_hestdiag;
+extern FREAL* device_gestdiag;
 extern int*   device_cone;        
  
 void cuda_assert(cudaError_t error);

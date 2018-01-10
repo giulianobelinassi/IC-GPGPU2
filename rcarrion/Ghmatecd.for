@@ -290,9 +290,15 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 * FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 *
         
-!        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
-!        PRINT*, NN, 3*N
-        CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, (0,0), ZFI, 1)
+        IF (SIZEOF(1.0) == 8) THEN
+            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSEIF (SIZEOF(1.0) == 4) THEN
+            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSE
+            PRINT*, "ERRO FATAL: Precisão desconhecida"
+            STOP
+        ENDIF
+
         t2 = OMP_GET_WTIME()
         PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
 

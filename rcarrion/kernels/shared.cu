@@ -3,20 +3,20 @@
 
 extern "C"{
 
-float* device_cx;
-float* device_cy;
-float* device_cz;
-float* device_cxm;
-float* device_cym;
-float* device_czm;
-float* device_etas;
-float* device_gi;
-float* device_ome;
+FREAL* device_cx;
+FREAL* device_cy;
+FREAL* device_cz;
+FREAL* device_cxm;
+FREAL* device_cym;
+FREAL* device_czm;
+FREAL* device_etas;
+FREAL* device_gi;
+FREAL* device_ome;
 int*   device_cone;
 
 /*Disponivel apos a execucao de Ghmatece*/
-float* device_hestdiag;
-float* device_gestdiag;
+FREAL* device_hestdiag;
+FREAL* device_gestdiag;
 /**/
 
 
@@ -72,15 +72,15 @@ void cublas_assert(cublasStatus_t error)
 }
 
 void send_shared_data_to_gpu_(
-        float cx[],
-        float cy[],
-        float cz[],
-        float cxm[],
-        float cym[],
-        float czm[],
-        float etas[],
-        float gi[],
-        float ome[],
+        FREAL cx[],
+        FREAL cy[],
+        FREAL cz[],
+        FREAL cxm[],
+        FREAL cym[],
+        FREAL czm[],
+        FREAL etas[],
+        FREAL gi[],
+        FREAL ome[],
         int cone[],
         int* np, 
         int* npg,
@@ -94,62 +94,62 @@ void send_shared_data_to_gpu_(
     error = cudaMalloc(&device_cone, 4*(*n)*sizeof(int));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_cx, (*np)*sizeof(float));
+    error = cudaMalloc(&device_cx, (*np)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_cy, (*np)*sizeof(float));
+    error = cudaMalloc(&device_cy, (*np)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_cz, (*np)*sizeof(float));
+    error = cudaMalloc(&device_cz, (*np)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_cxm, (*n)*sizeof(float));
+    error = cudaMalloc(&device_cxm, (*n)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_cym, (*n)*sizeof(float));
+    error = cudaMalloc(&device_cym, (*n)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_czm, (*n)*sizeof(float));
+    error = cudaMalloc(&device_czm, (*n)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_gi, (*npg)*sizeof(float));
+    error = cudaMalloc(&device_gi, (*npg)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_ome, (*npg)*sizeof(float));
+    error = cudaMalloc(&device_ome, (*npg)*sizeof(FREAL));
     cuda_assert(error);
 
-    error = cudaMalloc(&device_etas, (*n)*3*sizeof(float));
+    error = cudaMalloc(&device_etas, (*n)*3*sizeof(FREAL));
     cuda_assert(error);
 
     /*mova os dados para lá*/
     error = cudaMemcpy(device_cone, cone, 4*(*n)*sizeof(int), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_cx, cx, (*np)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_cx, cx, (*np)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_cy, cy, (*np)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_cy, cy, (*np)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_cz, cz, (*np)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_cz, cz, (*np)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_cxm, cxm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_cxm, cxm, (*n)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_cym, cym, (*n)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_cym, cym, (*n)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_czm, czm, (*n)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_czm, czm, (*n)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_gi, gi, (*npg)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_ome, ome, (*npg)*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_ome, ome, (*npg)*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
-    error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(float), cudaMemcpyHostToDevice);
+    error = cudaMemcpy(device_etas, etas, (*n)*3*sizeof(FREAL), cudaMemcpyHostToDevice);
     cuda_assert(error);
 
 }

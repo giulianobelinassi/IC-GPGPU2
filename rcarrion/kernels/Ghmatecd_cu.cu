@@ -10,25 +10,25 @@ extern "C"{
 
 __global__ void ghmatecd_kernel(
                            int cone[],
-                           float cx[],
-                           float cy[],
-                           float cz[],
-                           float cxm[],
-                           float cym[],
-                           float czm[],
-                           thrust::complex<float> zh[],
-                           thrust::complex<float> zg[],
-                           float rn[][3],
-                           thrust::complex<float> zge,
-                           thrust::complex<float> zcs,
-                           thrust::complex<float> zcp,
-                           float fr,
-                           float gi[],
-                           float ome[],
-                           float c1,
-                           float c2,
-                           float c3,
-                           float c4,
+                           FREAL cx[],
+                           FREAL cy[],
+                           FREAL cz[],
+                           FREAL cxm[],
+                           FREAL cym[],
+                           FREAL czm[],
+                           thrust::complex<FREAL> zh[],
+                           thrust::complex<FREAL> zg[],
+                           FREAL rn[][3],
+                           thrust::complex<FREAL> zge,
+                           thrust::complex<FREAL> zcs,
+                           thrust::complex<FREAL> zcp,
+                           FREAL fr,
+                           FREAL gi[],
+                           FREAL ome[],
+                           FREAL c1,
+                           FREAL c2,
+                           FREAL c3,
+                           FREAL c4,
                            int npg,
                            int n,
                            int nbe,
@@ -45,23 +45,23 @@ __global__ void ghmatecd_kernel(
 	const int jj = blockIdx.x + column_pad;
 
 	const int gelem_pad = 3*3*npg*npg;
-	extern __shared__ thrust::complex<float> s_[];
+	extern __shared__ thrust::complex<FREAL> s_[];
 	
 	int i, j;
 	
-	const float pi  = 3.141592654;
-	float p[4][2], f[4];
-	float xj[3][2];
-	__shared__ float co[3][4];
-	__shared__ float rn_cached[4];
-	float g1, g2, p1, p2, p12, sp, sm, rp, rm, det;
-	float cxg, cyg, czg, cxp, cyp, czp;
-	float j1, j2, j3;
-	float r1, r2, r3, r, drn, rd[3];
-	thrust::complex<float> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
+	const FREAL pi  = 3.141592654;
+	FREAL p[4][2], f[4];
+	FREAL xj[3][2];
+	__shared__ FREAL co[3][4];
+	__shared__ FREAL rn_cached[4];
+	FREAL g1, g2, p1, p2, p12, sp, sm, rp, rm, det;
+	FREAL cxg, cyg, czg, cxp, cyp, czp;
+	FREAL j1, j2, j3;
+	FREAL r1, r2, r3, r, drn, rd[3];
+	thrust::complex<FREAL> zwi, zc0, zc1, zc2, zkp, zks, zzp, zzs, zezp, zezs, 
                     zp2, zs2, zfhi, zcappa, zfhidr, zcappadr, zaa, zbb, zcc;
 
-	thrust::complex<float> zhi, zgi;
+	thrust::complex<FREAL> zhi, zgi;
 
 	int iii, jjj;
 
@@ -96,23 +96,23 @@ __global__ void ghmatecd_kernel(
 	p2 = ome[jg];
 	sp = 1 + g2;
 	sm = 1 - g2;
-	p[0][0] = -0.25f*sm;
-	p[1][0] =  0.25f*sm;
-	p[2][0] =  0.25f*sp;
-	p[3][0] = -0.25f*sp;
+	p[0][0] = -0.25*sm;
+	p[1][0] =  0.25*sm;
+	p[2][0] =  0.25*sp;
+	p[3][0] = -0.25*sp;
 
 	g1 = gi[ig];
 	p1 = ome[ig];
 	rp = 1 + g1;
 	rm = 1 - g1;
-	f[0] = 0.25f*rm*sm;
-	f[1] = 0.25f*rp*sm;
-	f[2] = 0.25f*rp*sp;
-	f[3] = 0.25f*rm*sp;
-	p[0][1] = -0.25f*rm;
-	p[1][1] = -0.25f*rp;
-	p[2][1] = 0.25f*rp;
-	p[3][1] = 0.25f*rm;
+	f[0] = 0.25*rm*sm;
+	f[1] = 0.25*rp*sm;
+	f[2] = 0.25*rp*sp;
+	f[3] = 0.25*rm*sp;
+	p[0][1] = -0.25*rm;
+	p[1][1] = -0.25*rp;
+	p[2][1] = 0.25*rp;
+	p[3][1] = 0.25*rm;
 
 	
    
@@ -160,9 +160,9 @@ __global__ void ghmatecd_kernel(
 	rd[2] = r3/r;
 	
 
-	zwi = thrust::complex<float>(0, fr);
+	zwi = thrust::complex<FREAL>(0, fr);
 	
-	zc0 = 1.f/(4.f*(pi)*(zge));
+	zc0 = ((FREAL) 1.0)/(((FREAL) 4.)*(pi)*(zge));
 	zc1 = ((zcp)/(zcs))*((zcp)/(zcs));
 	zc2 = ((zcs)/(zcp))*((zcs)/(zcp));
 	zkp = -zwi/(zcp);
@@ -174,14 +174,14 @@ __global__ void ghmatecd_kernel(
 	zp2 = zzp*zzp;
 	zs2 = zzs*zzs;
 
-	zfhi    = (1.f + 1.f/zs2 - 1.f/zzs)*zezs/r - zc2*(1.f/zp2 - 1.f/zzp)*zezp/r;
-	zcappa  = (1.f + 3.f/zs2 - 3.f/zzs)*zezs/r - zc2*(1.f + 3.f/zp2 - 3.f/zzp)*zezp/r;
-	zfhidr  = (-2.f+ zzs + 3.f/zzs - 3.f/zs2)*zezs/(r*r) - zc2*(-1.f + 3.f/zzp - 3.f/zp2)*zezp/(r*r);
-	zcappadr= (zzs - 4.f + 9.f/zzs - 9.f/zs2)*zezs/(r*r) - zc2*(zzp - 4.f + 9.f/zzp - 9.f/zp2)*zezp/(r*r);
+	zfhi    = (((FREAL) 1.) + ((FREAL) 1.)/zs2 - ((FREAL) 1.)/zzs)*zezs/r - zc2*(((FREAL) 1.)/zp2 - ((FREAL) 1.)/zzp)*zezp/r;
+	zcappa  = (((FREAL) 1.) + ((FREAL) 3.)/zs2 - ((FREAL) 3.f)/zzs)*zezs/r - zc2*(((FREAL) 1.) + ((FREAL) 3.)/zp2 - ((FREAL) 3.)/zzp)*zezp/r;
+	zfhidr  = (((FREAL) -2.)+ zzs + ((FREAL) 3.)/zzs - ((FREAL) 3.)/zs2)*zezs/(r*r) - zc2*(((FREAL) -1.) + ((FREAL) 3.)/zzp - ((FREAL) 3.)/zp2)*zezp/(r*r);
+	zcappadr= (zzs - ((FREAL) 4.) + ((FREAL) 9.f)/zzs - ((FREAL) 9.)/zs2)*zezs/(r*r) - zc2*(zzp - ((FREAL) 4.) + ((FREAL) 9.)/zzp - ((FREAL) 9.f)/zp2)*zezp/(r*r);
 
 	zaa = zfhidr-zcappa/r;
-	zbb = 4.f*zcappa/r - 2.f*zcappadr;
-	zcc = (zc1-2.f)*(zaa + 0.5f*zbb-3.0f*zcappa/r)-2.0f*zcappa/r;
+	zbb = ((FREAL) 4.)*zcappa/r -((FREAL) 2.)*zcappadr;
+	zcc = (zc1-((FREAL) 2.))*(zaa + ((FREAL) 0.5)*zbb-((FREAL) 3.0)*zcappa/r)-((FREAL) 2.0)*zcappa/r;
 
 	p12 = p1*p2*det;
 	
@@ -191,14 +191,14 @@ __global__ void ghmatecd_kernel(
             zgi = (zc0*(zfhi*delta[j][i] - zcappa*rd[j]*rd[i]));
             
 
-            zhi = (1.0f/(4.0f*pi))*((zaa*(drn*delta[j][i] + 
+            zhi = (((FREAL) 1.0)/(((FREAL) 4.0)*pi))*((zaa*(drn*delta[j][i] + 
                                 rd[j]*rn_cached[i])) + rd[i]*rd[j]*drn*zbb + 
                         rd[i]*rn_cached[j]*zcc);
         
             if (ii == jj && fast_singular)
             {
                 zgi = zgi - (c1/r)*(c2*delta[j][i] + rd[i]*rd[j]);
-                zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + 3.0f*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
+                zhi = zhi - (c3/(r*r))*(drn*(c4*delta[j][i] + ((FREAL) 3.0)*rd[i]*rd[j]) + c4*(rd[j]*rn_cached[i] - rd[i]*rn_cached[j]));
             }
           
             zgi = zgi*p12;
@@ -232,39 +232,39 @@ void cuda_ghmatecd_(int* nbe,
                     int* npg,
                     int* n,
                     int* np,
-                    thrust::complex<float>* zge,
-                    thrust::complex<float>* zcs,
-                    thrust::complex<float>* zcp,
-                    float* c1,
-                    float* c2,
-                    float* c3,
-                    float* c4,
-                    float* fr,
-                    float* zhest_,
-                    float* zgest_,
-                    thrust::complex<float>* zgp_,
-                    thrust::complex<float>* zhp_,
+                    thrust::complex<FREAL>* zge,
+                    thrust::complex<FREAL>* zcs,
+                    thrust::complex<FREAL>* zcp,
+                    FREAL* c1,
+                    FREAL* c2,
+                    FREAL* c3,
+                    FREAL* c4,
+                    FREAL* fr,
+                    FREAL* zhest_,
+                    FREAL* zgest_,
+                    thrust::complex<FREAL>* zgp_,
+                    thrust::complex<FREAL>* zhp_,
                     int* fast_singular,
                     int* status
                    )
 {
 	
-	size_t column_size = 2*(3*(*nbe))*sizeof(thrust::complex<float>);
+	size_t column_size = 2*(3*(*nbe))*sizeof(thrust::complex<FREAL>);
 	
-	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(thrust::complex<float>);
+	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(thrust::complex<FREAL>);
 	cudaError_t error;
 	
-	thrust::complex<float>* device_zh;
-	thrust::complex<float>* device_zg;
+	thrust::complex<FREAL>* device_zh;
+	thrust::complex<FREAL>* device_zg;
 
 	int* device_return_status;
 	int return_status;
 
 	/*Cast os parâmetros de volta para o tipo original*/
-//	float (*zhest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zhest_;
-//	float (*zgest)[3*(*nbe)] = (float (*)[3*(*nbe)]) zgest_;
-	thrust::complex<float> (*zgp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zgp_;
-	thrust::complex<float> (*zhp)[3*(*nbe)] = (thrust::complex<float> (*)[3*(*nbe)]) zhp_;
+//	FREAL (*zhest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) zhest_;
+//	FREAL (*zgest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) zgest_;
+	thrust::complex<FREAL> (*zgp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zgp_;
+	thrust::complex<FREAL> (*zhp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zhp_;
 
 	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);
@@ -274,10 +274,10 @@ void cuda_ghmatecd_(int* nbe,
 
 	width = largest_possible_width(column_size, *nbe, &iterations);
 
-	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
-	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
 	for (i = 0; i < iterations; ++i)
@@ -293,10 +293,10 @@ void cuda_ghmatecd_(int* nbe,
 		error = cudaMemset(device_return_status, 0, sizeof(int));
 		cuda_assert(error);
 
-		error = cudaMemset(device_zh, 0, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>));
+		error = cudaMemset(device_zh, 0, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 		cuda_assert(error);
 
-		error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>));
+		error = cudaMemset(device_zg, 0, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 		cuda_assert(error);
 
 		cudaDeviceSynchronize();
@@ -310,7 +310,7 @@ void cuda_ghmatecd_(int* nbe,
 							device_czm,
 							device_zh,
 							device_zg,
-							(float (*)[3]) device_etas,
+							(FREAL (*)[3]) device_etas,
 							*zge,
 							*zcs,
 							*zcp,
@@ -339,9 +339,9 @@ void cuda_ghmatecd_(int* nbe,
 			fputs("Matriz Singular\n", stderr);
 		}
 
-		error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+		error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
 		cuda_assert(error);
-		error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+		error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
 		cuda_assert(error);
 
 	}

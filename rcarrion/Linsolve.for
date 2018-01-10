@@ -38,7 +38,14 @@
             STOP
         ENDIF
 
-        CALL CGESV(NN,1,ZH,NN,PIV,ZFI,NN,stats)
+        IF (SIZEOF(1.0) == 8) THEN
+            CALL ZGESV(NN,1,ZH,NN,PIV,ZFI,NN,stats)
+        ELSEIF (SIZEOF(1.0) == 4) THEN
+            CALL CGESV(NN,1,ZH,NN,PIV,ZFI,NN,stats)
+        ELSE
+            PRINT*, "ERRO FATAL: Precisão de float desconhecida"
+        ENDIF
+
         IF (stats < 0) THEN
             PRINT *, "Erro em ZGESV :-("
         ELSE IF (stats > 0) THEN

@@ -19,18 +19,23 @@ void lu_assert(int status)
 void cuda_linsolve_(
 			int* nn,
 			int* n,
-			thrust::complex<float> zh[],
-			thrust::complex<float> zfi[]
+			thrust::complex<FREAL> zh[],
+			thrust::complex<FREAL> zfi[]
 		)
 {
     cudaError_t error;
 
+#if FREAL == double
+    magmaDoubleComplex_ptr device_zh;
+    magmaDoubleComplex_ptr device_zfi;
+#else
     magmaFloatComplex_ptr device_zh;
     magmaFloatComplex_ptr device_zfi;
+#endif
 	int status;
 	int* piv = (int*) malloc((*nn)*sizeof(int));
 
-    thrust::complex<float> one(1.0f, 0.0f);
+    thrust::complex<FREAL> one(1.0f, 0.0f);
 
 	if (!piv)
 	{
@@ -40,23 +45,27 @@ void cuda_linsolve_(
 
 	magma_init();
 
-	error = cudaMalloc(&device_zh, (*nn)*(*nn)*sizeof(thrust::complex<float>));
+	error = cudaMalloc(&device_zh, (*nn)*(*nn)*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
-    error = cudaMalloc(&device_zfi, (*nn)*sizeof(thrust::complex<float>));
+    error = cudaMalloc(&device_zfi, (*nn)*sizeof(thrust::complex<FREAL>));
     cuda_assert(error);
 
-	error = cudaMemcpy(device_zh, zh, (*nn)*(*nn)*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_zh, zh, (*nn)*(*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-	error = cudaMemcpy(device_zfi, zfi, (*nn)*sizeof(thrust::complex<float>), cudaMemcpyHostToDevice);
+	error = cudaMemcpy(device_zfi, zfi, (*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
+#if FREAL == double
+	magma_zgesv_gpu(*nn, 1, device_zh, *nn, piv, device_zfi, *nn, &status);
+#else
 	magma_cgesv_gpu(*nn, 1, device_zh, *nn, piv, device_zfi, *nn, &status);
+#endif
 	magma_finalize();
 	lu_assert(status);
 
-	error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<float>), cudaMemcpyDeviceToHost);
+	error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
     cuda_assert(error);
 
     error = cudaFree(device_zh);
