@@ -6,23 +6,27 @@
      $      FAST_SING)
           
             IMPLICIT NONE
-            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
-            REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
+            REAL(REAL_PREC), DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+            REAL(REAL_PREC), DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+            REAL(REAL_PREC), DIMENSION(3,3,NBE), INTENT(IN) ::HESTdiag,
+     $         GESTdiag
 
-            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH
-            COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZG
-            COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
-            REAL, INTENT(IN) :: DFI(3*NBE)
-            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
+            COMPLEX(CMPLX_PREC), DIMENSION(:,:), ALLOCATABLE, 
+     $         INTENT(OUT) :: ZH
+            COMPLEX(CMPLX_PREC), DIMENSION(:,:), ALLOCATABLE, 
+     $         INTENT(OUT) :: ZG
+            COMPLEX(CMPLX_PREC), DIMENSION(:), INTENT(OUT), 
+     $         ALLOCATABLE:: ZFI
+            REAL(REAL_PREC), INTENT(IN) :: DFI(3*NBE)
+            COMPLEX(CMPLX_PREC), INTENT(OUT), ALLOCATABLE :: ZDFI(:)
             INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
-            REAL, INTENT(IN) :: DELTA(3,3),PI
+            REAL(REAL_PREC), INTENT(IN) :: DELTA(3,3),PI
             INTEGER, INTENT(IN) :: N,NBE,NP,NPG, L
-            REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
-            COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
-            REAL, INTENT(IN) :: C1,C2,C3,C4
-            REAL, INTENT(IN) :: ETAS(3,N)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
+            REAL(REAL_PREC), INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
+            COMPLEX(CMPLX_PREC),   INTENT(IN) :: ZGE,ZCS,ZCP
+            REAL(REAL_PREC), INTENT(IN) :: C1,C2,C3,C4
+            REAL(REAL_PREC), INTENT(IN) :: ETAS(3,N)
+            REAL(REAL_PREC), DIMENSION(NPG), INTENT(IN) :: GI, OME
             LOGICAL, INTENT(IN) :: FAST_SING
           END
         END INTERFACE

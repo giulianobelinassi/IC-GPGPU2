@@ -4,16 +4,16 @@
      $             ,NE,NX,NCOX,
      $        CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,
      $        OME)
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
+            IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+            IMPLICIT COMPLEX(CMPLX_PREC) (Z)
             COMMON INP,INQ,IPR,IPS,IPT
-            REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+            REAL(REAL_PREC), DIMENSION(NP), INTENT(IN):: CX, CY, CZ
+            REAL(REAL_PREC), DIMENSION(N) , INTENT(IN):: CXM, CYM, CZM
             
-            REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) ::HESTdiag
-            REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) ::GESTdiag
+            REAL(REAL_PREC), DIMENSION(:,:,:),ALLOCATABLE,INTENT(OUT)::
+     $         HESTdiag, GESTdiag
             INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-            REAL :: DELTA(3,3), ETAS(3, n)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
+            REAL(REAL_PREC) :: DELTA(3,3), ETAS(3, n)
+            REAL(REAL_PREC), DIMENSION(NPG), INTENT(IN) :: GI, OME
           END
         END INTERFACE

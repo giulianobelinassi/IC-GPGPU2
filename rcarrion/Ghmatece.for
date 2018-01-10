@@ -12,23 +12,23 @@
 *
         USE omp_lib        
 
-        IMPLICIT REAL (A-H,O-Y)
-        IMPLICIT COMPLEX (Z)
+        IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+        IMPLICIT COMPLEX(CMPLX_PREC) (Z)
 
 #ifdef USE_GPU
         INCLUDE 'kernels/Ghmatece_cu.fd'
 #endif
 
         COMMON INP,INQ,IPR,IPS,IPT
-        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-        REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+        REAL(REAL_PREC), DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL(REAL_PREC), DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        REAL, DIMENSION(:,:), ALLOCATABLE :: HEST
-        REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: HESTdiag
-        REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: GESTdiag
-        REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
+        REAL(REAL_PREC), DIMENSION(:,:), ALLOCATABLE :: HEST
+        REAL(REAL_PREC), DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: 
+     $     HESTdiag, GESTdiag
+        REAL(REAL_PREC), DIMENSION(NPG), INTENT(IN) :: GI, OME 
 
-        REAL, INTENT(IN) :: ETAS(3,n)
+        REAL(REAL_PREC), INTENT(IN) :: ETAS(3,n)
         INTEGER stats1, stats2
         DIMENSION DELTA(3,3)
         DOUBLE PRECISION :: t1, t2
@@ -45,7 +45,7 @@
 #undef  USE_CPU
 #define USE_GPU
 #define USE_CPU
-        REAL, ALLOCATABLE, DIMENSION(:,:,:) :: HdiagP, GdiagP
+        REAL(REAL_PREC), ALLOCATABLE, DIMENSION(:,:,:) :: HdiagP, GdiagP
 #endif
 
 #ifdef USE_CPU
@@ -258,8 +258,8 @@ C            ETAS(3)=C/R
       SUBROUTINE RIGID_BODY(NBE, N, HEST, HESTdiag)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NBE, N
-        REAL, DIMENSION(3*NBE, 3*N), INTENT(INOUT) :: HEST
-        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: HESTdiag
+        REAL(REAL_PREC), DIMENSION(3*NBE, 3*N), INTENT(INOUT) :: HEST
+        REAL(REAL_PREC), DIMENSION(3,3,NBE), INTENT(OUT) :: HESTdiag
         INTEGER :: MA, MB, II, JJ
 
 !$OMP PARALLEL DO PRIVATE(MA, II)
@@ -290,15 +290,15 @@ C            ETAS(3)=C/R
      $      C1, C2, DELTA, GI, OME, CONE, NBE)
        
         IMPLICIT NONE
-        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-        REAL, DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
+        REAL(REAL_PREC), DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL(REAL_PREC), DIMENSION(N) , INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4), INTENT(IN) :: CONE
-        REAL, DIMENSION(3,3,NBE), INTENT(OUT) :: GESTdiag
-        REAL, DIMENSION(NPG) :: GI, OME
-        REAL, INTENT(IN) :: ETAS(3,n)
+        REAL(REAL_PREC), DIMENSION(3,3,NBE), INTENT(OUT) :: GESTdiag
+        REAL(REAL_PREC), DIMENSION(NPG) :: GI, OME
+        REAL(REAL_PREC), INTENT(IN) :: ETAS(3,n)
         INTEGER, INTENT(IN) :: NBE, N, NP, NPG, NCOX
-        REAL, INTENT(IN) :: C1,C2
-        REAL, INTENT(IN) :: DELTA(3,3)
+        REAL(REAL_PREC), INTENT(IN) :: C1,C2
+        REAL(REAL_PREC), INTENT(IN) :: DELTA(3,3)
         INTEGER :: J, JJ, N1, N2, N3, N4
 
         GESTdiag = 0
@@ -325,12 +325,13 @@ C            ETAS(3)=C/R
       SUBROUTINE ASSERT_GHMATECE_H_G(Hdiag, HdiagP, Gdiag, GdiagP,NBE,N)
         IMPLICIT NONE
         REAL :: eps = 1.0E-5
-        REAL, INTENT(IN), DIMENSION(3,3,NBE) ::Hdiag,HdiagP,Gdiag,Gdiagp
+        REAL(REAL_PREC), INTENT(IN), DIMENSION(3,3,NBE) ::Hdiag,HdiagP,
+     $    Gdiag,Gdiagp
         INTEGER, INTENT(IN) :: NBE, N  
 
         INTEGER :: i, j, k
         LOGICAL :: ghmatecd_asserted = .TRUE.
-        REAL :: sum_norms = 0, local_sum, max_local_sum
+        DOUBLE PRECISION :: sum_norms = 0, local_sum, max_local_sum
 
         eps = 1.0E-5
 

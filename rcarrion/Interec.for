@@ -12,23 +12,24 @@
 *
         USE omp_lib
 
-        IMPLICIT REAL (A-H,O-Y)
-        IMPLICIT COMPLEX (Z)
+        IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+        IMPLICIT COMPLEX(CMPLX_PREC) (Z)
 #ifdef USE_GPU
         INCLUDE 'kernels/Interec1_cu.fd'
 #endif
         COMMON INP,INQ,IPR,IPS,IPT
         
-        REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ
-        REAL, DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
-        REAL CO(4,3), DELTA(3,3)
-        COMPLEX, DIMENSION(3*NBE), INTENT(INOUT) :: ZDFI, ZFI
-        COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE :: ZDSOL, ZSSOL 
+        REAL(REAL_PREC), DIMENSION(:), INTENT(IN) :: CX, CY, CZ
+        REAL(REAL_PREC), DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
+        REAL(REAL_PREC) CO(4,3), DELTA(3,3)
+        COMPLEX(CMPLX_PREC), DIMENSION(3*NBE), INTENT(INOUT) ::ZDFI, ZFI
+        COMPLEX(CMPLX_PREC), DIMENSION(:), INTENT(OUT), ALLOCATABLE :: 
+     $      ZDSOL, ZSSOL 
         INTEGER, INTENT(IN) ::  CONE(N,4),KODE(3*NBE)
         DIMENSION ZD(3,3,3),ZS(3,3,3)
-        REAL, INTENT(IN) :: ETAS(3,NX)
+        REAL(REAL_PREC), INTENT(IN) :: ETAS(3,NX)
         
-        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
+        REAL(REAL_PREC), INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER stats1, stats2
 
         DOUBLE PRECISION :: t1, t2
@@ -44,11 +45,11 @@
 #undef USE_GPU
 #define USE_CPU
 #define USE_GPU
-        COMPLEX, DIMENSION(3*L) :: ZDSOLP
+        COMPLEX(CMPLX_PREC), DIMENSION(3*L) :: ZDSOLP
 #endif
 
 #ifdef USE_CPU
-        COMPLEX, DIMENSION(3,3) :: ZHELEM, ZGELEM 
+        COMPLEX(CMPLX_PREC), DIMENSION(3,3) :: ZHELEM, ZGELEM 
 #endif
 
 *
@@ -285,11 +286,11 @@ C                ETA(3)=C/R
 
       SUBROUTINE ASSERT_ZDSOL(ZDSOL, ZDSOLP, L)
         IMPLICIT NONE
-        COMPLEX, DIMENSION(3*L), INTENT(IN) :: ZDSOL, ZDSOLP
+        COMPLEX(CMPLX_PREC), DIMENSION(3*L), INTENT(IN) :: ZDSOL, ZDSOLP
         INTEGER :: L, i
         LOGICAL :: asserted = .TRUE. 
         REAL, PARAMETER :: eps = 1.0E-6
-        REAL :: maxentry = 0
+        REAL(REAL_PREC) :: maxentry = 0
 
         DO i = 1, 3*L
             maxentry = MAX(maxentry, ABS(ZDSOL(i) - ZDSOLP(i)))

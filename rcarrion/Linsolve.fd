@@ -3,7 +3,7 @@
           SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
             IMPLICIT NONE
             INTEGER, INTENT(IN) :: NN, N
-            COMPLEX, INTENT(IN) :: ZH(NN, N)
-            COMPLEX, INTENT(INOUT) :: ZFI(NN)
+            COMPLEX(CMPLX_PREC), INTENT(IN) :: ZH(NN, N)
+            COMPLEX(CMPLX_PREC), INTENT(INOUT) :: ZFI(NN)
           END 
         END INTERFACE

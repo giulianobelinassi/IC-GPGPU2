@@ -5,12 +5,12 @@
         IMPLICIT NONE
         
         INTEGER, DIMENSION(n,4), INTENT(IN) :: CONE
-        REAL, DIMENSION(np), INTENT(IN) :: CX, CY, CZ
+        REAL(REAL_PREC), DIMENSION(np), INTENT(IN) :: CX, CY, CZ
         INTEGER, INTENT(IN) :: n, np
-        REAL, DIMENSION(:,:), ALLOCATABLE:: ETAS
+        REAL(REAL_PREC), DIMENSION(:,:), ALLOCATABLE:: ETAS
 
         INTEGER J, N1,N2,N3,N4, stats
-        REAL A, B, C, R
+        REAL(REAL_PREC) A, B, C, R
 
         ALLOCATE(ETAS(3, n), STAT = stats)
         IF (stats /= 0) THEN

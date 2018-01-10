@@ -3,8 +3,8 @@
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(INOUT) :: ZH(NN, NN)
-        COMPLEX, INTENT(INOUT) :: ZFI(NN)
+        COMPLEX(CMPLX_PREC), INTENT(INOUT) :: ZH(NN, NN)
+        COMPLEX(CMPLX_PREC), INTENT(INOUT) :: ZFI(NN)
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 
@@ -17,8 +17,8 @@
 #undef  USE_GPU
 #define USE_CPU
 #define USE_GPU
-        COMPLEX :: ZFI_ORIG(NN), ZFIP(NN)
-        COMPLEX, ALLOCATABLE :: ZH_ORIG(:,:), ZHP(:,:)
+        COMPLEX(CMPLX_PREC) :: ZFI_ORIG(NN), ZFIP(NN)
+        COMPLEX(CMPLX_PREC), ALLOCATABLE :: ZH_ORIG(:,:), ZHP(:,:)
 #endif
 
 #ifdef USE_CPU
@@ -38,7 +38,11 @@
             STOP
         ENDIF
 
+#if CMPLX_PREC == 8
+        CALL ZGESV(NN,1,ZH,NN,PIV,ZFI,NN,stats)
+#else        
         CALL CGESV(NN,1,ZH,NN,PIV,ZFI,NN,stats)
+#endif
         IF (stats < 0) THEN
             PRINT *, "Erro em ZGESV :-("
         ELSE IF (stats > 0) THEN

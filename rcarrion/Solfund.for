@@ -7,8 +7,8 @@
       SUBROUTINE SOLFUND(ZU,ZT,CXP,CYP,CZP,CXG,CYG,CZG,RN,ZGE,ZCS,ZCP,
      $  DELTA,PI,FR)
 *
-        IMPLICIT REAL (A-H,O-Y)
-        IMPLICIT COMPLEX (Z)
+        IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+        IMPLICIT COMPLEX(CMPLX_PREC) (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION ZU(3,3),ZT(3,3)
         DIMENSION RD(3)
@@ -26,16 +26,16 @@
 *
 * CONSTANTES USADAS NAS SOLUÇÕES FUNDAMENTAIS DINÂMICAS
 *
-        ZWI=CMPLX(0.0,FR)
-        ZC0=(1.0,0.0)/(CMPLX(4.0*PI,0.0)*ZGE)
+        ZWI=COMPLEX(0.0,FR)
+        ZC0=(1.0,0.0)/(COMPLEX(4.0*PI,0.0)*ZGE)
         ZC1=(ZCP/ZCS)**2
         ZC2=(ZCS/ZCP)**2
         ZKP=-ZWI/ZCP
         ZKS=-ZWI/ZCS
         ZZP=ZKP*R
         ZZS=ZKS*R
-        ZEZP=CEXP(ZZP)
-        ZEZS=CEXP(ZZS)
+        ZEZP=EXP(ZZP)
+        ZEZS=EXP(ZZS)
         ZP2=ZZP*ZZP
         ZS2=ZZS*ZZS
 *

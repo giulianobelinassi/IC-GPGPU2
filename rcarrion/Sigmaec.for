@@ -9,8 +9,8 @@
        SUBROUTINE SIGMAEC(CO,CXP,CYP,CZP,RN,DELTA,PI,FR,ZGE,RHO,ZCS,
      $ZCP,NPG,ZD,ZS,GI,OME)
 *
-        IMPLICIT REAL (A-H,O-Y)
-        IMPLICIT COMPLEX (Z)
+        IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+        IMPLICIT COMPLEX(CMPLX_PREC) (Z)
         COMMON INP,INQ,IPR,IPS,IPT
         DIMENSION DELTA(3,3)
         DIMENSION GI(NPG),OME(NPG)
@@ -107,16 +107,16 @@ C       DIMENSION ETA(3)
 *
 * CONSTANTES USADAS NAS SOLUÇÕES FUNDAMENTAIS DINÂMICAS
 *
-                ZWI=CMPLX(0.0,FR)
-                ZC0=(1.0,0.0)/(CMPLX(4.0*PI,0.0)*ZGE)
+                ZWI=COMPLEX(0.0,FR)
+                ZC0=(1.0,0.0)/(COMPLEX(4.0*PI,0.0)*ZGE)
                 ZC1=(ZCP/ZCS)**2
                 ZC2=(ZCS/ZCP)**2
                 ZKP=-ZWI/ZCP
                 ZKS=-ZWI/ZCS
                 ZZP=ZKP*R
                 ZZS=ZKS*R
-                ZEZP=CEXP(ZZP)
-                ZEZS=CEXP(ZZS)
+                ZEZP=EXP(ZZP)
+                ZEZS=EXP(ZZS)
                 ZP2=ZZP*ZZP
                 ZS2=ZZS*ZZS
 *
@@ -138,8 +138,8 @@ C       DIMENSION ETA(3)
 *
                 ZK1=ZWI/ZCP
                 ZK2=ZWI/ZCS
-                ZEK1=CEXP(-ZK1*R)
-                ZEK2=CEXP(-ZK2*R)
+                ZEK1=EXP(-ZK1*R)
+                ZEK2=EXP(-ZK2*R)
                 ZMU=ZGE
                 ZLAMB=(ZCP*ZCP*RHO)-(2.0*ZMU)
 *

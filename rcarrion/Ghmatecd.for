@@ -26,26 +26,28 @@
         COMMON  INP,INQ,IPR,IPS,IPT
         
 
-        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-        REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
-        REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
+        REAL(REAL_PREC), DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        REAL(REAL_PREC), DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+        REAL(REAL_PREC), DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, 
+     $     GESTdiag
 
-        COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
-        COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
-        REAL, INTENT(IN) :: DFI(3*NBE)
-        COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
+        COMPLEX(CMPLX_PREC), DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) ::
+     $     ZH, ZG
+        COMPLEX(CMPLX_PREC), DIMENSION(:), INTENT(OUT), ALLOCATABLE::ZFI
+        REAL(REAL_PREC), INTENT(IN) :: DFI(3*NBE)
+        COMPLEX(CMPLX_PREC), INTENT(OUT), ALLOCATABLE :: ZDFI(:)
         INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
-        REAL, INTENT(IN) :: DELTA(3,3),PI
+        REAL(REAL_PREC), INTENT(IN) :: DELTA(3,3),PI
         INTEGER, INTENT(IN) :: L,N,NBE,NP,NPG
-        REAL, INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
-        COMPLEX, INTENT(IN) :: ZGE,ZCS,ZCP
-        REAL, INTENT(IN) :: C1,C2,C3,C4
-        REAL, INTENT(IN) :: ETAS(3,N)
+        REAL(REAL_PREC), INTENT(IN) :: GE,RNU,RMU,FR,DAM,RHO
+        COMPLEX(CMPLX_PREC), INTENT(IN) :: ZGE,ZCS,ZCP
+        REAL(REAL_PREC), INTENT(IN) :: C1,C2,C3,C4
+        REAL(REAL_PREC), INTENT(IN) :: ETAS(3,N)
         LOGICAL, INTENT(IN) :: FAST_SING
 
 
-        COMPLEX ZCH
-        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
+        COMPLEX(CMPLX_PREC) ZCH
+        REAL(REAL_PREC), INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
         INTEGER NN,I,J, stats1, stats2, II, JJ
 
@@ -60,19 +62,18 @@
 #undef  USE_GPU
 #define USE_CPU
 #define USE_GPU
-        COMPLEX, ALLOCATABLE :: ZHP(:,:), ZGP(:,:)
+        COMPLEX(CMPLX_PREC), ALLOCATABLE :: ZHP(:,:), ZGP(:,:)
 #endif
 
 #ifdef  USE_CPU
         INTEGER N1,N2,N3,N4
-        REAL :: CO(4,3)
+        REAL(REAL_PREC) :: CO(4,3)
 #endif
 #ifdef USE_GPU
         INTEGER RET
-        COMPLEX, DIMENSION(:,:,:), ALLOCATABLE :: ZHdiag, ZGdiag
+        COMPLEX(CMPLX_PREC), DIMENSION(:,:,:), ALLOCATABLE :: ZHdiag, 
+     $     ZGdiag
 #endif
-
-        PRINT*, "Em GHMATECD."
 
 *
 * TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
@@ -87,9 +88,9 @@
 
 !$OMP PARALLEL DO PRIVATE(I)
         DO I=1,NBE
-            ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
-            ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
-            ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
+            ZDFI(3*I-2) = COMPLEX(DFI(3*I-2),0.0)
+            ZDFI(3*I-1) = COMPLEX(DFI(3*I-1),0.0)
+            ZDFI(3*I  ) = COMPLEX(DFI(3*I),0.0)
         ENDDO
 !$OMP END PARALLEL DO
 *
@@ -292,7 +293,12 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         
 !        ZFI = MATMUL(ZG(1:NN, 1:NN), ZDFI)
 !        PRINT*, NN, 3*N
+
+#if CMPLX_PREC == 8
+        CALL ZGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, (0,0), ZFI, 1)
+#else
         CALL CGEMV('N', NN, NN, (1.0,0), ZG, NN, ZDFI, 1, (0,0), ZFI, 1)
+#endif
         t2 = OMP_GET_WTIME()
         PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
 
@@ -309,21 +315,23 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         
         IMPLICIT NONE 
 
-        COMPLEX, DIMENSION(3,3,NBE),INTENT(OUT) :: ZHdiag, ZGdiag
-        REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
+        COMPLEX(CMPLX_PREC), DIMENSION(3,3,NBE),INTENT(OUT) :: ZHdiag, 
+     $     ZGdiag
+        REAL(REAL_PREC), DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, 
+     $     GESTdiag
         
-        REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
-        COMPLEX,   INTENT(IN) :: ZGE,ZCS,ZCP
-        REAL, INTENT(IN) :: C1,C2,C3,C4,FR,PI
-        REAL, INTENT(IN) :: DELTA(3,3)
-        REAL, INTENT(IN) :: GI(NPG), OME(NPG)
+        REAL(REAL_PREC), DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
+        COMPLEX(CMPLX_PREC),   INTENT(IN) :: ZGE,ZCS,ZCP
+        REAL(REAL_PREC), INTENT(IN) :: C1,C2,C3,C4,FR,PI
+        REAL(REAL_PREC), INTENT(IN) :: DELTA(3,3)
+        REAL(REAL_PREC), INTENT(IN) :: GI(NPG), OME(NPG)
         INTEGER, INTENT(IN) :: N,NBE,NP,NPG
-        REAL, INTENT(IN) :: ETAS(3,N)
-        REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
+        REAL(REAL_PREC), INTENT(IN) :: ETAS(3,N)
+        REAL(REAL_PREC), DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
         INTEGER, DIMENSION(N, 4) :: CONE
 
         INTEGER :: N1, N2, N3, N4, I, J, II, JJ
-        REAL :: CO(4,3)
+        REAL(REAL_PREC) :: CO(4,3)
 
         ZGdiag = 0
         ZHdiag = 0
@@ -374,14 +382,15 @@ C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
 
       SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)
         IMPLICIT NONE
-        COMPLEX, INTENT(IN), DIMENSION(3*NBE,3*N) :: ZH,ZHP,ZG,ZGP
+        COMPLEX(CMPLX_PREC), INTENT(IN), DIMENSION(3*NBE,3*N) :: ZH,ZHP,
+     $     ZG,ZGP
         INTEGER, INTENT(IN) :: NBE, N  
 
         INTEGER :: i, j
         INTEGER :: N3, NBE3
         LOGICAL :: ghmatecd_asserted = .TRUE.
-        REAL :: sum_norms = 0, eps
-        REAL :: local_sum = 0, max_local_sum = 0
+        REAL(REAL_PREC) :: sum_norms = 0, eps
+        REAL(REAL_PREC) :: local_sum = 0, max_local_sum = 0
 
         eps = 1.5E-6*nbe
         N3   = N*3

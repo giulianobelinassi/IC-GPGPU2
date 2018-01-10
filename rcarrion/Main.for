@@ -28,20 +28,31 @@
 *
         USE omp_lib
 
-        IMPLICIT REAL (A-H,O-Y)
-        IMPLICIT COMPLEX (Z)
+        IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+        IMPLICIT COMPLEX(CMPLX_PREC) (Z)
         
-        INCLUDE 'Inputece.fd'
-        INCLUDE 'Normvec.fd'
-        INCLUDE 'Ghmatece.fd'
-        INCLUDE 'Inputecd.fd'
-        INCLUDE 'Ghmatecd.fd'
-        INCLUDE 'Interec.fd'
-        INCLUDE 'Outputec.fd'
-        INCLUDE 'Linsolve.fd'
+!        INCLUDE 'Inputece.fd'
+!        INCLUDE 'Normvec.fd'
+!        INCLUDE 'Ghmatece.fd'
+!        INCLUDE 'Inputecd.fd'
+!        INCLUDE 'Ghmatecd.fd'
+!        INCLUDE 'Interec.fd'
+!        INCLUDE 'Outputec.fd'
+!        INCLUDE 'Linsolve.fd'
+
+#include "Inputece.fd"
+#include "Normvec.fd"
+#include "Gauleg.fd"
+#include "Ghmatece.fd"
+#include "Inputecd.fd"
+#include "Ghmatecd.fd"
+#include "Interec.fd"
+#include "Outputec.fd"
+#include "Linsolve.fd"
 
 #ifdef USE_GPU
-        INCLUDE 'kernels/shared.fd'
+!        INCLUDE 'kernels/shared.fd'
+#include "kernels/shared.fd"
 #endif
 
 ! Talvez estes parâmetros sejam desnecessários uma vez que nesta versão
@@ -50,19 +61,22 @@
 C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         PARAMETER (NE=2200,NX=3*NE,NCOX=2200,NPIX=10,NFRX=7)
         COMMON INP,INQ,IPR,IPS,IPT
-        REAL, DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM, CYM, CZM
+        REAL(REAL_PREC), DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM
+        REAL(REAL_PREC), DIMENSION(:), ALLOCATABLE :: CYM, CZM
         INTEGER, ALLOCATABLE :: CONE(:,:), KODE(:)
-        REAL, DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
-        REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
-        REAL, DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag, GESTdiag
-        COMPLEX, DIMENSION(:,:), ALLOCATABLE :: ZH, ZG
-        COMPLEX, DIMENSION(:), ALLOCATABLE :: ZDFI, ZFI, ZDSOL, ZSSOL
+        REAL(REAL_PREC), DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
+        REAL(REAL_PREC), DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
+        REAL(REAL_PREC), DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag 
+        REAL(REAL_PREC), DIMENSION(:,:,:), ALLOCATABLE :: GESTdiag
+        COMPLEX(CMPLX_PREC), DIMENSION(:,:), ALLOCATABLE :: ZH, ZG
+        COMPLEX(CMPLX_PREC), DIMENSION(:), ALLOCATABLE :: ZDFI, ZFI 
+        COMPLEX(CMPLX_PREC), DIMENSION(:), ALLOCATABLE :: ZDSOL, ZSSOL
     
-        REAL, DIMENSION(:), ALLOCATABLE :: GI, OME
+        REAL(REAL_PREC), DIMENSION(:), ALLOCATABLE :: GI, OME
 
 
         DIMENSION DELTA(3,3)
-        REAL, DIMENSION(:,:), ALLOCATABLE :: ETAS
+        REAL(REAL_PREC), DIMENSION(:,:), ALLOCATABLE :: ETAS
         INTEGER i
         CHARACTER(len=100) :: input_e, input_d, output_e, output_d
         DOUBLE PRECISION :: t1, t2
@@ -116,8 +130,9 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 ! ACIONA A SUBROTINA QUE CALCULA OS PONTOS E PESOS DE GAUSS.        
         ALLOCATE(GI(NPG))
         ALLOCATE(OME(NPG))
-        CALL GAULEG(-1.0, 1.0, GI, OME, NPG)
-
+        CALL GAULEG(-1.0D0, 1.0D0, GI, OME, NPG)
+        PRINT*, GI
+        PRINT*, OME
 
 ! Aciona a rotina que calcula as normas originalmente usadas em
 ! Ghmatece.for Ghmatecd.for e Interec.for. Isto evita calculos
@@ -149,10 +164,21 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 *
 * ACIONA ROTINA QUE LÊ OS DADOS DE ENTRADA PARA O PROBLEMA DINÂMICO
 *
+
+        PRINT*, HESTdiag
+        PRINT*, GESTdiag
+
+
         CALL INPUTECD (CX,CY,CZ,CXI,CYI,CZI,KODE,BC,NFR,AFR,NE,NX,
      $     NCOX,NPIX,NFRX,CONE,CXM,CYM,CZM,N,NBE,NP,NPG,GE,RNU,RMU,
      $     L,FR,DAM,RHO,ZGE,ZCS,ZCP)
-       
+      
+        PRINT*, FR
+
+!        PRINT*, CX,CY,CZ,CXI,CYI,CZI,KODE,BC,NFR,AFR,NE,NX,
+!     $     NCOX,NPIX,NFRX,CONE,CXM,CYM,CZM,N,NBE,NP,NPG,GE,RNU,RMU,
+!     $     L,FR,DAM,RHO,ZGE,ZCS,ZCP
+
         
         NN=3*NBE
         ALLOCATE(DFI(NN), STAT = ITER)

@@ -4,17 +4,19 @@
      $      ZSSOL,NE,NX,NCOX,NPIX,CONE,ZGE,ZCS,ZCP,DELTA,PI,FR,NPG,L,N,
      $      NBE,RHO,ETAS,GI,OME,NP)
             
-            IMPLICIT REAL (A-H,O-Y)
-            IMPLICIT COMPLEX (Z)
-            REAL, DIMENSION(:), INTENT(IN) :: CX, CY, CZ
-            REAL, DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
-            COMPLEX, DIMENSION(3,3) :: ZHELEM, ZGELEM 
-            REAL, INTENT(IN) :: DELTA(3,3)
-            COMPLEX, DIMENSION(3*NBE), INTENT(INOUT) :: ZDFI, ZFI
-            COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDSOL(:), ZSSOL(:)
+            IMPLICIT REAL(REAL_PREC) (A-H,O-Y)
+            IMPLICIT COMPLEX(CMPLX_PREC) (Z)
+            REAL(REAL_PREC), DIMENSION(:), INTENT(IN) :: CX, CY, CZ
+            REAL(REAL_PREC), DIMENSION(L),  INTENT(IN) :: CXI, CYI, CZI
+            COMPLEX(CMPLX_PREC), DIMENSION(3,3) :: ZHELEM, ZGELEM 
+            REAL(REAL_PREC), INTENT(IN) :: DELTA(3,3)
+            COMPLEX(CMPLX_PREC), DIMENSION(3*NBE), INTENT(INOUT) :: 
+     $         ZDFI, ZFI
+            COMPLEX(CMPLX_PREC), INTENT(OUT), ALLOCATABLE :: 
+     $         ZDSOL(:), ZSSOL(:)
             INTEGER, INTENT(IN) ::  CONE(N,4),KODE(3*NBE)
             DIMENSION ZD(3,3,3),ZS(3,3,3)
-            REAL, INTENT(IN) :: ETAS(3,NX)
-            REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME
+            REAL(REAL_PREC), INTENT(IN) :: ETAS(3,NX)
+            REAL(REAL_PREC), DIMENSION(NPG), INTENT(IN) :: GI, OME
           END 
         END INTERFACE

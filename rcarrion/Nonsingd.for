@@ -13,18 +13,18 @@
 *
         IMPLICIT NONE
         COMMON INP,INQ,IPR,IPS,IPT
-        COMPLEX, INTENT(OUT) :: ZHELEM(3,3), ZGELEM(3,3)
-        REAL, INTENT(IN):: CO(4,3), CXP, CYP, CZP, ETA(3)
-        COMPLEX, INTENT(IN ) :: ZGE, ZCS, ZCP
-        REAL, INTENT(IN):: DELTA, PI, FR
+        COMPLEX(CMPLX_PREC), INTENT(OUT) :: ZHELEM(3,3), ZGELEM(3,3)
+        REAL(REAL_PREC), INTENT(IN):: CO(4,3), CXP, CYP, CZP, ETA(3)
+        COMPLEX(CMPLX_PREC), INTENT(IN ) :: ZGE, ZCS, ZCP
+        REAL(REAL_PREC), INTENT(IN):: DELTA, PI, FR
         INTEGER, INTENT(IN)         :: NPG
-        REAL, INTENT(IN):: GI(NPG), OME(NPG)
+        REAL(REAL_PREC), INTENT(IN):: GI(NPG), OME(NPG)
         INTEGER INP, INQ, IPR, IPS, IPT
 
-        COMPLEX ZU(3,3), ZT(3,3)
-        REAL P(2,4), XJ(2,3), F(4)
-        REAL G1, G2, P1, P2, P12, SP, SM, RP, RM, TEMP, DET
-        REAL CXG, CYG, CZG
+        COMPLEX(CMPLX_PREC) ZU(3,3), ZT(3,3)
+        REAL(REAL_PREC) P(2,4), XJ(2,3), F(4)
+        REAL(REAL_PREC) G1, G2, P1, P2, P12, SP, SM, RP, RM, TEMP, DET
+        REAL(REAL_PREC) CXG, CYG, CZG
         INTEGER i, j, k, ig, jg
 
 *
