@@ -126,9 +126,6 @@ void cuda_interec1_(int* n,
 	error = cudaMemcpy(device_czi, czi, (*l)*sizeof(FREAL), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-
-	cudaDeviceSynchronize();
-
 	ghmatecd_kernel<<<numBlocks, threadsPerBlock, shared_mem_size>>>(
 						device_cone,
 						device_cx,
@@ -158,6 +155,8 @@ void cuda_interec1_(int* n,
 						device_return_status
 						);
     
+	cudaDeviceSynchronize();
+
 	error = cudaMalloc(&device_zdsol, 3*(*l)*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 

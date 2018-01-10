@@ -77,9 +77,10 @@
             STOP
         ENDIF
 
-#ifdef USE_CPU
         ZDSOL = 0
         ZSSOL = 0
+
+#ifdef USE_CPU
 
         t1 = OMP_GET_WTIME()
 
