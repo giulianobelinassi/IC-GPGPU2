@@ -77,11 +77,10 @@
             STOP
         ENDIF
 
-        ZDSOL = 0
-        ZSSOL = 0
 
 #ifdef USE_CPU
 
+        ZDSOL = 0
         t1 = OMP_GET_WTIME()
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
@@ -184,6 +183,7 @@ C            ETA(3)=C/R
 * CÁLCULO DAS TENSÕES EM PONTOS INTERNOS
 *
 
+        ZSSOL = 0
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
 !$OMP& REDUCTION(+:ZSSOL)
