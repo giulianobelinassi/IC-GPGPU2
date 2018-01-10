@@ -1,8 +1,0 @@
- Tempo gasto alocando os vetores compartilhados:    2.4682810306549072     
- GHMATECE: Tempo na GPU:   0.64084911346435547     
- GHMATECE: Corpo rigido:    3.8510084152221680E-002
- Em GHMATECD.
- GHMATECD: Tempo na GPU:    1.2964539527893066     
- GHMATECD: Tempo gasto no restante:    2.6838779449462891E-003
- LINSOLVE: Tempo na GPU:   0.41143083572387695     
- INTEREC1: Tempo na CPU:    2.5835990905761719E-002
