@@ -321,6 +321,9 @@ int main(int argc, char* argv[])
 	validity &= !has_nans(ni,  3, deslocamentos);
 	validity &= !has_nans(ni,  9, sigmas);
 	
+	if (validity == 0)
+		printf("NaN in calculations = %d\n", (unsigned int) validity);
+
 	get_nos_contorno(nbe, nos_contorno_sol, file_sol);
 	get_tractions(nbe, tractions_sol, file_sol);
 	get_deslocamentos_internos(ni, deslocamentos_sol, file_sol);
@@ -331,7 +334,6 @@ int main(int argc, char* argv[])
 	validity &= compare_deslocamentos_internos(ni, deslocamentos, deslocamentos_sol);
 	validity &= compare_sigmas_internos(ni, sigmas, sigmas_sol);
 
-//	printf("validity = %d\n", (unsigned int) validity);
 
 	if (validity)
 		return 0;

@@ -184,24 +184,28 @@ void cuda_interec1_(int* n,
 
     stats = cublasCreate(&handle);
 	cublas_assert(stats);
-   
-#if FREAL == double
-	stats = cublasZgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zg, 3*(*l), (cuDoubleComplex*) device_zdfi, 1, (cuDoubleComplex*) &zero, (cuDoubleComplex*) device_zdsol, 1);
-    cublas_assert(stats);
-	cudaDeviceSynchronize();
-    
-	stats = cublasZgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuDoubleComplex*) &(minus_one), (cuDoubleComplex*) device_zh, 3*(*l), (cuDoubleComplex*) device_zfi, 1, (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zdsol, 1);
-    cublas_assert(stats);
-	cudaDeviceSynchronize(); 
-#else
-	stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &one, (cuComplex*) device_zg, 3*(*l), (cuComplex*) device_zdfi, 1, (cuComplex*) &zero, (cuComplex*) device_zdsol, 1);
-    cublas_assert(stats);
-	cudaDeviceSynchronize();
-    
-	stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &(minus_one), (cuComplex*) device_zh, 3*(*l), (cuComplex*) device_zfi, 1, (cuComplex*) &one, (cuComplex*) device_zdsol, 1);
-    cublas_assert(stats);
-	cudaDeviceSynchronize(); 
-#endif
+  
+    if (sizeof(FREAL) == 8)
+    {
+        stats = cublasZgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zg, 3*(*l), (cuDoubleComplex*) device_zdfi, 1, (cuDoubleComplex*) &zero, (cuDoubleComplex*) device_zdsol, 1);
+        cublas_assert(stats);
+        cudaDeviceSynchronize();
+        
+        stats = cublasZgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuDoubleComplex*) &(minus_one), (cuDoubleComplex*) device_zh, 3*(*l), (cuDoubleComplex*) device_zfi, 1, (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zdsol, 1);
+        cublas_assert(stats);
+        cudaDeviceSynchronize(); 
+    }
+    else
+    {
+        stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &one, (cuComplex*) device_zg, 3*(*l), (cuComplex*) device_zdfi, 1, (cuComplex*) &zero, (cuComplex*) device_zdsol, 1);
+        cublas_assert(stats);
+        cudaDeviceSynchronize();
+        
+        stats = cublasCgemv(handle, CUBLAS_OP_N, 3*(*l), 3*(*nbe), (cuComplex*) &(minus_one), (cuComplex*) device_zh, 3*(*l), (cuComplex*) device_zfi, 1, (cuComplex*) &one, (cuComplex*) device_zdsol, 1);
+        cublas_assert(stats);
+        cudaDeviceSynchronize(); 
+    }
+
 	error = cudaMemcpy(zdsol, device_zdsol, 3*(*l)*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
 	cuda_assert(error);
 

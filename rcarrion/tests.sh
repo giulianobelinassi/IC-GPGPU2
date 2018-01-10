@@ -109,4 +109,91 @@ else
 	print_failed
 fi
 
+echo -e "Teste com precisao dupla"
+make clean
+FPREC=double make gpu EXTRA="-DTEST_CUDA" -j 4
+
+#remove os arquivos antigos.
+rm -f SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
+
+echo -e "Dado a execução do programa 'main' com 240 pontos"
+
+optirun --no-xorg ./main ESOLO240E_-5+5.DAT ESOLO240D_-5+5.DAT SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT
+
+sleep 0.2s
+
+echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
+if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é compatível em precião ao SSOLO240D_-5+5.SOL ?"
+./dtester "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"
+if [ $? -eq 0 ]; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "Dado a execução do programa 'main' com 240 pontos e singularidade na GPU"
+optirun --no-xorg ./main ESOLO240E_-5+5.DAT ESOLO240D_-5+5.DAT SSOLO240E_-5+5.DAT SSOLO240D_-5+5.DAT --fast
+
+sleep 0.2s
+
+echo -e "O arquivo gerado SSOLO240E_-5+5.DAT é igual ao SSOLO240E_-5+5.SOL ?"
+if cmp -s "SSOLO240E_-5+5.DAT" "SSOLO240E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO240D_-5+5.DAT é compatível em precião ao SSOLO240D_-5+5.SOL ?"
+./dtester "SSOLO240D_-5+5.DAT" "SSOLO240D_-5+5.SOL"
+if [ $? -eq 0 ]; then
+	print_ok
+else 
+	print_failed
+fi
+
+
+echo -e "Dado a execução do programa 'main' com 2160 pontos"
+
+optirun --no-xorg ./main ESOLO2160E_-5+5.DAT ESOLO2160D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT
+
+echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
+if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
+./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
+if [ $? -eq 0 ]; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "Dado a execução do programa 'main' com 2160 pontos e singularidade na GPU"
+
+optirun --no-xorg ./main ESOLO2160E_-5+5.DAT ESOLO2160D_-5+5.DAT SSOLO2160E_-5+5.DAT SSOLO2160D_-5+5.DAT --fast
+
+echo -e "O arquivo gerado SSOLO2160E_-5+5.DAT é igual ao SSOLO2160E_-5+5.SOL ?"
+if cmp -s "SSOLO2160E_-5+5.DAT" "SSOLO2160E_-5+5.SOL"; then
+	print_ok
+else 
+	print_failed
+fi
+
+echo -e "O arquivo gerado SSOLO2160D_-5+5.DAT é compatível em precisão ao SSOLO2160D_-5+5.SOL ?"
+./dtester "SSOLO2160D_-5+5.DAT" "SSOLO2160D_-5+5.SOL"
+if [ $? -eq 0 ]; then
+	print_ok
+else 
+	print_failed
+fi
+
 echo -e "Este é o fim dos testes.\n\n"

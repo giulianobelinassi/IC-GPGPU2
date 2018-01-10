@@ -1,16 +1,16 @@
 FC      = gfortran-5
-NVCC    = nvcci
+NVCC    = nvcc
 
 ifeq ($(FPREC), double)
-NVPREC = -DREAL=double
+NVPREC = -DFREAL=double
 FPREC  = -fdefault-real-8 -fdefault-double-8
 else
-NVPREC = -DREAL=float
+NVPREC = -DFREAL=float
 FPREC  = 
 endif
 
 FP_FLAGS=-fdefault-real-8 -fdefault-double-8
-FCFLAGS = $(EXTRA) $(FPREC) -g -cpp -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast -funroll-loops
+FCFLAGS = $(EXTRA) $(FPREC) -ffpe-trap=invalid -g -cpp -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast -funroll-loops
 PARALLEL= -fopenmp
 NVFLAGS = $(EXTRA) $(NVPREC) -use_fast_math -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp

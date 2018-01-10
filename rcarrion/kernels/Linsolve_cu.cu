@@ -25,13 +25,9 @@ void cuda_linsolve_(
 {
     cudaError_t error;
 
-#if FREAL == double
-    magmaDoubleComplex_ptr device_zh;
-    magmaDoubleComplex_ptr device_zfi;
-#else
-    magmaFloatComplex_ptr device_zh;
-    magmaFloatComplex_ptr device_zfi;
-#endif
+	thrust::complex<FREAL>* device_zh;
+	thrust::complex<FREAL>* device_zfi;
+
 	int status;
 	int* piv = (int*) malloc((*nn)*sizeof(int));
 
@@ -57,11 +53,11 @@ void cuda_linsolve_(
 	error = cudaMemcpy(device_zfi, zfi, (*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyHostToDevice);
 	cuda_assert(error);
 
-#if FREAL == double
-	magma_zgesv_gpu(*nn, 1, device_zh, *nn, piv, device_zfi, *nn, &status);
-#else
-	magma_cgesv_gpu(*nn, 1, device_zh, *nn, piv, device_zfi, *nn, &status);
-#endif
+	if (sizeof(FREAL) == 8)
+		magma_zgesv_gpu(*nn, 1, (magmaDoubleComplex_ptr) device_zh, *nn, piv, (magmaDoubleComplex_ptr) device_zfi, *nn, &status);
+	else
+		magma_cgesv_gpu(*nn, 1, (magmaFloatComplex_ptr) device_zh, *nn, piv, (magmaFloatComplex_ptr) device_zfi, *nn, &status);
+	
 	magma_finalize();
 	lu_assert(status);
 
