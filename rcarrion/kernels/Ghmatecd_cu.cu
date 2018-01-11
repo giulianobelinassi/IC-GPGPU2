@@ -29,7 +29,7 @@ __global__ void ghmatecd_kernel(
                            FREAL c2,
                            FREAL c3,
                            FREAL c4,
-                           int npg,
+//                           int npg,
                            int n,
                            int nbe,
                            int dim_cone,
@@ -44,7 +44,17 @@ __global__ void ghmatecd_kernel(
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x + column_pad;
 
-	const int gelem_pad = 3*3*npg*npg;
+	const int npg = blockDim.y;
+
+	const int tid = npg*threadIdx.y + threadIdx.x;
+	const int lane = tid % 32;
+	const int warp = tid / 32;
+	const int num_warps = (npg*npg + 31)/32;
+
+	const int lane_x = lane % 3;
+	const int lane_y = lane / 3;
+
+	const int gelem_pad = 3*3*num_warps;
 	extern __shared__ thrust::complex<FREAL> s_[];
 	
 	int i, j;
@@ -63,18 +73,15 @@ __global__ void ghmatecd_kernel(
 
 	thrust::complex<FREAL> zhi, zgi;
 
+	float zhi_real, zhi_imag, zgi_real, zgi_imag;
+
 	int iii, jjj;
 
-#define zhelem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
-#define zgelem(i, j, k) (s_ + gelem_pad)[3*npg*npg*(i) + npg*npg*(j) + (k)]
-/*
-	for (iii = 0; iii < 3; ++iii)
-		for (jjj = 0; jjj < 3; ++jjj)
-			zgelem(iii, jjj, npg*ig + jg) = 0;
-	for (iii = 0; iii < 3; ++iii)
-		for (jjj = 0; jjj < 3; ++jjj)
-			zhelem(iii, jjj, npg*ig + jg) = 0;
-*/
+
+#define zhelem(i, j, k) s_[3*num_warps*(i) + num_warps*(j) + (k)]
+#define zgelem(i, j, k) (s_ + gelem_pad)[3*num_warps*(i) + num_warps*(j) + (k)]
+	
+	
 	if (threadIdx.x < 4 && threadIdx.y == 0)
 	{
 		co[0][threadIdx.x] = cx[cone[dim_cone*threadIdx.x + jj] - 1];
@@ -202,10 +209,27 @@ __global__ void ghmatecd_kernel(
             }
           
             zgi = zgi*p12;
-            zhi = zhi*p12;
+			zgi_real = zgi.real();
+			zgi_imag = zgi.imag();
 
-            zgelem(j, i, jg*npg + ig) = zgi;
-            zhelem(j, i, jg*npg + ig) = zhi;
+			for (int offset = 16; offset > 0; offset = offset/2)
+				zgi_real += __shfl_down(zgi_real, offset);
+			for (int offset = 16; offset > 0; offset = offset/2)
+				zgi_imag += __shfl_down(zgi_imag, offset);
+			
+            zhi = zhi*p12;
+			zhi_real = zhi.real();
+			zhi_imag = zhi.imag();
+			for (int offset = 16; offset > 0; offset = offset/2)
+				zhi_real += __shfl_down(zhi_real, offset);
+			for (int offset = 16; offset > 0; offset = offset/2)
+				zhi_imag += __shfl_down(zhi_imag, offset);
+
+			if (lane == 0)
+			{
+				zhelem(j, i, warp) = thrust::complex<float>(zhi_real, zhi_imag);
+				zgelem(j, i, warp) = thrust::complex<float>(zgi_real, zgi_imag);
+			}
         }
     }
 	__syncthreads();
@@ -213,11 +237,11 @@ __global__ void ghmatecd_kernel(
 	if (jg < 3 && ig < 3)
 	{
 		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
-		zg[index] = thrust::reduce(thrust::seq, &zgelem(jg, ig, 0), &zgelem(jg, ig, npg*npg));
+		zg[index] = thrust::reduce(thrust::seq, &zgelem(jg, ig, 0), &zgelem(jg, ig, num_warps));
 	} else if ((npg-3) <= jg && jg < npg && (npg-3) <= ig && ig < npg) //Split the warps
 	{
 		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + (ig-(npg-3)) + (3*nbe)*(jg-(npg-3));
-		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-(npg-3)), (ig-(npg-3)), 0), &zhelem((jg-(npg-3)), (ig-(npg-3)), npg*npg));
+		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-(npg-3)), (ig-(npg-3)), 0), &zhelem((jg-(npg-3)), (ig-(npg-3)), num_warps));
 	}
 
 //	} else if (3 <= jg && jg  < 6 && 3 <= ig && ig < 6)
@@ -321,7 +345,7 @@ void cuda_ghmatecd_(int* nbe,
 							*c2,
 							*c3,
 							*c4,
-							*npg,
+//							*npg,
 							*n,
 							*nbe,
 							*n,
