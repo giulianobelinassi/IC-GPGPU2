@@ -43,6 +43,17 @@ void rigid_body_c_(int* nbe,
 
 }
 
+static __device__ __inline__ uint32_t __mylaneid(){    
+  uint32_t laneid;    
+  asm volatile("mov.u32 %0, %%laneid;" : "=r"(laneid));    
+  return laneid;
+}
+
+static __device__ __inline__ uint32_t __mywarpid(){    
+  uint32_t warpid;    
+  asm volatile("mov.u32 %0, %%warpid;" : "=r"(warpid));    
+  return warpid;
+}
 
 __global__ void ghmatece_kernel(
                            int cone[],
@@ -59,7 +70,7 @@ __global__ void ghmatece_kernel(
                            FREAL ome[],
                            FREAL c3,
                            FREAL c4,
-                           int npg,
+//                           int npg,
                            int n,
                            int nbe,
 						   int column_pad,
@@ -72,7 +83,16 @@ __global__ void ghmatece_kernel(
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x + column_pad;
 
-	const int zgelem_pad = 3*3*npg*npg;
+	const int npg = blockDim.y;
+
+	const int tid = npg*threadIdx.y + threadIdx.x;
+	const int lane = tid % 32;
+	const int warp = tid / 32;
+	const int num_warps = (npg*npg + 31)/32;
+
+	const int lane_x = lane % 3;
+	const int lane_y = lane / 3;
+
 	extern __shared__ FREAL s_[];
 	
 	int i, j;
@@ -87,28 +107,33 @@ __global__ void ghmatece_kernel(
 	FREAL r1, r2, r3, r, drn, rd[3];
 	FREAL hei;
 
+
 //Manage the shared memory manually since apparently there is no other way
 //to allocate two cubes in dynamic allocated shared memory.
 //see https://devblogs.nvidia.com/parallelforall/using-shared-memory-cuda-cc/
-#define helem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
+//#define helem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
+#define helem_shared(i, j, k) s_[3*num_warps*(i) + 2*(j) + (k)]
+
 
 	int iii, jjj;
+	
+	if (lane < 9)
+	{
+		helem_shared(lane_y, lane_x, warp) = 0;
+	}
 
-	for (iii = 0; iii < 3; ++iii)
-		for (jjj = 0; jjj < 3; ++jjj)
-			helem(iii, jjj, npg*ig + jg) = 0;
+	if (threadIdx.x < 4 && threadIdx.y == 0)
+	{
+		co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
+		co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
+		co[2][threadIdx.x] = cz[cone[n*threadIdx.x + jj] - 1];
+		rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
+	}
+	__syncthreads();
 
     if (ii != jj)
     {
 
-        if (threadIdx.x < 4 && threadIdx.y == 0)
-        {
-            co[0][threadIdx.x] = cx[cone[n*threadIdx.x + jj] - 1];
-            co[1][threadIdx.x] = cy[cone[n*threadIdx.x + jj] - 1];
-            co[2][threadIdx.x] = cz[cone[n*threadIdx.x + jj] - 1];
-            rn_cached[threadIdx.x] = rn[jj][threadIdx.x];
-        }
-        __syncthreads();
 
         cxp = cxm[ii];
         cyp = cym[ii];
@@ -191,18 +216,24 @@ __global__ void ghmatece_kernel(
                     c4*(rd[j]*rn_cached[i]-rd[i]*rn_cached[j]));
 
                 hei = hei*p12;
-
-                helem(j, i, jg*npg + ig) = hei;
+ 
+				for (int offset = 16; offset > 0; offset = offset/2)
+					hei += __shfl_down(hei, offset);
+					
+				if (lane == 0)
+					helem_shared(j, i, warp) = hei;
             }
         }
+
     } 
     __syncthreads();
 	if (jg < 3 && ig < 3)
 	{
 
 		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
+//		hest[index] = helem_shared(jg, ig, 0) + helem_shared(jg, ig, 1);
 		
-		hest[index] = thrust::reduce(thrust::seq, &helem(jg, ig, 0), &helem(jg, ig, npg*npg));
+		hest[index] = thrust::reduce(thrust::seq, &helem_shared(jg, ig, 0), &helem_shared(jg, ig, num_warps));
 	}
 }
 
@@ -317,7 +348,9 @@ void cuda_ghmatece_(int* nbe,
                    )
 {
 	dim3 threadsPerBlock(*npg,*npg);
-	int shared_mem_size = 3*3*(*npg)*(*npg)*sizeof(FREAL);
+//	int shared_mem_size = 3*3*(*npg)*(*npg)*sizeof(FREAL);
+	int num_of_warps = ((*npg)*(*npg) + 31)/32;
+	int shared_mem_size = 3*3*num_of_warps*sizeof(FREAL); 
 	size_t column_size = (3*(*nbe))*sizeof(FREAL);
 	
 	cudaError_t error;
@@ -368,7 +401,7 @@ void cuda_ghmatece_(int* nbe,
 							device_ome,
 							*c3,
 							*c4,
-							*npg,
+//							*npg,
 							*n,
 							*nbe,
 							starting_column,
