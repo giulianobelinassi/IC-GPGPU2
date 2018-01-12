@@ -1,10 +1,12 @@
-      SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
+      SUBROUTINE LINSOLVE(NN, N, ZH, ZG, ZFI, DFI, ZDFI)
         USE omp_lib
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(INOUT) :: ZH(NN, NN)
-        COMPLEX, INTENT(INOUT) :: ZFI(NN)
+        COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
+		REAL, INTENT(IN) :: DFI(NN)
+        COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
+        COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 
@@ -22,8 +24,9 @@
 #endif
 
 #ifdef USE_CPU
-        INTEGER :: stats
+        INTEGER :: stats, stats1, stats2
         INTEGER, ALLOCATABLE :: PIV(:)
+#endif
 
 #ifdef TEST_CUDA
         ALLOCATE(ZH_ORIG(NN, NN))
@@ -32,6 +35,38 @@
         ZFI_ORIG = ZFI
 #endif
         t1 = OMP_GET_WTIME()
+
+        ALLOCATE(ZDFI(NN), STAT = stats1)
+        ALLOCATE(ZFI(NN) , STAT = stats2)
+        IF (stats1 /= 0 .OR. stats2 /= 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE"
+        ENDIF
+
+!
+! TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
+!
+		ZDFI = DFI
+
+!!$OMP PARALLEL DO PRIVATE(I)
+!        DO I=1,NBE
+!            ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
+!            ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
+!            ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
+!        ENDDO
+!!$OMP END PARALLEL DO
+
+
+! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
+        
+        IF (SIZEOF(1.0) == 8) THEN
+            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSEIF (SIZEOF(1.0) == 4) THEN
+            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSE
+            PRINT*, "ERRO FATAL: Precisão desconhecida"
+            STOP
+        ENDIF
+#ifdef USE_CPU
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE"

@@ -9,8 +9,7 @@
 
 
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,ZG,
-     $         ZFI,DFI,
-     $    ZDFI,KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
+     $    KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
      $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,FAST_SING)
         
         USE omp_lib
@@ -31,9 +30,6 @@
         REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
 
         COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
-        COMPLEX, DIMENSION(:), INTENT(OUT), ALLOCATABLE:: ZFI
-        REAL, INTENT(IN) :: DFI(3*NBE)
-        COMPLEX, INTENT(OUT), ALLOCATABLE :: ZDFI(:)
         INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
         REAL, INTENT(IN) :: DELTA(3,3),PI
         INTEGER, INTENT(IN) :: L,N,NBE,NP,NPG
@@ -74,24 +70,8 @@
 
         PRINT*, "Em GHMATECD."
 
-*
-* TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
-*
         NN = 3*NBE
 
-        ALLOCATE(ZDFI(NN), STAT = stats1)
-        ALLOCATE(ZFI(NN) , STAT = stats2)
-        IF (stats1 /= 0 .OR. stats2 /= 0) THEN
-            PRINT*, "MEMÓRIA INSUFICIENTE"
-        ENDIF
-
-!$OMP PARALLEL DO PRIVATE(I)
-        DO I=1,NBE
-            ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
-            ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
-            ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
-        ENDDO
-!$OMP END PARALLEL DO
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
@@ -286,18 +266,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
             ENDIF
         ENDDO
 
-*
-* FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
-*
-        
-        IF (SIZEOF(1.0) == 8) THEN
-            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSEIF (SIZEOF(1.0) == 4) THEN
-            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSE
-            PRINT*, "ERRO FATAL: Precisão desconhecida"
-            STOP
-        ENDIF
 
         t2 = OMP_GET_WTIME()
         PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
