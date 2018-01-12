@@ -39,8 +39,8 @@ __global__ void ghmatecd_kernel(
                            )
 {
 
-	const int ig = threadIdx.y;
-	const int jg = threadIdx.x;
+	const int ig = threadIdx.x;
+	const int jg = threadIdx.y;
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x + column_pad;
 
@@ -73,7 +73,7 @@ __global__ void ghmatecd_kernel(
 
 	thrust::complex<FREAL> zhi, zgi;
 
-	float zhi_real, zhi_imag, zgi_real, zgi_imag;
+	FREAL zhi_real, zhi_imag, zgi_real, zgi_imag;
 
 	int iii, jjj;
 
@@ -212,43 +212,52 @@ __global__ void ghmatecd_kernel(
 			zgi_real = zgi.real();
 			zgi_imag = zgi.imag();
 
-			for (int offset = 16; offset > 0; offset = offset/2)
-				zgi_real += __shfl_down(zgi_real, offset);
-			for (int offset = 16; offset > 0; offset = offset/2)
-				zgi_imag += __shfl_down(zgi_imag, offset);
-			
             zhi = zhi*p12;
 			zhi_real = zhi.real();
 			zhi_imag = zhi.imag();
+
 			for (int offset = 16; offset > 0; offset = offset/2)
-				zhi_real += __shfl_down(zhi_real, offset);
-			for (int offset = 16; offset > 0; offset = offset/2)
-				zhi_imag += __shfl_down(zhi_imag, offset);
+			{	zgi_real += shfl(zgi_real, offset);
+				zgi_imag += shfl(zgi_imag, offset);
+				zhi_real += shfl(zhi_real, offset);
+				zhi_imag += shfl(zhi_imag, offset);
+			}
 
 			if (lane == 0)
 			{
-				zhelem(j, i, warp) = thrust::complex<float>(zhi_real, zhi_imag);
-				zgelem(j, i, warp) = thrust::complex<float>(zgi_real, zgi_imag);
+				zhelem(j, i, warp) = thrust::complex<FREAL>(zhi_real, zhi_imag);
+				zgelem(j, i, warp) = thrust::complex<FREAL>(zgi_real, zgi_imag);
 			}
         }
     }
 	__syncthreads();
-	
-	if (jg < 3 && ig < 3)
-	{
-		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
-		zg[index] = thrust::reduce(thrust::seq, &zgelem(jg, ig, 0), &zgelem(jg, ig, num_warps));
-	} else if ((npg-3) <= jg && jg < npg && (npg-3) <= ig && ig < npg) //Split the warps
-	{
-		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + (ig-(npg-3)) + (3*nbe)*(jg-(npg-3));
-		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-(npg-3)), (ig-(npg-3)), 0), &zhelem((jg-(npg-3)), (ig-(npg-3)), num_warps));
-	}
 
-//	} else if (3 <= jg && jg  < 6 && 3 <= ig && ig < 6)
-//	{
-//		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + (ig-3) + (3*nbe)*(jg-3);
-//		zh[index] = thrust::reduce(thrust::seq, &zhelem((jg-3), (ig-3), 0), &zhelem((jg-3), (ig-3), npg*npg));
-//	}
+	int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + lane_x + (3*nbe)*lane_y;
+	if (num_warps == 1)
+	{	
+		if (lane < 9)
+		{
+			// No need for reduction.
+			zg[index] = zgelem(lane_y, lane_x, 0);
+			zh[index] = zhelem(lane_y, lane_x, 0);
+		}
+	}
+	else
+	{
+		switch (warp)
+		{
+			case 0:
+			if (lane < 9)
+				zg[index] = thrust::reduce(thrust::seq, &zgelem(lane_y, lane_x, 0), &zgelem(lane_y, lane_x, num_warps));
+			break;
+
+			case 1:
+			if (lane < 9)
+				zh[index] = thrust::reduce(thrust::seq, &zhelem(lane_y, lane_x, 0), &zhelem(lane_y, lane_x, num_warps));
+			break;
+		}
+	}
+	
 }
 
 
@@ -274,8 +283,8 @@ void cuda_ghmatecd_(int* nbe,
 {
 	
 	size_t column_size = 2*(3*(*nbe))*sizeof(thrust::complex<FREAL>);
-	
-	int shared_mem_size = 2*3*3*(*npg)*(*npg)*sizeof(thrust::complex<FREAL>);
+	int num_of_warps = ((*npg)*(*npg) + 31)/32;
+	int shared_mem_size = 2*3*3*num_of_warps*sizeof(thrust::complex<FREAL>);
 	cudaError_t error;
 	
 	thrust::complex<FREAL>* device_zh;

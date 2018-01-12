@@ -43,18 +43,6 @@ void rigid_body_c_(int* nbe,
 
 }
 
-static __device__ __inline__ uint32_t __mylaneid(){    
-  uint32_t laneid;    
-  asm volatile("mov.u32 %0, %%laneid;" : "=r"(laneid));    
-  return laneid;
-}
-
-static __device__ __inline__ uint32_t __mywarpid(){    
-  uint32_t warpid;    
-  asm volatile("mov.u32 %0, %%warpid;" : "=r"(warpid));    
-  return warpid;
-}
-
 __global__ void ghmatece_kernel(
                            int cone[],
                            FREAL cx[],
@@ -78,8 +66,8 @@ __global__ void ghmatece_kernel(
                            )
 {
 
-	const int ig = threadIdx.y;
-	const int jg = threadIdx.x;
+	const int ig = threadIdx.x;
+	const int jg = threadIdx.y;
 	const int ii = blockIdx.y;
 	const int jj = blockIdx.x + column_pad;
 
@@ -107,12 +95,11 @@ __global__ void ghmatece_kernel(
 	FREAL r1, r2, r3, r, drn, rd[3];
 	FREAL hei;
 
-
 //Manage the shared memory manually since apparently there is no other way
 //to allocate two cubes in dynamic allocated shared memory.
 //see https://devblogs.nvidia.com/parallelforall/using-shared-memory-cuda-cc/
 //#define helem(i, j, k) s_[3*npg*npg*(i) + npg*npg*(j) + (k)]
-#define helem_shared(i, j, k) s_[3*num_warps*(i) + 2*(j) + (k)]
+#define helem_shared(i, j, k) s_[3*num_warps*(i) + num_warps*(j) + (k)]
 
 
 	int iii, jjj;
@@ -216,9 +203,9 @@ __global__ void ghmatece_kernel(
                     c4*(rd[j]*rn_cached[i]-rd[i]*rn_cached[j]));
 
                 hei = hei*p12;
- 
+
 				for (int offset = 16; offset > 0; offset = offset/2)
-					hei += __shfl_down(hei, offset);
+					hei += shfl(hei, offset);
 					
 				if (lane == 0)
 					helem_shared(j, i, warp) = hei;
@@ -231,8 +218,6 @@ __global__ void ghmatece_kernel(
 	{
 
 		int index = 3*blockIdx.y + (3*nbe)*3*blockIdx.x + ig + (3*nbe)*jg;
-//		hest[index] = helem_shared(jg, ig, 0) + helem_shared(jg, ig, 1);
-		
 		hest[index] = thrust::reduce(thrust::seq, &helem_shared(jg, ig, 0), &helem_shared(jg, ig, num_warps));
 	}
 }
