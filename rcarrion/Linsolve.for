@@ -28,12 +28,6 @@
         INTEGER, ALLOCATABLE :: PIV(:)
 #endif
 
-#ifdef TEST_CUDA
-        ALLOCATE(ZH_ORIG(NN, NN))
-        ALLOCATE(ZHP(NN, NN))
-        ZH_ORIG = ZH
-        ZFI_ORIG = ZFI
-#endif
         t1 = OMP_GET_WTIME()
 
         ALLOCATE(ZDFI(NN), STAT = stats1)
@@ -47,14 +41,6 @@
 !
 		ZDFI = DFI
 
-!!$OMP PARALLEL DO PRIVATE(I)
-!        DO I=1,NBE
-!            ZDFI(3*I-2) = CMPLX(DFI(3*I-2),0.0)
-!            ZDFI(3*I-1) = CMPLX(DFI(3*I-1),0.0)
-!            ZDFI(3*I  ) = CMPLX(DFI(3*I),0.0)
-!        ENDDO
-!!$OMP END PARALLEL DO
-
 
 ! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
         
@@ -66,6 +52,14 @@
             PRINT*, "ERRO FATAL: Precisão desconhecida"
             STOP
         ENDIF
+
+#ifdef TEST_CUDA
+        ALLOCATE(ZH_ORIG(NN, NN))
+        ALLOCATE(ZHP(NN, NN))
+        ZH_ORIG = ZH
+        ZFI_ORIG = ZFI
+#endif
+
 #ifdef USE_CPU
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
