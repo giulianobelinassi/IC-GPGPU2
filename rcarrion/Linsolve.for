@@ -53,6 +53,9 @@
             STOP
         ENDIF
 
+        t2 = OMP_GET_WTIME()
+        PRINT*, "[G]{t}: Tempo na CPU: ", (t2-t1)
+
 #ifdef TEST_CUDA
         ALLOCATE(ZH_ORIG(NN, NN))
         ALLOCATE(ZHP(NN, NN))
@@ -61,6 +64,8 @@
 #endif
 
 #ifdef USE_CPU
+
+        t1 = OMP_GET_WTIME()
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE"

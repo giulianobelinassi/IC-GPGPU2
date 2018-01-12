@@ -270,9 +270,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         t2 = OMP_GET_WTIME()
         PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
 
-
-C        t1 = OMP_GET_WTIME()
-C        PRINT *, "Tempo gasto em Ghmatecd: ", (t1-t0)
         RETURN
       END
 
