@@ -7,7 +7,7 @@
         REAL, INTENT(IN) :: DFI(NN)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
-		INTEGER :: stats1, stats2
+        INTEGER :: stats1, stats2
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 

@@ -329,8 +329,7 @@ void cuda_ghmatece_(int* nbe,
                     FREAL* c4,
                     FREAL* fr,
                     FREAL hestdiag[][3][3],
-                    int* status,
-					int* keep_gpu
+                    int* status
                    )
 {
 	dim3 threadsPerBlock(*npg,*npg);
@@ -347,8 +346,8 @@ void cuda_ghmatece_(int* nbe,
 	int return_status;
 	int width, iterations, i;
 
-    FREAL* hest_ = (FREAL*) malloc(3*(*n)*3*(*nbe)*sizeof(FREAL));
-	FREAL (*hest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) hest_;
+//    FREAL* hest_ = (FREAL*) malloc(3*(*n)*3*(*nbe)*sizeof(FREAL));
+//	FREAL (*hest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) hest_;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
@@ -417,12 +416,12 @@ void cuda_ghmatece_(int* nbe,
 
 	/*Guarda em shared.cu*/
 	device_hestdiag = device_hdiag;
+#ifdef TEST_CUDA
 
-//	if (*keep_gpu == 0)
-//	{
-		error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(FREAL), cudaMemcpyDeviceToHost);
-		cuda_assert(error);
-//	}
+	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(FREAL), cudaMemcpyDeviceToHost);
+
+	cuda_assert(error);
+#endif
 }
 
 void cuda_send_gest_data_(int* nbe, FREAL* gestdiag)

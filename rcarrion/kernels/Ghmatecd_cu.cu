@@ -338,9 +338,10 @@ void cuda_ghmatecd_(int* nbe,
 
 	int* device_return_status;
 	int return_status;
-
+#ifdef TEST_CUDA
 	thrust::complex<FREAL> (*zgp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zgp_;
 	thrust::complex<FREAL> (*zhp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zhp_;
+#endif
 
 	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);

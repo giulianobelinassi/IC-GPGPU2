@@ -10,7 +10,7 @@
 
       SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,ZG,
      $    KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
-     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME,FAST_SING)
+     $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
         
         USE omp_lib
 
@@ -28,7 +28,6 @@
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
         REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
-
         COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
         INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
         REAL, INTENT(IN) :: DELTA(3,3),PI
@@ -37,13 +36,9 @@
         COMPLEX, INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,N)
-        LOGICAL, INTENT(IN) :: FAST_SING
 
-
-        COMPLEX ZCH
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-        INTEGER NN,I,J, stats1, stats2, II, JJ
 
 #define USE_CPU
 
@@ -60,16 +55,18 @@
 #endif
 
 #ifdef  USE_CPU
+        INTEGER I,J, stats1, stats2, II, JJ, NN
         INTEGER N1,N2,N3,N4
         REAL :: CO(4,3)
 #endif
+
 #ifdef USE_GPU
         INTEGER RET
-        COMPLEX, DIMENSION(:,:,:), ALLOCATABLE :: ZHdiag, ZGdiag
 #endif
 
         PRINT*, "Em GHMATECD."
 
+#ifdef USE_CPU
         NN = 3*NBE
 
 *
@@ -86,7 +83,6 @@
 
         t1 = OMP_GET_WTIME()
 
-#ifdef USE_CPU
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)

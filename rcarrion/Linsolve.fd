@@ -1,11 +1,11 @@
 
         INTERFACE
           SUBROUTINE LINSOLVE(NN, N, ZH, ZG, ZFI, DFI, ZDFI)
-        	IMPLICIT NONE
-        	INTEGER, INTENT(IN) :: NN, N
-        	COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
-			REAL, INTENT(IN) :: DFI(NN)
-        	COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
-        	COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
+            IMPLICIT NONE
+            INTEGER, INTENT(IN) :: NN, N
+            COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
+            REAL, INTENT(IN) :: DFI(NN)
+            COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
+            COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
           END 
         END INTERFACE
