@@ -87,8 +87,6 @@
         t1 = OMP_GET_WTIME()
 
 #ifdef USE_CPU
-* ZERANDO AS MATRIZES H E G
-*
 
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,I,CO,II,JJ)
@@ -144,6 +142,9 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
             ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+
+        CALL BOUNDARY_CONDITIONS(ZH, ZG, KODE, ZGE, NN)
+
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
@@ -159,8 +160,7 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()
 
-        IF (FAST_SING .EQV. .TRUE.) THEN
-            CALL cuda_ghmatecd(
+        CALL cuda_ghmatecd(
      $                        NBE,
      $                        NPG,
      $                        N,
@@ -177,65 +177,11 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
      $                        GESTdiag,
      $                        ZG,
      $                        ZH,
+     $                        KODE,
      $                        1,
      $                        RET
      $                        )
-            DO i = 1, NBE
-                II=3*(I-1) + 1
-                ZG(II:II+2, II:II+2) = ZG(II:II+2, II:II+2) +
-     $              GESTdiag(1:3, 1:3, i)
-                ZH(II:II+2, II:II+2) = ZH(II:II+2, II:II+2) + 
-     $              HESTdiag(1:3, 1:3, i)
-            ENDDO
-        ELSE
 
-!$OMP PARALLEL NUM_THREADS(2)
-            IF (OMP_GET_THREAD_NUM() == 0) THEN
-
-                CALL cuda_ghmatecd(
-     $                      NBE,
-     $                      NPG,
-     $                      N,
-     $                      NP,
-     $                      ZGE,
-     $                      ZCS,
-     $                      ZCP,
-     $                      C1,
-     $                      C2,
-     $                      C3,
-     $                      C4,
-     $                      FR,
-     $                      HESTdiag,
-     $                      GESTdiag,
-     $                      ZG,
-     $                      ZH,
-     $                      0,
-     $                      RET
-     $                      )
-
-            ELSE
-
-                ALLOCATE(ZHdiag(3,3,NBE))
-                ALLOCATE(ZGdiag(3,3,NBE))
-                CALL GHMATECD_SINGULAR(ZHdiag, ZGdiag, CX, CY, CZ, ZGE, 
-     $                 ZCS, ZCP,C1, C2, C3, C4, DELTA, FR, GI, OME, NPG,
-     $                 N, NBE, NP,
-     $                 ETAS,CXM, CYM, CZM, PI, GESTdiag, HESTdiag, CONE)
-            ENDIF
-!$OMP END PARALLEL
-        ENDIF
-
-        IF (FAST_SING .EQV. .FALSE.) THEN
-            DO J = 1, NBE
-                JJ = 3*(J-1)+1
-                ZH(JJ:JJ+2, JJ:JJ+2) = ZHdiag(1:3, 1:3, J)
-                ZG(JJ:JJ+2, JJ:JJ+2) = ZGdiag(1:3, 1:3, J)
-            ENDDO
-            DEALLOCATE(ZHdiag)
-            DEALLOCATE(ZGdiag)
-        ENDIF
- 
-        
         IF (RET /= 0) THEN
             PRINT*, "GHMATECD: Erro: Matriz Singular."
         ENDIF
@@ -250,25 +196,6 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         DEALLOCATE(ZHP)
         DEALLOCATE(ZGP)
 #endif
-*
-* REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS
-*
-* CONDIÇÕES DE CONTORNO E FORMA A MATRIZ A QUE É ARMAZENADA EM G
-*
-        t1 = OMP_GET_WTIME()
-        DO  J=1,NN
-            IF (KODE(J) == 0) THEN
-                DO I=1,NN
-                    ZCH = ZG(I,J)*ZGE
-                    ZG(I,J) = -ZH(I,J)
-                    ZH(I,J) = -ZCH
-                ENDDO
-            ENDIF
-        ENDDO
-
-
-        t2 = OMP_GET_WTIME()
-        PRINT*, "GHMATECD: Tempo gasto no restante: ", (t2-t1)
 
         RETURN
       END
@@ -341,6 +268,31 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         ENDDO
 !$OMP END PARALLEL DO
       END SUBROUTINE GHMATECD_SINGULAR
+
+*
+* REORDENA AS COLUNAS DO SISTEMA DE EQUAÇÕES DE ACORDO COM AS
+*
+* CONDIÇÕES DE CONTORNO E FORMA A MATRIZ A QUE É ARMAZENADA EM G
+*
+
+      SUBROUTINE BOUNDARY_CONDITIONS(ZG, ZH, KODE, ZGE, NN)
+        IMPLICIT NONE
+        COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
+        COMPLEX, INTENT(IN) :: ZGE
+        INTEGER, INTENT(IN) :: NN, KODE(NN)
+        COMPLEX :: ZCH
+        INTEGER :: I, J
+
+        DO  J=1,NN
+            IF (KODE(J) == 0) THEN
+                DO I=1,NN
+                    ZCH = ZG(I,J)*ZGE
+                    ZG(I,J) = -ZH(I,J)
+                    ZH(I,J) = -ZCH
+                ENDDO
+            ENDIF
+        ENDDO
+      END SUBROUTINE BOUNDARY_CONDITIONS
 
 
       SUBROUTINE ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, N)

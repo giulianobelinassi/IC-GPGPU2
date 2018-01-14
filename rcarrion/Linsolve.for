@@ -4,9 +4,10 @@
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
         COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
-		REAL, INTENT(IN) :: DFI(NN)
+        REAL, INTENT(IN) :: DFI(NN)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
+		INTEGER :: stats1, stats2
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 
@@ -24,11 +25,9 @@
 #endif
 
 #ifdef USE_CPU
-        INTEGER :: stats, stats1, stats2
+        INTEGER :: stats 
         INTEGER, ALLOCATABLE :: PIV(:)
 #endif
-
-        t1 = OMP_GET_WTIME()
 
         ALLOCATE(ZDFI(NN), STAT = stats1)
         ALLOCATE(ZFI(NN) , STAT = stats2)
@@ -39,22 +38,10 @@
 !
 ! TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 !
-		ZDFI = DFI
+        ZDFI = DFI
 
 
 ! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
-        
-        IF (SIZEOF(1.0) == 8) THEN
-            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSEIF (SIZEOF(1.0) == 4) THEN
-            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSE
-            PRINT*, "ERRO FATAL: Precisão desconhecida"
-            STOP
-        ENDIF
-
-        t2 = OMP_GET_WTIME()
-        PRINT*, "[G]{t}: Tempo na CPU: ", (t2-t1)
 
 #ifdef TEST_CUDA
         ALLOCATE(ZH_ORIG(NN, NN))
@@ -66,6 +53,16 @@
 #ifdef USE_CPU
 
         t1 = OMP_GET_WTIME()
+        
+        IF (SIZEOF(1.0) == 8) THEN
+            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSEIF (SIZEOF(1.0) == 4) THEN
+            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSE
+            PRINT*, "ERRO FATAL: Precisão desconhecida"
+            STOP
+        ENDIF
+        
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE"
@@ -100,7 +97,7 @@
 
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()  
-        CALL cuda_linsolve(NN, N, ZH, ZFI)
+        CALL cuda_linsolve(NN, N, ZFI, ZDFI)
         t2 = OMP_GET_WTIME()
         PRINT*, "LINSOLVE: Tempo na GPU: ", (t2-t1)
 #endif

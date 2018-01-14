@@ -29,7 +29,8 @@ __global__ void ghmatecd_kernel(
                            FREAL c2,
                            FREAL c3,
                            FREAL c4,
-//                           int npg,
+						   FREAL hestdiag[][3][3],
+						   FREAL gestdiag[][3][3],
                            int n,
                            int nbe,
                            int dim_cone,
@@ -240,6 +241,11 @@ __global__ void ghmatecd_kernel(
 			// No need for reduction.
 			zg[index] = zgelem(lane_y, lane_x, 0);
 			zh[index] = zhelem(lane_y, lane_x, 0);
+            if (ii == jj && fast_singular)
+            { 
+                zg[index] += gestdiag[jj][lane_y][lane_x];
+                zh[index] += hestdiag[jj][lane_y][lane_x];
+            }
 		}
 	}
 	else
@@ -248,18 +254,52 @@ __global__ void ghmatecd_kernel(
 		{
 			case 0:
 			if (lane < 9)
+            {
 				zg[index] = thrust::reduce(thrust::seq, &zgelem(lane_y, lane_x, 0), &zgelem(lane_y, lane_x, num_warps));
+				if (ii == jj && fast_singular)
+					zg[index] += gestdiag[jj][lane_y][lane_x];
+            }
 			break;
 
 			case 1:
 			if (lane < 9)
+            {
 				zh[index] = thrust::reduce(thrust::seq, &zhelem(lane_y, lane_x, 0), &zhelem(lane_y, lane_x, num_warps));
+				if (ii == jj && fast_singular)
+					zh[index] += hestdiag[jj][lane_y][lane_x];
+            }
 			break;
 		}
 	}
 	
 }
 
+__global__ void boundary_kernel(
+    thrust::complex<FREAL> zh_[],
+    thrust::complex<FREAL> zg_[],
+    int kode[],
+    thrust::complex<FREAL> zge,
+    int nn,
+    int pad
+)
+{
+    #define zh(i, j) zh_[nn*(i) + (j)]
+    #define zg(i, j) zg_[nn*(i) + (j)]
+
+    const int j = blockIdx.y + pad;
+    const int i = blockDim.x*blockIdx.x + threadIdx.x;
+
+    thrust::complex<FREAL> zch;
+
+    if (i < nn)
+    {
+        if (kode[j] == 0) {
+            zch = zg(j, i)*zge;
+            zg(j, i) = -zh(j, i);
+            zh(j, i) = -zch;
+        }
+    }
+}  
 
 void cuda_ghmatecd_(int* nbe,
                     int* npg,
@@ -273,10 +313,11 @@ void cuda_ghmatecd_(int* nbe,
                     FREAL* c3,
                     FREAL* c4,
                     FREAL* fr,
-                    FREAL* zhest_,
-                    FREAL* zgest_,
+                    FREAL hestdiag[][3][3],
+                    FREAL gestdiag[][3][3],
                     thrust::complex<FREAL>* zgp_,
                     thrust::complex<FREAL>* zhp_,
+                    int kode[],
                     int* fast_singular,
                     int* status
                    )
@@ -286,24 +327,34 @@ void cuda_ghmatecd_(int* nbe,
 	int num_of_warps = ((*npg)*(*npg) + 31)/32;
 	int shared_mem_size = 2*3*3*num_of_warps*sizeof(thrust::complex<FREAL>);
 	cudaError_t error;
+
+    const int boundary_threads = 128;
+    dim3 boundaryNumThreads(boundary_threads);
 	
-	thrust::complex<FREAL>* device_zh;
-	thrust::complex<FREAL>* device_zg;
+    /*Armazenado em shared*/
+//	thrust::complex<FREAL>* device_zh;
+//	thrust::complex<FREAL>* device_zg;
+    /**/
 
 	int* device_return_status;
 	int return_status;
 
-	/*Cast os parâmetros de volta para o tipo original*/
-//	FREAL (*zhest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) zhest_;
-//	FREAL (*zgest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) zgest_;
 	thrust::complex<FREAL> (*zgp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zgp_;
 	thrust::complex<FREAL> (*zhp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zhp_;
 
 	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);
 
+    int* device_kode;
+
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
+
+    error = cudaMalloc(&device_kode, 3*(*nbe)*sizeof(int));
+    cuda_assert(error);
+
+    error = cudaMemcpy(device_kode, kode, 3*(*nbe)*sizeof(int), cudaMemcpyHostToDevice);
+    cuda_assert(error);
 
 	width = largest_possible_width(column_size, *nbe, &iterations);
 
@@ -316,8 +367,6 @@ void cuda_ghmatecd_(int* nbe,
 	for (i = 0; i < iterations; ++i)
 	{
 		int starting_column = width*i;
-//		if (starting_column + width > *n)
-//			width = *n - starting_column;
 		if (starting_column + width > *nbe)
 			width = *nbe - starting_column;
 		dim3 numBlocks(width, *nbe);
@@ -354,7 +403,8 @@ void cuda_ghmatecd_(int* nbe,
 							*c2,
 							*c3,
 							*c4,
-//							*npg,
+							(FREAL (*)[3][3]) device_hestdiag,
+							(FREAL (*)[3][3])  device_gestdiag,
 							*n,
 							*nbe,
 							*n,
@@ -372,18 +422,31 @@ void cuda_ghmatecd_(int* nbe,
 			fputs("Matriz Singular\n", stderr);
 		}
 
-		error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
-		cuda_assert(error);
-		error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
-		cuda_assert(error);
+        dim3 boundaryNumBlocks((3*(*nbe)+boundary_threads-1)/boundary_threads, 3*starting_column);
+        boundary_kernel<<<boundaryNumBlocks, boundaryNumThreads>>>(
+            device_zg,
+            device_zh,
+            device_kode,
+            *zge,
+            3*(*nbe),
+            3*starting_column
+        );
+        cudaDeviceSynchronize();
+
+
+#ifdef TEST_CUDA
+
+            error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
+            cuda_assert(error);
+            error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
+            cuda_assert(error);
+#endif
 
 	}
 
-	error = cudaFree(device_zh);
-	cuda_assert(error);
-	error = cudaFree(device_zg);
-	cuda_assert(error);
 	*status = return_status;
+    error = cudaFree(device_kode);
+    cuda_assert(error);
     error = cudaFree(device_return_status);
     cuda_assert(error);
 }

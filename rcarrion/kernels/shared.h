@@ -1,6 +1,7 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include <thrust/complex.h>
 #include "cublas_v2.h"
 
 extern "C"{            
@@ -19,7 +20,9 @@ extern FREAL* device_ome;
 extern FREAL* device_hestdiag;
 extern FREAL* device_gestdiag;
 extern int*   device_cone;        
- 
+extern thrust::complex<FREAL>* device_zh;
+extern thrust::complex<FREAL>* device_zg;
+
 void cuda_assert(cudaError_t error);
 
 void cublas_assert(cublasStatus_t error);

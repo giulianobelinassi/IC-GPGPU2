@@ -18,7 +18,9 @@ int*   device_cone;
 FREAL* device_hestdiag;
 FREAL* device_gestdiag;
 /**/
-
+/*Disponivel apos a execucao de Ghmatecd, caso fastsing esteja ligado*/
+thrust::complex<FREAL>* device_zh;
+thrust::complex<FREAL>* device_zg;
 
 void cuda_assert(cudaError_t error)
 {

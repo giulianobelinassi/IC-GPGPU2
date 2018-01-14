@@ -31,11 +31,13 @@ __global__ void ghmatecd_kernel(
                            FREAL c2,
                            FREAL c3,
                            FREAL c4,
-                           //int npg,
+						   FREAL hestdiag[],
+						   FREAL gestdiag[],
                            int n,
                            int nbe,
                            int dim_cone,
-						   int fast_singular,
+						   int column_pad,
+                           int fast_singular,
                            int* ret
                            );
 
@@ -147,10 +149,12 @@ void cuda_interec1_(int* n,
 						*c2,
 						*c3,
 						*c4,
-//						*npg,
+						NULL,
+						NULL,
 						*nbe,
 						*l,
                         *n,
+						0,
 						0,
 						device_return_status
 						);

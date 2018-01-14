@@ -8,7 +8,8 @@
 *
       SUBROUTINE GHMATECE (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,NE,NX,
      $         NCOX,
-     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,OME)
+     $    CONE,N,NBE,NP,NPG,GE,RNU,RMU,DELTA,PI,C1,C2,C3,C4,ETAS,GI,OME,
+     $    keep_gpu)
 *
         USE omp_lib        
 
@@ -27,6 +28,7 @@
         REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: HESTdiag
         REAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(OUT) :: GESTdiag
         REAL, DIMENSION(NPG), INTENT(IN) :: GI, OME 
+        LOGICAL, INTENT(IN) :: keep_gpu
 
         REAL, INTENT(IN) :: ETAS(3,n)
         INTEGER stats1, stats2
@@ -211,7 +213,8 @@ C            ETAS(3)=C/R
      $          C4,
      $          FR,
      $          HESTdiag,
-     $          STATS1
+     $          STATS1,
+     $          keep_gpu
      $          )
         ELSE
 
@@ -237,7 +240,9 @@ C            ETAS(3)=C/R
      $          NBE
      $          )
 
-!            CALL CUDA_SEND_GEST_DATA(NBE, GESTdiag) 
+            IF (keep_gpu .EQV. .TRUE.) THEN     
+                CALL CUDA_SEND_GEST_DATA(NBE, GESTdiag) 
+            ENDIF
         ENDIF
 !$OMP END PARALLEL
         

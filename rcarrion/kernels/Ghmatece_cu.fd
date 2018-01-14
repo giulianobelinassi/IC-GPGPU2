@@ -1,7 +1,7 @@
     
         INTERFACE
           SUBROUTINE CUDA_GHMATECE (nbe,npg,n,np,c3,c4,fr,
-     $      hestdiag, status)
+     $      hestdiag, status, keep_gpu)
           
             IMPLICIT NONE
 
@@ -10,6 +10,7 @@
 
             REAL, INTENT(IN) :: c3,c4,fr
             INTEGER, INTENT(OUT) :: status
+			LOGICAL, INTENT(IN) :: keep_gpu
           END
         END INTERFACE
 
