@@ -3,7 +3,7 @@
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(INOUT) :: ZH(NN, NN), ZG(NN, NN)
+        COMPLEX, INTENT(INOUT) ::  ZH(NN, NN), ZG(NN, NN)
         REAL, INTENT(IN) :: DFI(NN)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
@@ -83,8 +83,10 @@
             PRINT *, "Matriz Singular :-|"
         ENDIF
         DEALLOCATE(PIV)
+
         t2 = OMP_GET_WTIME()
         PRINT*, "LINSOLVE: Tempo na CPU: ", (t2-t1)
+
 #endif
 
 #ifdef  TEST_CUDA

@@ -365,6 +365,8 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
+    printf("iterations: %d\n", iterations);
+
 	for (i = 0; i < iterations; ++i)
 	{
 		int starting_column = width*i;
@@ -423,7 +425,8 @@ void cuda_ghmatecd_(int* nbe,
 			fputs("Matriz Singular\n", stderr);
 		}
 
-        dim3 boundaryNumBlocks((3*(*nbe)+boundary_threads-1)/boundary_threads, 3*starting_column);
+        dim3 boundaryNumBlocks((3*(*nbe)+boundary_threads-1)/boundary_threads, 3*width);
+        
         boundary_kernel<<<boundaryNumBlocks, boundaryNumThreads>>>(
             device_zg,
             device_zh,
