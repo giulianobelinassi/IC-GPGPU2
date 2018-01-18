@@ -300,24 +300,16 @@ __global__ void rigid_body_kernel(int m, int n, FREAL hest_[], FREAL hdiag_[][3]
 #undef hdiag
 }
 
-FREAL* cuda_rigid_body(int nbe, int n, FREAL device_h[])
+void cuda_rigid_body(int nbe, int n, FREAL device_h[], FREAL device_hdiag[])
 {
 	cudaError_t error;
-	FREAL* device_hdiag;
 	const int threads = 128;
-	int blocks = (n+threads-1)/threads;
+	int blocks = (nbe+threads-1)/threads;
 	dim3 threadsPerBlock(threads);
 	dim3 numBlocks(blocks);
 
-	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(FREAL));
-	cuda_assert(error);
-
-	error = cudaMemset(device_hdiag, 0, 3*3*nbe*sizeof(FREAL));
-	cuda_assert(error);
 
 	rigid_body_kernel<<<numBlocks, threadsPerBlock>>>(nbe, n, device_h, (FREAL (*)[3][3]) device_hdiag);
-
-	return device_hdiag;
 }
 
 
@@ -341,6 +333,7 @@ void cuda_ghmatece_(int* nbe,
 	cudaError_t error;
 
 	FREAL* device_h;
+    FREAL* device_hdiag;
 
 	int* device_return_status;
 	int return_status;
@@ -350,6 +343,12 @@ void cuda_ghmatece_(int* nbe,
 //	FREAL (*hest)[3*(*nbe)] = (FREAL (*)[3*(*nbe)]) hest_;
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
+	cuda_assert(error);
+
+	error = cudaMalloc(&device_hdiag, 3*3*(*nbe)*sizeof(FREAL));
+	cuda_assert(error);
+
+	error = cudaMemset(device_hdiag, 0, 3*3*(*nbe)*sizeof(FREAL));
 	cuda_assert(error);
 
 	width = largest_possible_width(column_size, *n, &iterations);
@@ -401,12 +400,9 @@ void cuda_ghmatece_(int* nbe,
 		{
 			fputs("Matriz Singular\n", stderr);
 		}
-
-//		error = cudaMemcpy(&hest[3*starting_column], device_h, (3*(*nbe))*(3*(width))*sizeof(FREAL), cudaMemcpyDeviceToHost);
-//		cuda_assert(error);
+	    cuda_rigid_body(*nbe, width, device_h, device_hdiag);
 	}
 
-	FREAL* device_hdiag = cuda_rigid_body(*nbe, *n, device_h);
 
 	error = cudaFree(device_h);
 	cuda_assert(error);
@@ -417,9 +413,7 @@ void cuda_ghmatece_(int* nbe,
 	/*Guarda em shared.cu*/
 	device_hestdiag = device_hdiag;
 #ifdef TEST_CUDA
-
 	error = cudaMemcpy(hestdiag, device_hdiag, 3*3*(*nbe)*sizeof(FREAL), cudaMemcpyDeviceToHost);
-
 	cuda_assert(error);
 #endif
 }
