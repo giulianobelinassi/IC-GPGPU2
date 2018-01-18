@@ -1,4 +1,4 @@
-FC      = gfortran-5
+FC      = gfortran-4.9
 NVCC    = nvcc
 
 ifeq ($(FPREC), double)
@@ -12,7 +12,7 @@ endif
 FP_FLAGS=-fdefault-real-8 -fdefault-double-8
 FCFLAGS = $(EXTRA) $(FPREC) -ffpe-trap=invalid -g -cpp -flto -Wall -Wno-unused-dummy-argument -march=native -Ofast -funroll-loops
 PARALLEL= -fopenmp
-NVFLAGS = $(EXTRA) $(NVPREC) -use_fast_math -O3  -Xptxas --opt-level=3  -maxrregcount=32 -Xptxas --allow-expensive-optimizations=true 
+NVFLAGS = $(EXTRA) $(NVPREC) -arch=sm_35 -use_fast_math -O3  -Xptxas --opt-level=3 -Xptxas --allow-expensive-optimizations=true 
 FLFLAGS = libopenblas.a -fopenmp
 RM      = rm -f
 
