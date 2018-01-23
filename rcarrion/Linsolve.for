@@ -1,10 +1,9 @@
-      SUBROUTINE LINSOLVE(NN, N, ZH, ZG, ZFI, DFI, ZDFI)
+      SUBROUTINE LINSOLVE(NN, N, ZH, ZG, ZFI, ZDFI)
         USE omp_lib
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
         COMPLEX, INTENT(INOUT) ::  ZH(NN, NN), ZG(NN, NN)
-        REAL, INTENT(IN) :: DFI(NN)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
         COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
         INTEGER :: stats1, stats2
@@ -29,16 +28,14 @@
         INTEGER, ALLOCATABLE :: PIV(:)
 #endif
 
-        ALLOCATE(ZDFI(NN), STAT = stats1)
         ALLOCATE(ZFI(NN) , STAT = stats2)
-        IF (stats1 /= 0 .OR. stats2 /= 0) THEN
+        IF (stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
         ENDIF
 
 !
 ! TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
 !
-        ZDFI = DFI
 
 
 ! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI

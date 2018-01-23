@@ -53,7 +53,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         REAL, DIMENSION(:), ALLOCATABLE :: CX, CY, CZ, CXM, CYM, CZM
         INTEGER, ALLOCATABLE :: CONE(:,:), KODE(:)
         REAL, DIMENSION(:), ALLOCATABLE :: CXI,CYI, CZI
-        REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR, DFI
+        REAL, DIMENSION(:), ALLOCATABLE :: BC, AFR
         REAL, DIMENSION(:,:,:), ALLOCATABLE :: HESTdiag, GESTdiag
         COMPLEX, DIMENSION(:,:), ALLOCATABLE :: ZH, ZG
         COMPLEX, DIMENSION(:), ALLOCATABLE :: ZDFI, ZFI, ZDSOL, ZSSOL
@@ -150,12 +150,12 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
        
         
         NN=3*NBE
-        ALLOCATE(DFI(NN), STAT = ITER)
+        ALLOCATE(ZDFI(NN), STAT = ITER)
         IF (ITER /= 0) THEN
             PRINT*, "Memória insuficiente"
         ENDIF
 
-        DFI = BC
+        ZDFI = BC
         
         DO 12 I=1,NFR
             FR=AFR(I)
@@ -172,7 +172,7 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 * ACIONA ROTINA QUE RESOLVE O SISTEMA DE EQUAÇÕES
 *
             
-            CALL LINSOLVE(NN, N, ZH, ZG, ZFI, DFI, ZDFI)
+            CALL LINSOLVE(NN, N, ZH, ZG, ZFI, ZDFI)
 #ifdef USE_CPU
             DEALLOCATE(ZG)
             DEALLOCATE(ZH)
@@ -190,49 +190,48 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
 *
             CALL OUTPUTEC(ZFI,ZDFI,ZDSOL,ZSSOL,NPIX,NX,N,NBE,L,FR)
 
-            DEALLOCATE(ZDFI)
             DEALLOCATE(ZFI)
             DEALLOCATE(ZDSOL)
             DEALLOCATE(ZSSOL)
  12     CONTINUE
 *
-*
-            DEALLOCATE(GI)
-            DEALLOCATE(OME)
+        DEALLOCATE(ZDFI)
 
-            DEALLOCATE(CX)
-            DEALLOCATE(CY)
-            DEALLOCATE(CZ)
+        DEALLOCATE(GI)
+        DEALLOCATE(OME)
 
-            DEALLOCATE(CXM)
-            DEALLOCATE(CYM)
-            DEALLOCATE(CZM)
-           
-            DEALLOCATE(CXI)
-            DEALLOCATE(CYI)
-            DEALLOCATE(CZI)
+        DEALLOCATE(CX)
+        DEALLOCATE(CY)
+        DEALLOCATE(CZ)
 
-            DEALLOCATE(BC)
-            DEALLOCATE(KODE)
-            DEALLOCATE(AFR)
+        DEALLOCATE(CXM)
+        DEALLOCATE(CYM)
+        DEALLOCATE(CZM)
+       
+        DEALLOCATE(CXI)
+        DEALLOCATE(CYI)
+        DEALLOCATE(CZI)
 
-            DEALLOCATE(CONE) 
-            
-            DEALLOCATE(ETAS)
+        DEALLOCATE(BC)
+        DEALLOCATE(KODE)
+        DEALLOCATE(AFR)
 
-            DEALLOCATE(HESTdiag)
-            DEALLOCATE(GESTdiag)
+        DEALLOCATE(CONE) 
+        
+        DEALLOCATE(ETAS)
+
+        DEALLOCATE(HESTdiag)
+        DEALLOCATE(GESTdiag)
     
-            DEALLOCATE(DFI)
 #ifdef USE_GPU
-            CALL deallocate_shared_gpu_data() 
+        CALL deallocate_shared_gpu_data() 
 #endif
 
-            CLOSE (INP)          
-            CLOSE (INQ)
-            CLOSE (IPR)          
-            CLOSE (IPS)
-            STOP
+        CLOSE (INP)          
+        CLOSE (INQ)
+        CLOSE (IPR)          
+        CLOSE (IPS)
+        STOP
       END
 *
 *#######################################################################
