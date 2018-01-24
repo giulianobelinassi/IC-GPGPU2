@@ -71,6 +71,13 @@
         ALLOCATE(ZFI(3*NBE) , STAT = stats1)
         IF (stats1 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
+            STOP
+        ENDIF
+
+        ALLOCATE(ZH(3*NBE, 3*NBE), STAT = stats1)
+        IF (stats1 /= 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE"
+            STOP
         ENDIF
 
 
@@ -82,10 +89,9 @@
 *
         NN = 3*NBE
 
-        ALLOCATE(ZH(3*NBE, 3*NBE), STAT = stats1)
         ALLOCATE(ZG(3*NBE, 3*NBE), STAT = stats2)
 
-        IF (stats1 /= 0 .or. stats2 /= 0) THEN
+        IF (stats2 /= 0) THEN
             PRINT*, "MEMÓRIA INSUFICIENTE"
             STOP
         ENDIF
@@ -175,26 +181,26 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         t1 = OMP_GET_WTIME()
 
         CALL cuda_ghmatecd(
-     $                        NBE,
-     $                        NPG,
-     $                        N,
-     $                        NP,
-     $                        ZGE,
-     $                        ZCS,
-     $                        ZCP,
-     $                        C1,
-     $                        C2,
-     $                        C3,
-     $                        C4,
-     $                        FR,
-     $                        HESTdiag,
-     $                        GESTdiag,
-     $                        ZG,
-     $                        ZH,
-     $                        KODE,
-     $                        1,
-     $                        RET
-     $                        )
+     $        NBE,
+     $        NPG,
+     $        N,
+     $        NP,
+     $        ZGE,
+     $        ZCS,
+     $        ZCP,
+     $        C1,
+     $        C2,
+     $        C3,
+     $        C4,
+     $        FR,
+     $        HESTdiag,
+     $        GESTdiag,
+     $        ZG,
+     $        ZH,
+     $        KODE,
+     $        1,
+     $        RET
+     $        )
 
         IF (RET /= 0) THEN
             PRINT*, "GHMATECD: Erro: Matriz Singular."

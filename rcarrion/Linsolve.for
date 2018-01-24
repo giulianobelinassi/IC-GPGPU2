@@ -5,7 +5,6 @@
         INTEGER, INTENT(IN) :: NN, N
         COMPLEX, INTENT(INOUT) ::  ZH(NN, NN)
         COMPLEX, INTENT(INOUT) :: ZFI(NN)
-        INTEGER :: stats1, stats2
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
 
@@ -22,11 +21,6 @@
         COMPLEX, ALLOCATABLE :: ZH_ORIG(:,:), ZHP(:,:)
 #endif
 
-#ifdef USE_CPU
-        INTEGER :: stats 
-        INTEGER, ALLOCATABLE :: PIV(:)
-#endif
-
 
 ! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 
@@ -40,8 +34,45 @@
 #ifdef USE_CPU
 
         t1 = OMP_GET_WTIME()
+    
+        CALL LINSOLVE_CPU(NN, ZH, ZFI)
+     
+        t2 = OMP_GET_WTIME()
+        PRINT*, "LINSOLVE: Tempo na CPU: ", (t2-t1)
+
+#endif
+
+#ifdef  TEST_CUDA
         
-        
+        ZFIP = ZFI
+        ZH = ZHP
+        ZFI = ZFI_ORIG
+        ZH = ZH_ORIG
+#endif
+
+#ifdef USE_GPU
+        t1 = OMP_GET_WTIME()  
+        CALL cuda_linsolve(NN, N, ZH, ZFI)
+        t2 = OMP_GET_WTIME()
+        PRINT*, "LINSOLVE: Tempo na GPU: ", (t2-t1)
+#endif
+
+#ifdef  TEST_CUDA
+        CALL ASSERT_ZFI(ZFI, ZFIP, NN)
+        DEALLOCATE(ZHP)
+        DEALLOCATE(ZH_ORIG)
+#endif
+
+      END SUBROUTINE
+
+      SUBROUTINE LINSOLVE_CPU(NN, ZH, ZFI)
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: NN
+        COMPLEX, INTENT(INOUT) ::  ZH(NN, NN)
+        COMPLEX, INTENT(INOUT) :: ZFI(NN)
+        INTEGER, ALLOCATABLE :: PIV(:)
+        INTEGER :: stats        
+
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
             PRINT*, "MEMORIA INSUFICIENTE"
@@ -63,33 +94,7 @@
         ENDIF
         DEALLOCATE(PIV)
 
-        t2 = OMP_GET_WTIME()
-        PRINT*, "LINSOLVE: Tempo na CPU: ", (t2-t1)
-
-#endif
-
-#ifdef  TEST_CUDA
-        
-        ZFIP = ZFI
-        ZH = ZHP
-        ZFI = ZFI_ORIG
-        ZH = ZH_ORIG
-#endif
-
-#ifdef USE_GPU
-        t1 = OMP_GET_WTIME()  
-        CALL cuda_linsolve(NN, N, ZFI)
-        t2 = OMP_GET_WTIME()
-        PRINT*, "LINSOLVE: Tempo na GPU: ", (t2-t1)
-#endif
-
-#ifdef  TEST_CUDA
-        CALL ASSERT_ZFI(ZFI, ZFIP, NN)
-        DEALLOCATE(ZHP)
-        DEALLOCATE(ZH_ORIG)
-#endif
-
-      END SUBROUTINE
+      END SUBROUTINE LINSOLVE_CPU
 
 
       SUBROUTINE ASSERT_ZFI(ZFI, ZFIP, NN)

@@ -302,12 +302,10 @@ __global__ void rigid_body_kernel(int m, int n, FREAL hest_[], FREAL hdiag_[][3]
 
 void cuda_rigid_body(int nbe, int n, FREAL device_h[], FREAL device_hdiag[])
 {
-	cudaError_t error;
 	const int threads = 128;
 	int blocks = (nbe+threads-1)/threads;
 	dim3 threadsPerBlock(threads);
 	dim3 numBlocks(blocks);
-
 
 	rigid_body_kernel<<<numBlocks, threadsPerBlock>>>(nbe, n, device_h, (FREAL (*)[3][3]) device_hdiag);
 }

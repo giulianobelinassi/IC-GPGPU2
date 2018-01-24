@@ -343,8 +343,8 @@ void cuda_ghmatecd_(int* nbe,
 	int return_status;
 #ifdef TEST_CUDA
 	thrust::complex<FREAL> (*zgp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zgp_;
-	thrust::complex<FREAL> (*zhp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zhp_;
 #endif
+	thrust::complex<FREAL> (*zhp)[3*(*nbe)] = (thrust::complex<FREAL> (*)[3*(*nbe)]) zhp_;
 
 	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);
@@ -354,6 +354,8 @@ void cuda_ghmatecd_(int* nbe,
 
     thrust::complex<FREAL> one(1.0f, 0.0f);
     thrust::complex<FREAL> zero(0., 0.);
+
+    swapped = 0;
 
     stats = cublasCreate(&handle);
 	cublas_assert(stats);
@@ -375,7 +377,8 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
-    printf("iterations: %d\n", iterations);
+    if (iterations > 1)
+        swapped = 1;
 
 	for (i = 0; i < iterations; ++i)
 	{
@@ -453,12 +456,17 @@ void cuda_ghmatecd_(int* nbe,
             stats = cublasCgemv(handle, CUBLAS_OP_N, nn, 3*width, (cuComplex*) &one, (cuComplex*) device_zg, nn, (cuComplex*) device_zdfi + 3*starting_column, 1, (cuComplex*) &one, (cuComplex*) device_zfi, 1); 
         cublas_assert(stats);
 
-#ifdef TEST_CUDA
-
+        if (swapped)
+        {
             error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
             cuda_assert(error);
-            error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
-            cuda_assert(error);
+        }
+
+#ifdef TEST_CUDA
+        error = cudaMemcpy(&zhp[3*starting_column], device_zh, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
+        cuda_assert(error);
+        error = cudaMemcpy(&zgp[3*starting_column], device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
+        cuda_assert(error);
 #endif
 
 	}

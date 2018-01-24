@@ -27,6 +27,9 @@ int* device_kode;
 thrust::complex<FREAL>* device_zh;
 thrust::complex<FREAL>* device_zfi;
 
+/*indica se precisou fazer swap ao monstar zh*/
+int swapped = 0;
+
 void cuda_assert(cudaError_t error)
 {
     if (error != cudaSuccess)

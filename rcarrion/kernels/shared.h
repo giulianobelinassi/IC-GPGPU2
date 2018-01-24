@@ -25,6 +25,8 @@ extern thrust::complex<FREAL>* device_zdfi;
 extern thrust::complex<FREAL>* device_zfi;
 extern int*   device_kode;
 
+extern int swapped;
+
 void cuda_assert(cudaError_t error);
 
 void cublas_assert(cublasStatus_t error);
