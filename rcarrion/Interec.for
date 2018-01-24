@@ -184,6 +184,7 @@ C            ETA(3)=C/R
 *
 
         ZSSOL = 0
+        t1 = OMP_GET_WTIME()
 !$OMP  PARALLEL DO DEFAULT(SHARED)
 !$OMP& PRIVATE(N1,N2,N3,N4,J,K,CO,ZD,ZS)
 !$OMP& REDUCTION(+:ZSSOL)
@@ -280,6 +281,8 @@ C                ETA(3)=C/R
             ENDDO
         ENDDO        
 !$OMP END PARALLEL DO
+        t2 = OMP_GET_WTIME()
+        PRINT*, "SIGMAEC: Tempo na CPU: ", (t2-t1)
 *
         RETURN
       END

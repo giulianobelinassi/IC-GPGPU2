@@ -222,56 +222,6 @@ __global__ void ghmatece_kernel(
 	}
 }
 
-
-
-/*
-__global__ void generate_identity(int m, FREAL one_vec[][3])
-{
-	int i, j;
-	const int tid = 3*(blockDim.x*blockIdx.x + threadIdx.x);
-	const FREAL const Id[3][3] = {{1., 0., 0.}, {0., 1., 0.}, {0., 0., 1.}};
-
-	if (tid < m)
-	{
-		for (i = 0; i < 3; ++i)
-			for (j = 0; j < 3; ++j)
-				one_vec[tid + i][j] = Id[i][j];
-	}
-}
-
-FREAL* cuda_rigid_body(int nbe, int n, FREAL device_h[])
-{
-	cudaError_t error;
-	cublasStatus_t blaserror;
-	FREAL* device_Ids;
-	FREAL* device_hdiag;
-	const int threads = 32;
-	int blocks = (n+threads-1)/threads;
-	dim3 threadsPerBlock(32);
-	dim3 numBlocks(blocks);
-	FREAL one = 1., zero = 0.;	
-
-	error = cudaMalloc(&device_Ids, 3*3*n*sizeof(FREAL));
-	cuda_assert(error);
-	error = cudaMalloc(&device_hdiag, 3*3*nbe*sizeof(FREAL));
-	cuda_assert(error);
-
-	generate_identity<<<numBlocks, threadsPerBlock>>>(n, (FREAL (*)[3]) device_Ids);
-	cudaDeviceSynchronize();
-	
-	cublasHandle_t handle;
-	cublasCreate(&handle);
-
-	blaserror = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, nbe, 3, n, &one, device_h, nbe, device_Ids, n, 
-			&zero, device_hdiag, nbe);
-	cublas_assert(blaserror);
-
-	cudaFree(device_Ids);
-
-	return device_hdiag;
-}
-*/
-
 __global__ void rigid_body_kernel(int m, int n, FREAL hest_[], FREAL hdiag_[][3][3])
 {
 	int i, j, k;

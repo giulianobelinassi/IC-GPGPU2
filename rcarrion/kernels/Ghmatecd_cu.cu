@@ -377,6 +377,8 @@ void cuda_ghmatecd_(int* nbe,
 	error = cudaMalloc(&device_zg, (3*(*nbe))*(3*(width))*sizeof(thrust::complex<FREAL>));
 	cuda_assert(error);
 
+	printf("iterations: %d\n", iterations);
+
     if (iterations > 1)
         swapped = 1;
 

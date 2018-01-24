@@ -220,7 +220,6 @@ int largest_possible_width(size_t sizeof_column_mem, int columns, int* iteration
 	int possible_width;
 
 	cuda_assert(cudaMemGetInfo(&available_mem, &total_mem));
-	available_mem = available_mem;
 //	available_mem = 8*1024*1024; //Simulate a GPU with 8Mb of video memory
 
 	if ((3*columns)*sizeof_column_mem < available_mem)
@@ -228,6 +227,10 @@ int largest_possible_width(size_t sizeof_column_mem, int columns, int* iteration
 		return columns;
 	}
 	possible_width = available_mem/(3*sizeof_column_mem);
+// As vezes o programa crasha pois, mesmo fazendo os cálculos exatos,
+// A GPU fica sem memória. Sendo assim, eu retiro algumas colunas para
+// tentar amenizar o problema
+	possible_width -= 10;
 
 	*iterations = (columns + possible_width - 1)/possible_width;
 

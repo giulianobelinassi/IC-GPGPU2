@@ -158,7 +158,10 @@ C       PARAMETER (NE=960,NX=3*NE,NCOX=962,NPIX=10,NFRX=7)
         ZDFI = BC
         
 #ifdef USE_GPU
+        t1 = OMP_GET_WTIME()
         CALL send_dyn_data_gpu(NBE, ZDFI, KODE)
+        t2 = OMP_GET_WTIME()
+        PRINT*, "Vetores compartilhados do prob. dynamico: ", (t2-t1)
 #endif
 
         DO 12 I=1,NFR

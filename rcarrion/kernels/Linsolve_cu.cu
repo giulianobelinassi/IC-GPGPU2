@@ -64,46 +64,53 @@ void cuda_linsolve_(
     thrust::complex<FREAL> one(1.0f, 0.0f);
     thrust::complex<FREAL> zero(0., 0.);
     
+	int* piv = (int*) malloc((*nn)*sizeof(int));
+
+	if (!piv)
+	{
+		fputs("Erro: Memória Insuficiente", stderr);
+		exit(1);
+	}
+
+    magma_init();
 
     if (zh_fits_in_memory(*nn, zh))
     {
-	    int* piv = (int*) malloc((*nn)*sizeof(int));
         if (swapped)
             reorganize_zh(*nn, zh);
-
-		if (!piv)
-		{
-			fputs("Erro: Memória Insuficiente", stderr);
-			exit(1);
-		}
-
-        magma_init();
 
         if (sizeof(FREAL) == 8)
             magma_zgesv_gpu(*nn, 1, (magmaDoubleComplex_ptr) device_zh, *nn, piv, (magmaDoubleComplex_ptr) device_zfi, *nn, &status);
         else
             magma_cgesv_gpu(*nn, 1, (magmaFloatComplex_ptr) device_zh, *nn, piv, (magmaFloatComplex_ptr) device_zfi, *nn, &status);
         
-        magma_finalize();
         lu_assert(status);
 
         error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
         cuda_assert(error);
 
-	    free(piv);
     }
     else
     {
         error = cudaMemcpy(zfi, device_zfi, (*nn)*sizeof(thrust::complex<FREAL>), cudaMemcpyDeviceToHost);
         cuda_assert(error);
-        
-        linsolve_cpu_(nn, zh, zfi);
+
+        if (sizeof(FREAL) == 8)
+            magma_zgesv(*nn, 1, (magmaDoubleComplex_ptr) zh, *nn, piv, (magmaDoubleComplex_ptr) zfi, *nn, &status);
+        else
+            magma_cgesv(*nn, 1, (magmaFloatComplex_ptr) zh, *nn, piv, (magmaFloatComplex_ptr) zfi, *nn, &status);
+		
+        lu_assert(status);
     }
 
-    error = cudaFree(device_zh);
+	magma_finalize();
+    
+	error = cudaFree(device_zh);
     cuda_assert(error);
 
     error = cudaFree(device_zfi);
     cuda_assert(error);
+
+	free(piv);
 }
 }
