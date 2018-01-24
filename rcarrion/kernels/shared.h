@@ -21,7 +21,9 @@ extern FREAL* device_hestdiag;
 extern FREAL* device_gestdiag;
 extern int*   device_cone;        
 extern thrust::complex<FREAL>* device_zh;
-extern thrust::complex<FREAL>* device_zg;
+extern thrust::complex<FREAL>* device_zdfi;
+extern thrust::complex<FREAL>* device_zfi;
+extern int*   device_kode;
 
 void cuda_assert(cudaError_t error);
 

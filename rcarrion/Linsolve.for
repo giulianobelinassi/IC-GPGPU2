@@ -1,11 +1,10 @@
-      SUBROUTINE LINSOLVE(NN, N, ZH, ZG, ZFI, ZDFI)
+      SUBROUTINE LINSOLVE(NN, N, ZH, ZFI)
         USE omp_lib
     
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NN, N
-        COMPLEX, INTENT(INOUT) ::  ZH(NN, NN), ZG(NN, NN)
-        COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZFI(:)
-        COMPLEX, INTENT(INOUT), ALLOCATABLE :: ZDFI(:)
+        COMPLEX, INTENT(INOUT) ::  ZH(NN, NN)
+        COMPLEX, INTENT(INOUT) :: ZFI(NN)
         INTEGER :: stats1, stats2
         DOUBLE PRECISION :: t1, t2
 #define USE_CPU
@@ -28,15 +27,6 @@
         INTEGER, ALLOCATABLE :: PIV(:)
 #endif
 
-        ALLOCATE(ZFI(NN) , STAT = stats2)
-        IF (stats2 /= 0) THEN
-            PRINT*, "MEMÓRIA INSUFICIENTE"
-        ENDIF
-
-!
-! TRANSFORMAÇÃO DAS CONDIÇÕES DE CONTORNO EM NÚMEROS COMPLEXOS
-!
-
 
 ! FORMA O LADO DIREITO DO SISTEMA {VETOR f} QUE É ARMAZENADO EM ZFI
 
@@ -51,14 +41,6 @@
 
         t1 = OMP_GET_WTIME()
         
-        IF (SIZEOF(1.0) == 8) THEN
-            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSEIF (SIZEOF(1.0) == 4) THEN
-            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
-        ELSE
-            PRINT*, "ERRO FATAL: Precisão desconhecida"
-            STOP
-        ENDIF
         
         ALLOCATE(PIV(NN), STAT = stats)
         IF (stats /= 0) THEN
@@ -96,7 +78,7 @@
 
 #ifdef USE_GPU
         t1 = OMP_GET_WTIME()  
-        CALL cuda_linsolve(NN, N, ZFI, ZDFI)
+        CALL cuda_linsolve(NN, N, ZFI)
         t2 = OMP_GET_WTIME()
         PRINT*, "LINSOLVE: Tempo na GPU: ", (t2-t1)
 #endif

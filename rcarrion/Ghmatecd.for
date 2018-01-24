@@ -8,8 +8,8 @@
 
 
 
-      SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,ZG,
-     $    KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,
+      SUBROUTINE GHMATECD (CX,CY,CZ,CXM,CYM,CZM,HESTdiag,GESTdiag,ZH,
+     $   KODE,NE,NX,NCOX,CONE,DELTA,PI,N,NBE,NP,NPG,GE,RNU,RMU,ZDFI,ZFI,
      $    L,FR,DAM,RHO,ZGE,ZCS,ZCP,C1,C2,C3,C4,ETAS,GI,OME)
         
         USE omp_lib
@@ -28,7 +28,7 @@
         REAL, DIMENSION(NP), INTENT(IN) :: CX, CY, CZ
         REAL, DIMENSION(N), INTENT(IN) :: CXM, CYM, CZM
         REAL, DIMENSION(3,3,NBE), INTENT(IN) :: HESTdiag, GESTdiag
-        COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH, ZG
+        COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(OUT) :: ZH
         INTEGER, INTENT(IN) :: KODE(3*NBE),NE,NX,NCOX,CONE(N,4)
         REAL, INTENT(IN) :: DELTA(3,3),PI
         INTEGER, INTENT(IN) :: L,N,NBE,NP,NPG
@@ -36,10 +36,14 @@
         COMPLEX, INTENT(IN) :: ZGE,ZCS,ZCP
         REAL, INTENT(IN) :: C1,C2,C3,C4
         REAL, INTENT(IN) :: ETAS(3,N)
+        COMPLEX, INTENT(IN) :: ZDFI(3*NBE)
+        COMPLEX, INTENT(OUT), ALLOCATABLE :: ZFI(:)
 
+
+        COMPLEX, DIMENSION(:,:), ALLOCATABLE :: ZG
         REAL, INTENT(IN) :: GI(NPG), OME(NPG)
         DOUBLE PRECISION :: t1, t2
-
+        INTEGER :: stats1
 #define USE_CPU
 
 #ifdef USE_GPU
@@ -55,7 +59,7 @@
 #endif
 
 #ifdef  USE_CPU
-        INTEGER I,J, stats1, stats2, II, JJ, NN
+        INTEGER I,J, stats2, II, JJ, NN
         INTEGER N1,N2,N3,N4
         REAL :: CO(4,3)
 #endif
@@ -64,15 +68,20 @@
         INTEGER RET
 #endif
 
-        PRINT*, "Em GHMATECD."
+        ALLOCATE(ZFI(3*NBE) , STAT = stats1)
+        IF (stats1 /= 0) THEN
+            PRINT*, "MEMÓRIA INSUFICIENTE"
+        ENDIF
+
 
 #ifdef USE_CPU
-        NN = 3*NBE
 
 *
 * CÁLCULO DOS COEFICIENTES DAS MATRIZES H E G
 *
 *
+        NN = 3*NBE
+
         ALLOCATE(ZH(3*NBE, 3*NBE), STAT = stats1)
         ALLOCATE(ZG(3*NBE, 3*NBE), STAT = stats2)
 
@@ -141,6 +150,15 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
 
         CALL BOUNDARY_CONDITIONS(ZH, ZG, KODE, ZGE, NN)
 
+        IF (SIZEOF(1.0) == 8) THEN
+            CALL ZGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSEIF (SIZEOF(1.0) == 4) THEN
+            CALL CGEMV('N',NN,NN,(1.0,0),ZG,NN,ZDFI,1,(0,0),ZFI,1)
+        ELSE
+            PRINT*, "ERRO FATAL: Precisão desconhecida"
+            STOP
+        ENDIF
+
         t2 = OMP_GET_WTIME()
         PRINT *, "GHMATECD: Tempo na CPU: ", (t2-t1)
 #endif
@@ -191,6 +209,9 @@ C                   ATRAVÉS DA DIFERENÇA DINÂMICO - ESTÁTICO
         CALL ASSERT_GHMATECD_ZH_ZG(ZH, ZHP, ZG, ZGP, NBE, NBE)
         DEALLOCATE(ZHP)
         DEALLOCATE(ZGP)
+#endif
+#ifdef USE_CPU
+        DEALLOCATE(ZG)
 #endif
 
         RETURN

@@ -17,10 +17,15 @@ int*   device_cone;
 /*Disponivel apos a execucao de Ghmatece*/
 FREAL* device_hestdiag;
 FREAL* device_gestdiag;
-/**/
-/*Disponivel apos a execucao de Ghmatecd, caso fastsing esteja ligado*/
+
+
+/*Inputecd*/
+thrust::complex<FREAL>* device_zdfi;
+int* device_kode;
+
+/*Disponivel apos a execucao de Ghmatecd*/
 thrust::complex<FREAL>* device_zh;
-thrust::complex<FREAL>* device_zg;
+thrust::complex<FREAL>* device_zfi;
 
 void cuda_assert(cudaError_t error)
 {
@@ -156,6 +161,23 @@ void send_shared_data_to_gpu_(
 
 }
 
+
+void send_dyn_data_gpu_(int* nbe, thrust::complex<FREAL> zdfi[], int kode[])
+{
+    int nn = 3*(*nbe);
+    cudaError_t error;
+
+    error = cudaMalloc(&device_zdfi, nn*sizeof(thrust::complex<FREAL>));
+    cuda_assert(error);
+    error = cudaMalloc(&device_kode, nn*sizeof(int));
+    cuda_assert(error);
+
+    error = cudaMemcpy(device_zdfi, zdfi, nn*sizeof(thrust::complex<FREAL>), cudaMemcpyHostToDevice);
+    cuda_assert(error);
+    error = cudaMemcpy(device_kode, kode, nn*sizeof(int), cudaMemcpyHostToDevice);
+    cuda_assert(error);
+}
+
 void deallocate_shared_gpu_data_()
 {
     cudaError_t error;
@@ -181,6 +203,10 @@ void deallocate_shared_gpu_data_()
     error = cudaFree(device_hestdiag);
     cuda_assert(error);
     error = cudaFree(device_gestdiag);
+    cuda_assert(error);
+    error = cudaFree(device_zdfi);
+    cuda_assert(error);
+    error = cudaFree(device_kode);
     cuda_assert(error);
 }
 

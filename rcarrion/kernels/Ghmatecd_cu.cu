@@ -330,7 +330,10 @@ void cuda_ghmatecd_(int* nbe,
 
     const int boundary_threads = 128;
     dim3 boundaryNumThreads(boundary_threads);
-	
+
+    cublasHandle_t handle;
+	cublasStatus_t stats;
+
     /*Armazenado em shared*/
 //	thrust::complex<FREAL>* device_zh;
 //	thrust::complex<FREAL>* device_zg;
@@ -345,17 +348,24 @@ void cuda_ghmatecd_(int* nbe,
 
 	int i, iterations, width;
 	dim3 threadsPerBlock(*npg,*npg);
+    int nn = 3*(*nbe);
 
-    int* device_kode;
+    thrust::complex<FREAL>* device_zg;
+
+    thrust::complex<FREAL> one(1.0f, 0.0f);
+    thrust::complex<FREAL> zero(0., 0.);
+
+    stats = cublasCreate(&handle);
+	cublas_assert(stats);
 
 	error = cudaMalloc(&device_return_status, sizeof(int));
 	cuda_assert(error);
 
-    error = cudaMalloc(&device_kode, 3*(*nbe)*sizeof(int));
+    error = cudaMalloc(&device_zfi, nn*sizeof(thrust::complex<FREAL>));
     cuda_assert(error);
 
-    error = cudaMemcpy(device_kode, kode, 3*(*nbe)*sizeof(int), cudaMemcpyHostToDevice);
-    cuda_assert(error);
+	error = cudaMemset(device_zfi, 0, nn*sizeof(thrust::complex<FREAL>));
+	cuda_assert(error);
 
 	width = largest_possible_width(column_size, *nbe, &iterations);
 
@@ -437,6 +447,11 @@ void cuda_ghmatecd_(int* nbe,
         );
         cudaDeviceSynchronize();
 
+        if (sizeof(FREAL) == 8)
+            stats = cublasZgemv(handle, CUBLAS_OP_N, nn, 3*width, (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zg, nn, (cuDoubleComplex*) device_zdfi + 3*starting_column, 1, (cuDoubleComplex*) &one, (cuDoubleComplex*) device_zfi, 1); 
+        else
+            stats = cublasCgemv(handle, CUBLAS_OP_N, nn, 3*width, (cuComplex*) &one, (cuComplex*) device_zg, nn, (cuComplex*) device_zdfi + 3*starting_column, 1, (cuComplex*) &one, (cuComplex*) device_zfi, 1); 
+        cublas_assert(stats);
 
 #ifdef TEST_CUDA
 
@@ -448,8 +463,10 @@ void cuda_ghmatecd_(int* nbe,
 
 	}
 
+    cublasDestroy(handle);
 	*status = return_status;
-    error = cudaFree(device_kode);
+    
+    error = cudaFree(device_zg);
     cuda_assert(error);
     error = cudaFree(device_return_status);
     cuda_assert(error);
